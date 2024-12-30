@@ -1,9 +1,14 @@
-#include "vkRenderer.h"
+#include "VkRenderer.h"
+#include "glm/fwd.hpp"
+#include <glm/fwd.hpp>
+#include <utility>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan.h>
 
+
 namespace VkRenderer{
 //--- creating buffers----//
+//  
     u32 findMemoryType(Init& init, u32 typeFilter, VkMemoryPropertyFlags properties) {
         VkPhysicalDeviceMemoryProperties memoryProperties;
         init.inst_disp.getPhysicalDeviceMemoryProperties(init.physicalDevice, &memoryProperties); 
@@ -118,4 +123,44 @@ namespace VkRenderer{
         copyDataToBufferWithStaging(init,data,data.indexBuffer, data.indices->data(), sizeof(u32)*data.indices->size());
         return 0;
     }
+    
+    int createUniformBuffers(Init& init, RenderData& data) {
+        VkBuffer cameraBuffer;
+        VkDeviceMemory cameraMemory;
+        createBuffer(init, sizeof(Camera),
+                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                 &cameraBuffer,
+                 &cameraMemory);
+        data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(cameraBuffer, cameraMemory));
+        
+        VkBuffer modelBuffer;
+        VkDeviceMemory modelMemory;
+        createBuffer(init, sizeof(glm::mat4) * 100,
+                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                 &modelBuffer,
+                 &modelMemory);
+        data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(modelBuffer, modelMemory));
+        return 0;
+    }
+
+    void updateCameraBuffer(Init& init, RenderData& data, Camera & camera) {
+        copyDataToBuffer(init, data.uniformBuffers[0].second, &camera, sizeof(Camera)); 
+    }
+    
+    void updateModelBuffer(Init& init, RenderData& data, Model & model) {
+        copyDataToBuffer(init, data.uniformBuffers[1].second, model.modelMatrices.data(), sizeof(glm::mat4) * model.instanceCount); 
+    }
+
+    void destroyBuffers(Init& init, RenderData& data) {
+        init.disp.destroyBuffer(data.vertexBuffer, nullptr);
+        init.disp.destroyBuffer(data.indexBuffer, nullptr);
+        init.disp.freeMemory(data.vertexBufferMemory, nullptr);
+        init.disp.freeMemory(data.indexBufferMemory, nullptr);
+        for (auto & buffer : data.uniformBuffers) {
+            init.disp.destroyBuffer(buffer.first, nullptr);
+            init.disp.freeMemory(buffer.second, nullptr);
+        }
+    } 
 }

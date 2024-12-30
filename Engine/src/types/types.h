@@ -25,7 +25,6 @@ struct Model{
 struct Camera {
     glm::mat4 view;
     glm::mat4 projection;
-    glm::vec4 rotation; //roll pitch yaw
 };
 
 struct Vertex{
@@ -33,6 +32,11 @@ struct Vertex{
     glm::vec3 color;
     static VkVertexInputBindingDescription getBindingDescription();
     static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+};
+
+struct GPUGeometry {
+    std::vector<Vertex> vertices;
+    std::vector<u32> indices;
 };
 
 #endif // !SOULS_SHARD_TYPES_H

@@ -9,7 +9,7 @@
 
 namespace VkRenderer {
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
+const int MAX_FRAMES_IN_FLIGHT = 1;
 
 struct Init {
     GLFWwindow* window;
@@ -53,6 +53,8 @@ struct RenderData {
     std::vector<Vertex> * vertices;
     std::vector<u32> * indices;
 
+    std::vector<std::pair<VkBuffer, VkDeviceMemory>> uniformBuffers;
+
 
 
     const char * vertShaderPath;
@@ -78,7 +80,18 @@ int create_sync_objects(Init& init, RenderData& data);
 int recreate_swapchain(Init& init, RenderData& data);
 int draw_frame(Init& init, RenderData& data);
 void cleanup(Init& init, RenderData& data);
+
+///----- Buffers -----//
 int createGeometryBuffers(Init& init, RenderData& data);
+int createUniformBuffers(Init& init, RenderData& data);
+void updateCameraBuffer(Init& init, RenderData& data, Camera & camera);
+void updateModelBuffer(Init& init, RenderData& data, Model & model);
+void destroyBuffers(Init& init, RenderData& data);
+
+//--- Descriptors ----//
+int create_descriptor_pool(Init& init, RenderData& data);
+int create_descriptor_layout(Init& init, RenderData& data); 
+int update_descriptor_sets(Init& init, RenderData& data);
 }
 #endif // !VK_RENDERER_H
 //

@@ -1,4 +1,4 @@
-#include "vkRenderer.h"
+#include "VkRenderer.h"
 #include <memory>
 #include <iostream>
 #include <fstream>
@@ -245,7 +245,7 @@ namespace VkRenderer {
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizer.depthBiasEnable = VK_FALSE;
 
         VkPipelineMultisampleStateCreateInfo multisampling = {};
@@ -271,7 +271,8 @@ namespace VkRenderer {
 
         VkPipelineLayoutCreateInfo pipeline_layout_info = {};
         pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipeline_layout_info.setLayoutCount = 0;
+        pipeline_layout_info.setLayoutCount = 1;
+        pipeline_layout_info.pSetLayouts = &data.descriptorLayout;
         pipeline_layout_info.pushConstantRangeCount = 0;
 
         if (init.disp.createPipelineLayout(&pipeline_layout_info, nullptr, &data.pipeline_layout) != VK_SUCCESS) {
@@ -391,6 +392,9 @@ namespace VkRenderer {
             VkBuffer vertexBuffers[] = {data.vertexBuffer};
             init.disp.cmdBindVertexBuffers(data.command_buffers[i], 0, 1, vertexBuffers, offsets);
             for (auto & model : data.models) {
+                updateModelBuffer(init, data, model);
+                update_descriptor_sets(init,data);
+                init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSet, 0, nullptr);
                 init.disp.cmdBindIndexBuffer(data.command_buffers[i], data.indexBuffer, model.indexOffset*sizeof(u32), VK_INDEX_TYPE_UINT32);
                 init.disp.cmdDrawIndexed(data.command_buffers[i], model.triangleCount * 3, model.instanceCount, 0, 0,0);
             }
@@ -541,10 +545,7 @@ namespace VkRenderer {
         }
 
         init.disp.destroyCommandPool(data.command_pool, nullptr);
-        init.disp.destroyBuffer(data.vertexBuffer, nullptr);
-        init.disp.destroyBuffer(data.indexBuffer, nullptr);
-        init.disp.freeMemory(data.vertexBufferMemory, nullptr);
-        init.disp.freeMemory(data.indexBufferMemory, nullptr);
+        destroyBuffers(init, data);
 
         for (auto framebuffer : data.framebuffers) {
             init.disp.destroyFramebuffer(framebuffer, nullptr);

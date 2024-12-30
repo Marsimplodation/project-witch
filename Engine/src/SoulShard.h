@@ -4,11 +4,12 @@
 #include "types/types.h"
 #include <vector>
 struct SoulShard {
-	std::vector<void(*)(float deltaTime)> systems;
-	entt::registry entities;
-	std::vector<Vertex> vertices;
-	std::vector<u32> indices;
-	int run();
+    std::vector<void(*)(float deltaTime)> systems;
+    entt::registry entities;
+    glm::vec2 renderingResolution;
+    GPUGeometry gpuGeometry;
+    Camera mainCamera;
+    int run();
 };
 
 #endif // !SOUL_SHARD_ENINGE_Hf
