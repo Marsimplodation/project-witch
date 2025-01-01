@@ -16,6 +16,7 @@ int SoulShard::run() {
     if (0 != VkRenderer::create_swapchain(init)) return -1;
     if (0 != VkRenderer::get_queues(init, render_data)) return -1;
     if (0 != VkRenderer::create_render_pass(init, render_data)) return -1;
+    if (0 != VkRenderer::create_off_screen_render_pass(init, render_data)) return -1;
     if (0 != VkRenderer::create_descriptor_pool(init, render_data)) return -1;
     if (0 != VkRenderer::create_descriptor_layout(init, render_data)) return -1;
     if (0 != VkRenderer::create_graphics_pipeline(init, render_data)) return -1;

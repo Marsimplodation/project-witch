@@ -4,13 +4,13 @@ namespace VkRenderer{
     int create_descriptor_pool(Init& init, RenderData& data) {
         VkDescriptorPoolSize poolSizes[1] = {};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = 2; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+        poolSizes[0].descriptorCount = 2 * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
         
         VkDescriptorPoolCreateInfo poolInfo = {};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = 1;
         poolInfo.pPoolSizes = poolSizes;
-        poolInfo.maxSets = 3;  // Only need 1 descriptor set (if you're allocating 1 per frame)
+        poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;  // Only need 1 descriptor set (if you're allocating 1 per frame)
 
         VkResult result = init.disp.createDescriptorPool(&poolInfo, nullptr, &data.descriptorPool); 
         if (result != VK_SUCCESS) {
@@ -39,17 +39,19 @@ namespace VkRenderer{
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutCreateInfo.bindingCount = 2;  // Number of bindings
         layoutCreateInfo.pBindings = bindings;
-        VkResult result = init.disp.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &data.descriptorLayout);
-        if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to create descriptor set layout!");
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i){
+            VkResult result = init.disp.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &data.descriptorLayouts[i]);
+            if (result != VK_SUCCESS) {
+                throw std::runtime_error("failed to create descriptor set layout!");
+            }
         }
-        
+       
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = data.descriptorPool;
-        allocInfo.descriptorSetCount = 1; 
-        allocInfo.pSetLayouts = &data.descriptorLayout;
-        if ( init.disp.allocateDescriptorSets(&allocInfo, &data.descriptorSet) != VK_SUCCESS) {
+        allocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT; 
+        allocInfo.pSetLayouts = data.descriptorLayouts;
+        if ( init.disp.allocateDescriptorSets(&allocInfo, data.descriptorSets) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
         return 0;
@@ -81,8 +83,8 @@ namespace VkRenderer{
             const VkBufferView*              pTexelBufferView;
         } VkWriteDescriptorSet;*/
         VkWriteDescriptorSet writeDescriptorSets[] = {
-            { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSet, 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &cameraBufferInfo, nullptr },
-            { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSet, 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
+            { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.current_frame], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &cameraBufferInfo, nullptr },
+            { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.current_frame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
         };
 
         init.disp.updateDescriptorSets(2,writeDescriptorSets, 0,nullptr);

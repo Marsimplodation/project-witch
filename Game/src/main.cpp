@@ -58,6 +58,6 @@ int main (int argc, char *argv[]) {
     engine.entities.emplace<Model>(quad, quadInfo);
     engine.systems.push_back(updateCamera);
     engine.systems.push_back(rotateAllModels);
-    engine.systems.push_back(printFPS);
+    //engine.systems.push_back(printFPS);
     engine.run();
 }

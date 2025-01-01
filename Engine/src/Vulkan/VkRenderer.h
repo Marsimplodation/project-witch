@@ -30,9 +30,17 @@ struct RenderData {
     std::vector<VkImageView> swapchain_image_views;
     std::vector<VkFramebuffer> framebuffers;
 
+    std::vector<VkImage> offscreen_images;
+    std::vector<VkDeviceMemory> offscreen_image_memory;
+    std::vector<VkImageView> offscreen_image_views;
+    std::vector<VkFramebuffer> offscreen_framebuffers;
+
+
     VkRenderPass render_pass;
+    VkRenderPass offscreen_pass;
     VkPipelineLayout pipeline_layout;
     VkPipeline graphics_pipeline;
+    VkPipeline offscreen_pipeline;
 
     VkCommandPool command_pool;
     std::vector<VkCommandBuffer> command_buffers;
@@ -42,8 +50,8 @@ struct RenderData {
     std::vector<VkFence> in_flight_fences;
     std::vector<VkFence> image_in_flight;
 
-    VkDescriptorSet descriptorSet;
-    VkDescriptorSetLayout descriptorLayout;
+    VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
+    VkDescriptorSetLayout descriptorLayouts[MAX_FRAMES_IN_FLIGHT];
     VkDescriptorPool descriptorPool;
     VkBuffer vertexBuffer;
     VkBuffer indexBuffer;
@@ -61,6 +69,7 @@ struct RenderData {
     const char * fragShaderPath;
 
     size_t current_frame = 0;
+    int current_img_index = 0;
 };
 
 GLFWwindow* create_window_glfw(const char* window_name = "", bool resize = true);
@@ -74,8 +83,6 @@ std::vector<char> readFile(const std::string& filename);
 VkShaderModule createShaderModule(Init& init, const std::vector<char>& code);
 int create_graphics_pipeline(Init& init, RenderData& data);
 int create_framebuffers(Init& init, RenderData& data);
-int create_command_pool(Init& init, RenderData& data);
-int create_command_buffers(Init& init, RenderData& data);
 int create_sync_objects(Init& init, RenderData& data);
 int recreate_swapchain(Init& init, RenderData& data);
 int draw_frame(Init& init, RenderData& data);
@@ -87,11 +94,20 @@ int createUniformBuffers(Init& init, RenderData& data);
 void updateCameraBuffer(Init& init, RenderData& data, Camera & camera);
 void updateModelBuffer(Init& init, RenderData& data, Model & model);
 void destroyBuffers(Init& init, RenderData& data);
+u32 findMemoryType(Init& init, u32 typeFilter, VkMemoryPropertyFlags properties);
 
 //--- Descriptors ----//
 int create_descriptor_pool(Init& init, RenderData& data);
 int create_descriptor_layout(Init& init, RenderData& data); 
 int update_descriptor_sets(Init& init, RenderData& data);
+
+//--- Command Buffer ---//
+int record_command_buffer(Init& init, RenderData& data, int i);
+int create_command_pool(Init& init, RenderData& data);
+int create_command_buffers(Init& init, RenderData& data);
+
+//--- Presentation ----//
+int create_off_screen_render_pass(Init& init, RenderData& data);
 }
 #endif // !VK_RENDERER_H
 //
