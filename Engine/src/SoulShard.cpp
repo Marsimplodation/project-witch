@@ -1,3 +1,4 @@
+#include "Editor/Editor.h"
 #include "GLFW/glfw3.h"
 #include "SoulShard.h"
 #include "Vulkan/VkRenderer.h"
@@ -32,8 +33,18 @@ int SoulShard::run() {
     
     
     auto lastTime = glfwGetTime(); 
+    render_data.gui = ImguiModule();
+    render_data.gui.init(&init, &render_data);
+    bool keyAvailable = true;
     while (!glfwWindowShouldClose(init.window)) {
         glfwPollEvents();
+        if (keyAvailable && glfwGetKey(init.window, GLFW_KEY_U) == GLFW_PRESS) {
+            render_data.editorMode = !render_data.editorMode;
+            keyAvailable = false;
+        }
+        if (glfwGetKey(init.window, GLFW_KEY_U) == GLFW_RELEASE) {
+            keyAvailable = true;
+        }
         auto view = entities.view<Model>();
         render_data.models.clear();
         for (auto entity : view) {
@@ -43,8 +54,14 @@ int SoulShard::run() {
         auto currentTime = glfwGetTime();
         float deltaTime = float(currentTime - lastTime);
         lastTime = currentTime;
-        renderingResolution[0] = init.swapchain.extent.width;
-        renderingResolution[1] = init.swapchain.extent.height;
+        if (!render_data.editorMode) {
+            renderingResolution[0] = init.swapchain.extent.width;
+            renderingResolution[1] = init.swapchain.extent.height;
+        } else {
+            renderingResolution[0] = render_data.gui.previewSize.x; 
+            renderingResolution[1] = render_data.gui.previewSize.y;
+        }
+
 
         for(auto & func : systems) {
             func(deltaTime);
@@ -59,6 +76,7 @@ int SoulShard::run() {
     }
     init.disp.deviceWaitIdle();
 
+    render_data.gui.destroy(init.device);
     VkRenderer::cleanup(init, render_data);
     return 0;
 }

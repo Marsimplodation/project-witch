@@ -1,6 +1,7 @@
 #ifndef VK_RENDERER_H
 #define VK_RENDERER_H
 
+#include "Editor/Editor.h"
 #include "types/types.h"
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
@@ -41,6 +42,11 @@ struct RenderData {
     VkPipelineLayout pipeline_layout;
     VkPipeline graphics_pipeline;
     VkPipeline offscreen_pipeline;
+    VkSampler imageSampler;
+    bool swapchain_out_of_date;
+    bool editorMode;
+    
+    ImguiModule gui;
 
     VkCommandPool command_pool;
     std::vector<VkCommandBuffer> command_buffers;

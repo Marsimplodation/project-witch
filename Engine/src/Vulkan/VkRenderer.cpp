@@ -110,7 +110,7 @@ namespace VkRenderer {
         color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        color_attachment.finalLayout = VK_IMAGE_LAYOUT_GENERAL;
 
         VkAttachmentReference color_attachment_ref = {};
         color_attachment_ref.attachment = 0;
@@ -141,6 +141,26 @@ namespace VkRenderer {
         if (init.disp.createRenderPass(&render_pass_info, nullptr, &data.offscreen_pass) != VK_SUCCESS) {
             std::cout << "failed to create render pass\n";
             return -1; // failed to create render pass!
+        }
+         //create sampler for image
+        
+        VkSamplerCreateInfo samplerInfo = {};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;  // Linear filtering
+        samplerInfo.minFilter = VK_FILTER_LINEAR;  // Linear filtering
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+
+
+        if (init.disp.createSampler(&samplerInfo, nullptr, &data.imageSampler) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create sampler!");
         }
         return 0;
     }
@@ -226,8 +246,8 @@ namespace VkRenderer {
             image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             image_info.imageType = VK_IMAGE_TYPE_2D;
             image_info.format = VK_FORMAT_R8G8B8A8_SRGB; // Or a format matching your use case
-            image_info.extent.width = init.swapchain.extent.width;
-            image_info.extent.height = init.swapchain.extent.height;
+            image_info.extent.width = data.gui.previewSize.x;
+            image_info.extent.height = data.gui.previewSize.y;
             image_info.extent.depth = 1;
             image_info.mipLevels = 1;
             image_info.arrayLayers = 1;
@@ -285,8 +305,8 @@ namespace VkRenderer {
             framebuffer_info.renderPass = data.offscreen_pass;
             framebuffer_info.attachmentCount = 1;
             framebuffer_info.pAttachments = attachments;
-            framebuffer_info.width = init.swapchain.extent.width;
-            framebuffer_info.height = init.swapchain.extent.height;
+            framebuffer_info.width = data.gui.previewSize.x; 
+            framebuffer_info.height = data.gui.previewSize.y; 
             framebuffer_info.layers = 1;
 
             if (init.disp.createFramebuffer(&framebuffer_info, nullptr, &data.offscreen_framebuffers[i]) != VK_SUCCESS) {
@@ -298,6 +318,7 @@ namespace VkRenderer {
 
 
     int recreate_swapchain(Init& init, RenderData& data) {
+        data.swapchain_out_of_date = false;
         init.disp.deviceWaitIdle();
 
         init.disp.destroyCommandPool(data.command_pool, nullptr);
@@ -326,10 +347,13 @@ namespace VkRenderer {
         init.disp.waitForFences(1, &data.in_flight_fences[data.current_frame], VK_TRUE, UINT64_MAX);
 
         uint32_t image_index = 0;
+        if (data.swapchain_out_of_date) {
+            return recreate_swapchain(init, data);
+        }
         VkResult result = init.disp.acquireNextImageKHR(
             init.swapchain, UINT64_MAX, data.available_semaphores[data.current_frame], VK_NULL_HANDLE, &image_index);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || data.swapchain_out_of_date) {
             return recreate_swapchain(init, data);
         } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             std::cout << "failed to acquire swapchain image. Error " << result << "\n";
@@ -417,6 +441,7 @@ namespace VkRenderer {
         init.disp.destroyPipelineLayout(data.pipeline_layout, nullptr);
         init.disp.destroyRenderPass(data.render_pass, nullptr);
         init.disp.destroyRenderPass(data.offscreen_pass, nullptr);
+        init.disp.destroySampler(data.imageSampler, nullptr);
 
         init.swapchain.destroy_image_views(data.swapchain_image_views);
 

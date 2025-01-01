@@ -13,6 +13,48 @@ namespace VkRenderer{
         }
         return 0;
     }
+    
+    void TransitionImageLayout(
+        VkCommandBuffer commandBuffer,
+        VkImage image,
+        VkImageLayout oldLayout,
+        VkImageLayout newLayout,
+        VkPipelineStageFlags srcStage,
+        VkPipelineStageFlags dstStage) {
+        
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = image;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        } else if (newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = 0;
+        }
+
+        vkCmdPipelineBarrier(
+            commandBuffer,
+            srcStage, dstStage,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &barrier);
+    }
+
 
     void scene_offscreen_rendering(Init & init, RenderData & data, int i){
         VkRenderPassBeginInfo offsceen_pass_info = {};
@@ -20,7 +62,8 @@ namespace VkRenderer{
         offsceen_pass_info.renderPass = data.offscreen_pass;
         offsceen_pass_info.framebuffer = data.offscreen_framebuffers[i];
         offsceen_pass_info.renderArea.offset = { 0, 0 };
-        offsceen_pass_info.renderArea.extent = init.swapchain.extent;
+        VkExtent2D extent = {(u32)data.gui.previewSize.x, (u32)data.gui.previewSize.y};
+        offsceen_pass_info.renderArea.extent = extent; 
         VkClearValue clearColor{ { { 0.0f, 0.0f, 0.0f, 1.0f } } };
         offsceen_pass_info.clearValueCount = 1;
         offsceen_pass_info.pClearValues = &clearColor;
@@ -28,8 +71,8 @@ namespace VkRenderer{
         VkViewport viewport = {};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float)init.swapchain.extent.width;
-        viewport.height = (float)init.swapchain.extent.height;
+        viewport.width = (float)extent.width;
+        viewport.height = (float)extent.height;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
@@ -85,7 +128,7 @@ namespace VkRenderer{
         init.disp.cmdSetScissor(data.command_buffers[i], 0, 1, &scissor);
 
         init.disp.cmdBeginRenderPass(data.command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
+        data.gui.update(&init, &data);
         init.disp.cmdBindPipeline(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.graphics_pipeline);
 
         init.disp.cmdEndRenderPass(data.command_buffers[i]);
@@ -142,8 +185,12 @@ namespace VkRenderer{
         if (init.disp.beginCommandBuffer(data.command_buffers[i], &begin_info) != VK_SUCCESS) {
             return -1; // failed to begin recording command buffer
         }
-        scene_offscreen_rendering(init, data, i);
-        ui_onscreen_rendering(init, data, i);
+        if(data.editorMode){
+            scene_offscreen_rendering(init, data, i);
+            ui_onscreen_rendering(init, data, i);
+        } else {
+            scene_onscreen_rendering(init, data, i);
+        }
 
         if (init.disp.endCommandBuffer(data.command_buffers[i]) != VK_SUCCESS) {
             std::cout << "failed to record command buffer\n";
@@ -167,7 +214,6 @@ namespace VkRenderer{
         }
 
         for (size_t i = 0; i < data.command_buffers.size(); i++) {
-            record_command_buffer(init, data, i);
         }
         return 0;
     }
