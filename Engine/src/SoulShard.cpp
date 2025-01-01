@@ -2,6 +2,7 @@
 #include "GLFW/glfw3.h"
 #include "SoulShard.h"
 #include "Vulkan/VkRenderer.h"
+#include <cstdlib>
 #include <iostream>
 #include <chrono>
 int SoulShard::run() {
@@ -35,6 +36,7 @@ int SoulShard::run() {
     auto lastTime = glfwGetTime(); 
     render_data.gui = ImguiModule();
     render_data.gui.init(&init, &render_data);
+    render_data.gui.enginePtr = this;
     bool keyAvailable = true;
     while (!glfwWindowShouldClose(init.window)) {
         glfwPollEvents();
@@ -63,8 +65,8 @@ int SoulShard::run() {
         }
 
 
-        for(auto & func : systems) {
-            func(deltaTime);
+        for(auto & system : systems) {
+            if(system.active)system.func(deltaTime);
         }
         VkRenderer::updateCameraBuffer(init, render_data, mainCamera);
 
@@ -79,4 +81,11 @@ int SoulShard::run() {
     render_data.gui.destroy(init.device);
     VkRenderer::cleanup(init, render_data);
     return 0;
+}
+
+void SoulShard::registerSystem(void(*func)(float deltaTime), const char * name) {
+    systems.push_back({.active = true,
+        .func = func,
+        .name = std::string(name)
+    });
 }

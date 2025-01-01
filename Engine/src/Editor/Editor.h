@@ -14,6 +14,7 @@ class ImguiModule {
         bool updated = false;
         ImTextureID textureID;
         ImVec2 previewSize = {128, 128};
+        void* enginePtr;
     private:
         VkDescriptorPool imguiPool;
 };

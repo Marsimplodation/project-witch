@@ -56,8 +56,8 @@ int main (int argc, char *argv[]) {
     }
     auto quad = engine.entities.create();
     engine.entities.emplace<Model>(quad, quadInfo);
-    engine.systems.push_back(updateCamera);
-    engine.systems.push_back(rotateAllModels);
-    //engine.systems.push_back(printFPS);
+    engine.registerSystem(updateCamera, "Game Camera");
+    engine.registerSystem(rotateAllModels, "Rotation");
+    //engine.registerSystem(printFPS, "FPS");
     engine.run();
 }

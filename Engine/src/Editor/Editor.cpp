@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iterator>
 #include "../Vulkan/VkRenderer.h"
+#include "SoulShard.h"
 #include "glm/detail/qualifier.hpp"
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -183,6 +184,11 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::End();
         
         ImGui::Begin("Systems");
+        for(auto & system : ((SoulShard*)enginePtr)->systems) {
+            const char * name = system.name.c_str();
+            ImGui::Text("%s", name);
+            ImGui::Checkbox((std::string("Active##") + name).c_str(), &system.active);
+        }
         ImGui::End();
 
         ImGui::Render();
