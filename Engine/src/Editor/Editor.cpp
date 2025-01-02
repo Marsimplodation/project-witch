@@ -195,6 +195,16 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             ImGui::Checkbox((std::string("Active##") + name).c_str(), &system.active);
         }
         ImGui::End();
+        ImGui::Begin("Scene");
+        auto view = ((SoulShard*)enginePtr)->entities.view<Model>();
+        for (auto entity : view) {
+            auto& model = view.get<Model>(entity);
+            const char * name = model.name.c_str();
+            ImGui::Checkbox((std::string("##") + name).c_str(), &model.active);
+            ImGui::SameLine();
+            ImGui::Text("%s", name);
+        }
+        ImGui::End();
         
         ImGui::Begin("Node Editor");
         editor.draw();

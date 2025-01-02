@@ -33,7 +33,14 @@ FetchContent_Declare(
     GIT_TAG v1.91.6-docking
 )
 
-FetchContent_MakeAvailable(fetch_vk_bootstrap glfw entt glm imgui)
+# Fetch TinyObjLoader
+FetchContent_Declare(
+  tinyobjloader
+  GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
+  GIT_TAG v2.0.0rc13  # Replace with the version you want to use
+)
+
+FetchContent_MakeAvailable(fetch_vk_bootstrap glfw entt glm imgui tinyobjloader)
 find_package(Vulkan REQUIRED)
 
 add_library(imgui
@@ -67,9 +74,10 @@ include_directories(
 )
 
 # Link dependencies for the engine
-target_link_libraries(${PROJECT_NAME} PRIVATE vk-bootstrap::vk-bootstrap glfw glm imgui)
+target_link_libraries(${PROJECT_NAME} PRIVATE vk-bootstrap::vk-bootstrap glfw glm imgui tinyobjloader)
 
 # Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 # Include the EnTT header files
 target_include_directories(${PROJECT_NAME} PUBLIC ${entt_SOURCE_DIR}/src)
+target_compile_definitions(${PROJECT_NAME} PRIVATE GAME_ONLY)

@@ -8,7 +8,7 @@ build:
 	glslc Engine/shaders/main.frag -o build/frag.spv  --target-spv=spv1.0
 
 	cd build && ./Game/witch
-build-release:
+release:
 	cd build && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release
 	cd build && make -j16
 

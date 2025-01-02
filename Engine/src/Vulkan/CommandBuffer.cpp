@@ -97,6 +97,7 @@ namespace VkRenderer{
         init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
         update_descriptor_sets(init,data);
         for (auto & model : data.models) {
+            if(!model.active) continue;
             updateModelBuffer(init, data, model);
             init.disp.cmdBindIndexBuffer(data.command_buffers[i], data.indexBuffer, model.indexOffset*sizeof(u32), VK_INDEX_TYPE_UINT32);
             init.disp.cmdDrawIndexed(data.command_buffers[i], model.triangleCount * 3, model.instanceCount, 0, 0,0);

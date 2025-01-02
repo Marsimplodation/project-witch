@@ -5,11 +5,6 @@
 #include <string>
 #include <vector>
 
-struct System{
-    bool active;
-    void(*func)(float deltaTime);
-    std::string name;
-};
 
 struct SoulShard {
     std::vector<System> systems;
@@ -20,6 +15,7 @@ struct SoulShard {
     Camera editorCamera;
     int run();
     void registerSystem(void(*func)(float deltaTime), const char * name);
+    void loadGeometry(std::string modelPath);
 };
 
 #endif // !SOUL_SHARD_ENINGE_Hf
