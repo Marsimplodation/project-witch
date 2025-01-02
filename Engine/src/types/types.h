@@ -48,6 +48,12 @@ struct GPUGeometry {
     std::vector<u32> indices;
 };
 
+//print overloads
+void print(glm::vec4 & v);
+void print(glm::vec3 & v);
+
+//common math
+glm::mat3 createRotationMatrix(float yaw, float pitch, float roll);
 #endif // !SOULS_SHARD_TYPES_H
 
 

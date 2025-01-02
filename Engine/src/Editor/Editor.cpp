@@ -179,15 +179,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::DockSpaceOverViewport(0);
 
         // Build your GUI
-        ImGui::Begin("Viewport");
-        
-        if(ImGui::GetWindowSize().x != previewSize.x || ImGui::GetWindowSize().y != previewSize.y) {
-            data.swapchain_out_of_date = true;
-        }
-        ImGui::Image(textureID,previewSize);
-        previewSize = ImGui::GetWindowSize(); 
-        ImGui::End();
-        
+        renderViewport(initPtr, dataPtr);        
         ImGui::Begin("Systems");
         for(auto & system : ((SoulShard*)enginePtr)->systems) {
             const char * name = system.name.c_str();

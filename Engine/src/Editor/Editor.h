@@ -17,5 +17,6 @@ class ImguiModule {
         void* enginePtr;
     private:
         VkDescriptorPool imguiPool;
+        void renderViewport(void * initPtr, void * dataPtr);
 };
 #endif // !IMGUI_MODULE_H

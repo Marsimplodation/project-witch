@@ -1,13 +1,15 @@
 #include "Editor/Editor.h"
 #include "GLFW/glfw3.h"
 #include "SoulShard.h"
+#include "InputHandling/InputHandling.h"
 #include "Vulkan/VkRenderer.h"
 #include <cstdlib>
 #include <iostream>
 #include <chrono>
+VkRenderer::Init init;
+VkRenderer::RenderData render_data;
 int SoulShard::run() {
-    VkRenderer::Init init;
-    VkRenderer::RenderData render_data {
+    render_data = VkRenderer::RenderData {
         .vertices = &gpuGeometry.vertices, 
         .indices = &gpuGeometry.indices,
         .vertShaderPath = "./vert.spv",
@@ -30,6 +32,7 @@ int SoulShard::run() {
     
     if (0 != VkRenderer::create_command_buffers(init, render_data)) return -1;
     if (0 != VkRenderer::create_sync_objects(init, render_data)) return -1;
+    inputHandler.init(init.window);
 
     
     
@@ -42,6 +45,7 @@ int SoulShard::run() {
         glfwPollEvents();
         if (keyAvailable && glfwGetKey(init.window, GLFW_KEY_U) == GLFW_PRESS) {
             render_data.editorMode = !render_data.editorMode;
+            inputHandler.releaseMouse();
             keyAvailable = false;
         }
         if (glfwGetKey(init.window, GLFW_KEY_U) == GLFW_RELEASE) {
@@ -54,7 +58,7 @@ int SoulShard::run() {
             render_data.models.push_back(model);
         }
         auto currentTime = glfwGetTime();
-        float deltaTime = float(currentTime - lastTime);
+        deltaTime = float(currentTime - lastTime);
         lastTime = currentTime;
         if (!render_data.editorMode) {
             renderingResolution[0] = init.swapchain.extent.width;
@@ -64,17 +68,24 @@ int SoulShard::run() {
             renderingResolution[1] = render_data.gui.previewSize.y;
         }
 
-
-        for(auto & system : systems) {
-            if(system.active)system.func(deltaTime);
+        if(!render_data.editorMode) {
+            for(auto & system : systems) {
+                if(system.active)system.func(deltaTime);
+            }
+            VkRenderer::updateCameraBuffer(init, render_data, mainCamera);
+        } else {
+            for(auto & system : systems) {
+                if(system.active)system.func(deltaTime);
+            }
+            VkRenderer::updateCameraBuffer(init, render_data, editorCamera);
         }
-        VkRenderer::updateCameraBuffer(init, render_data, mainCamera);
 
         int res = draw_frame(init, render_data);
         if (res != 0) {
             std::cout << "failed to draw frame \n";
             return -1;
         }
+        inputHandler.update();
     }
     init.disp.deviceWaitIdle();
 
