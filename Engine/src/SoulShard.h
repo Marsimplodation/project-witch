@@ -17,6 +17,7 @@ struct SoulShard {
     glm::vec2 renderingResolution;
     GPUGeometry gpuGeometry;
     Camera mainCamera;
+    Camera editorCamera;
     int run();
     void registerSystem(void(*func)(float deltaTime), const char * name);
 };
