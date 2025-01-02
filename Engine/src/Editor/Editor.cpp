@@ -1,4 +1,5 @@
 #include "Editor.h"
+#include "Editor/NodeEditor.h"
 #include "GLFW/glfw3.h"
 #include <cmath>
 #include <iterator>
@@ -11,91 +12,84 @@
 #include <vulkan/vulkan_core.h>
 
 void customTheme() {
-        auto &colors = ImGui::GetStyle().Colors;
+auto &colors = ImGui::GetStyle().Colors;
+colors[ImGuiCol_WindowBg] = ImVec4{0.1f, 0.1f, 0.13f, 1.0f};
+colors[ImGuiCol_MenuBarBg] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
 
-    // General Background
-    colors[ImGuiCol_WindowBg] = ImVec4{0.12f, 0.12f, 0.15f, 1.0f};
-    colors[ImGuiCol_MenuBarBg] = ImVec4{0.14f, 0.14f, 0.18f, 1.0f};
+// Border
+colors[ImGuiCol_Border] = ImVec4{0.44f, 0.37f, 0.61f, 0.29f};
+colors[ImGuiCol_BorderShadow] = ImVec4{0.0f, 0.0f, 0.0f, 0.24f};
 
-    // Border
-    colors[ImGuiCol_Border] = ImVec4{0.3f, 0.3f, 0.3f, 0.8f};
-    colors[ImGuiCol_BorderShadow] = ImVec4{0.0f, 0.0f, 0.0f, 0.0f};
+// Text
+colors[ImGuiCol_Text] = ImVec4{1.0f, 1.0f, 1.0f, 1.0f};
+colors[ImGuiCol_TextDisabled] = ImVec4{0.5f, 0.5f, 0.5f, 1.0f};
 
-    // Text
-    colors[ImGuiCol_Text] = ImVec4{0.9f, 0.9f, 0.9f, 1.0f};
-    colors[ImGuiCol_TextDisabled] = ImVec4{0.5f, 0.5f, 0.5f, 1.0f};
+// Headers
+colors[ImGuiCol_Header] = ImVec4{0.13f, 0.13f, 0.17, 1.0f};
+colors[ImGuiCol_HeaderHovered] = ImVec4{0.19f, 0.2f, 0.25f, 1.0f};
+colors[ImGuiCol_HeaderActive] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
 
-    // Headers
-    colors[ImGuiCol_Header] = ImVec4{0.2f, 0.2f, 0.25f, 1.0f};
-    colors[ImGuiCol_HeaderHovered] = ImVec4{0.25f, 0.25f, 0.3f, 1.0f};
-    colors[ImGuiCol_HeaderActive] = ImVec4{0.3f, 0.3f, 0.35f, 1.0f};
+// Buttons
+colors[ImGuiCol_Button] = ImVec4{0.13f, 0.13f, 0.17, 1.0f};
+colors[ImGuiCol_ButtonHovered] = ImVec4{0.19f, 0.2f, 0.25f, 1.0f};
+colors[ImGuiCol_ButtonActive] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
+colors[ImGuiCol_CheckMark] = ImVec4{0.74f, 0.58f, 0.98f, 1.0f};
 
-    // Buttons
-    colors[ImGuiCol_Button] = ImVec4{0.2f, 0.2f, 0.25f, 1.0f};
-    colors[ImGuiCol_ButtonHovered] = ImVec4{0.3f, 0.3f, 0.4f, 1.0f};
-    colors[ImGuiCol_ButtonActive] = ImVec4{0.35f, 0.35f, 0.45f, 1.0f};
-    colors[ImGuiCol_CheckMark] = ImVec4{0.45f, 0.7f, 1.0f, 1.0f}; // Vibrant accent color
+// Popups
+colors[ImGuiCol_PopupBg] = ImVec4{0.1f, 0.1f, 0.13f, 0.92f};
 
-    // Popups
-    colors[ImGuiCol_PopupBg] = ImVec4{0.1f, 0.1f, 0.14f, 0.95f};
+// Slider
+colors[ImGuiCol_SliderGrab] = ImVec4{0.44f, 0.37f, 0.61f, 0.54f};
+colors[ImGuiCol_SliderGrabActive] = ImVec4{0.74f, 0.58f, 0.98f, 0.54f};
 
-    // Slider
-    colors[ImGuiCol_SliderGrab] = ImVec4{0.3f, 0.5f, 1.0f, 0.7f}; // Smooth blue accent
-    colors[ImGuiCol_SliderGrabActive] = ImVec4{0.4f, 0.6f, 1.0f, 0.8f};
+// Frame BG
+colors[ImGuiCol_FrameBg] = ImVec4{0.13f, 0.13, 0.17, 1.0f};
+colors[ImGuiCol_FrameBgHovered] = ImVec4{0.19f, 0.2f, 0.25f, 1.0f};
+colors[ImGuiCol_FrameBgActive] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
 
-    // Frame BG
-    colors[ImGuiCol_FrameBg] = ImVec4{0.17f, 0.17f, 0.22f, 1.0f};
-    colors[ImGuiCol_FrameBgHovered] = ImVec4{0.2f, 0.2f, 0.27f, 1.0f};
-    colors[ImGuiCol_FrameBgActive] = ImVec4{0.25f, 0.25f, 0.32f, 1.0f};
+// Tabs
+colors[ImGuiCol_Tab] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
+colors[ImGuiCol_TabHovered] = ImVec4{0.24, 0.24f, 0.32f, 1.0f};
+colors[ImGuiCol_TabActive] = ImVec4{0.2f, 0.22f, 0.27f, 1.0f};
+colors[ImGuiCol_TabUnfocused] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
+colors[ImGuiCol_TabUnfocusedActive] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
 
-    // Tabs
-    colors[ImGuiCol_Tab] = ImVec4{0.14f, 0.14f, 0.18f, 1.0f};
-    colors[ImGuiCol_TabHovered] = ImVec4{0.3f, 0.3f, 0.4f, 1.0f};
-    colors[ImGuiCol_TabActive] = ImVec4{0.25f, 0.25f, 0.35f, 1.0f};
-    colors[ImGuiCol_TabUnfocused] = ImVec4{0.14f, 0.14f, 0.18f, 1.0f};
-    colors[ImGuiCol_TabUnfocusedActive] = ImVec4{0.2f, 0.2f, 0.27f, 1.0f};
+// Title
+colors[ImGuiCol_TitleBg] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
+colors[ImGuiCol_TitleBgActive] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
+colors[ImGuiCol_TitleBgCollapsed] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
 
-    // Title
-    colors[ImGuiCol_TitleBg] = ImVec4{0.14f, 0.14f, 0.18f, 1.0f};
-    colors[ImGuiCol_TitleBgActive] = ImVec4{0.2f, 0.2f, 0.27f, 1.0f};
-    colors[ImGuiCol_TitleBgCollapsed] = ImVec4{0.1f, 0.1f, 0.13f, 1.0f};
+// Scrollbar
+colors[ImGuiCol_ScrollbarBg] = ImVec4{0.1f, 0.1f, 0.13f, 1.0f};
+colors[ImGuiCol_ScrollbarGrab] = ImVec4{0.16f, 0.16f, 0.21f, 1.0f};
+colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4{0.19f, 0.2f, 0.25f, 1.0f};
+colors[ImGuiCol_ScrollbarGrabActive] = ImVec4{0.24f, 0.24f, 0.32f, 1.0f};
 
-    // Scrollbar
-    colors[ImGuiCol_ScrollbarBg] = ImVec4{0.12f, 0.12f, 0.15f, 1.0f};
-    colors[ImGuiCol_ScrollbarGrab] = ImVec4{0.3f, 0.3f, 0.35f, 1.0f};
-    colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4{0.35f, 0.35f, 0.4f, 1.0f};
-    colors[ImGuiCol_ScrollbarGrabActive] = ImVec4{0.4f, 0.4f, 0.45f, 1.0f};
+// Seperator
+colors[ImGuiCol_Separator] = ImVec4{0.44f, 0.37f, 0.61f, 1.0f};
+colors[ImGuiCol_SeparatorHovered] = ImVec4{0.74f, 0.58f, 0.98f, 1.0f};
+colors[ImGuiCol_SeparatorActive] = ImVec4{0.84f, 0.58f, 1.0f, 1.0f};
 
-    // Separator
-    colors[ImGuiCol_Separator] = ImVec4{0.3f, 0.3f, 0.4f, 1.0f};
-    colors[ImGuiCol_SeparatorHovered] = ImVec4{0.4f, 0.4f, 0.5f, 1.0f};
-    colors[ImGuiCol_SeparatorActive] = ImVec4{0.5f, 0.5f, 0.6f, 1.0f};
+// Resize Grip
+colors[ImGuiCol_ResizeGrip] = ImVec4{0.44f, 0.37f, 0.61f, 0.29f};
+colors[ImGuiCol_ResizeGripHovered] = ImVec4{0.74f, 0.58f, 0.98f, 0.29f};
+colors[ImGuiCol_ResizeGripActive] = ImVec4{0.84f, 0.58f, 1.0f, 0.29f};
 
-    // Resize Grip
-    colors[ImGuiCol_ResizeGrip] = ImVec4{0.3f, 0.3f, 0.4f, 0.6f};
-    colors[ImGuiCol_ResizeGripHovered] = ImVec4{0.35f, 0.35f, 0.45f, 0.7f};
-    colors[ImGuiCol_ResizeGripActive] = ImVec4{0.4f, 0.4f, 0.5f, 0.8f};
+// Docking
+colors[ImGuiCol_DockingPreview] = ImVec4{0.44f, 0.37f, 0.61f, 1.0f};
 
-    // Docking
-    colors[ImGuiCol_DockingPreview] = ImVec4{0.45f, 0.7f, 1.0f, 0.8f}; // Blue glow effect
-
-    // Style Adjustments for Modern Feel
-    auto &style = ImGui::GetStyle();
-    style.TabRounding = 6;
-    style.ScrollbarRounding = 10;
-    style.WindowRounding = 8;
-    style.GrabRounding = 4;
-    style.FrameRounding = 5;
-    style.PopupRounding = 6;
-    style.ChildRounding = 6;
-
-    // General padding and spacing adjustments
-    style.WindowPadding = ImVec2(10, 10);
-    style.FramePadding = ImVec2(6, 4);
-    style.ItemSpacing = ImVec2(8, 6);
+auto &style = ImGui::GetStyle();
+style.TabRounding = 4;
+style.ScrollbarRounding = 9;
+style.WindowRounding = 7;
+style.GrabRounding = 3;
+style.FrameRounding = 3;
+style.PopupRounding = 4;
+style.ChildRounding = 4;
 
 }
 
+NodeEditor editor{};
 void ImguiModule::init(void * initPtr, void * dataPtr) {
     VkDescriptorPoolSize pool_sizes[] = {
             { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
@@ -139,6 +133,19 @@ void ImguiModule::init(void * initPtr, void * dataPtr) {
     ImGui_ImplGlfw_InitForVulkan(init.window, true);
     customTheme();
 
+        editor.nodes.push_back({
+            .id = 0,
+            .position = {10 , 20 },
+            .size = {100,100},
+            .outputs = {Pin{0, {-10,15}}},
+        });
+        editor.nodes.push_back({
+            .id = 1,
+            .position = {250, 30},
+            .size = {100,100},
+            .inputs = {Pin{0, {-10,15}}},
+        });
+        editor.links.push_back({.fromNode = 0, .fromPin = 0, .toNode = 1, .toPin = 0});
 }
 
 void ImguiModule::destroy(VkDevice device) {
@@ -150,7 +157,6 @@ void ImguiModule::destroy(VkDevice device) {
 }
 
 bool textureCreated = false;
-
 void ImguiModule::update(void * initPtr, void * dataPtr) {
    	VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
     	VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;
@@ -180,7 +186,6 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         }
         ImGui::Image(textureID,previewSize);
         previewSize = ImGui::GetWindowSize(); 
-
         ImGui::End();
         
         ImGui::Begin("Systems");
@@ -189,6 +194,10 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             ImGui::Text("%s", name);
             ImGui::Checkbox((std::string("Active##") + name).c_str(), &system.active);
         }
+        ImGui::End();
+        
+        ImGui::Begin("Node Editor");
+        editor.draw();
         ImGui::End();
 
         ImGui::Render();

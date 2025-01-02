@@ -62,11 +62,15 @@ namespace VkRenderer{
         offsceen_pass_info.renderPass = data.offscreen_pass;
         offsceen_pass_info.framebuffer = data.offscreen_framebuffers[i];
         offsceen_pass_info.renderArea.offset = { 0, 0 };
-        VkExtent2D extent = {(u32)data.gui.previewSize.x, (u32)data.gui.previewSize.y};
+        VkExtent2D extent;
+        extent.width = std::min((u32)data.gui.previewSize.x, init.swapchain.extent.width); 
+        extent.height = std::min((u32)data.gui.previewSize.y, init.swapchain.extent.height); 
         offsceen_pass_info.renderArea.extent = extent; 
-        VkClearValue clearColor{ { { 0.0f, 0.0f, 0.0f, 1.0f } } };
-        offsceen_pass_info.clearValueCount = 1;
-        offsceen_pass_info.pClearValues = &clearColor;
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+        offsceen_pass_info.clearValueCount = 2;
+        offsceen_pass_info.pClearValues = clearValues.data();
 
         VkViewport viewport = {};
         viewport.x = 0.0f;
@@ -108,9 +112,11 @@ namespace VkRenderer{
         render_pass_info.framebuffer = data.framebuffers[i];
         render_pass_info.renderArea.offset = { 0, 0 };
         render_pass_info.renderArea.extent = init.swapchain.extent;
-        VkClearValue clearColor{ { { 0.0f, 0.0f, 0.0f, 1.0f } } };
-        render_pass_info.clearValueCount = 1;
-        render_pass_info.pClearValues = &clearColor;
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+        render_pass_info.clearValueCount = 2;
+        render_pass_info.pClearValues = clearValues.data();
 
         VkViewport viewport = {};
         viewport.x = 0.0f;
@@ -141,9 +147,11 @@ namespace VkRenderer{
         render_pass_info.framebuffer = data.framebuffers[i];
         render_pass_info.renderArea.offset = { 0, 0 };
         render_pass_info.renderArea.extent = init.swapchain.extent;
-        VkClearValue clearColor{ { { 0.0f, 0.0f, 0.0f, 1.0f } } };
-        render_pass_info.clearValueCount = 1;
-        render_pass_info.pClearValues = &clearColor;
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+        render_pass_info.clearValueCount = 2;
+        render_pass_info.pClearValues = clearValues.data();
 
         VkViewport viewport = {};
         viewport.x = 0.0f;

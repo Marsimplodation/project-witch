@@ -63,6 +63,11 @@ struct RenderData {
     VkBuffer indexBuffer;
     VkDeviceMemory vertexBufferMemory;
     VkDeviceMemory indexBufferMemory;
+
+    VkImage depthImage;
+    VkDeviceMemory depthImageMemory;
+    VkImageView depthImageView;
+
     std::vector<Model> models;
     std::vector<Vertex> * vertices;
     std::vector<u32> * indices;
@@ -114,6 +119,15 @@ int create_command_buffers(Init& init, RenderData& data);
 
 //--- Presentation ----//
 int create_off_screen_render_pass(Init& init, RenderData& data);
+void createDepthResources(Init& init, RenderData& data);
+//-- Images ---//
+void createImage(Init& init, RenderData & data,
+                 VkImage & image, VkImageView & view, VkDeviceMemory & memory,
+                 VkFormat requestedFormat, VkExtent2D extent,
+                VkImageUsageFlags flags, VkImageAspectFlags aspectFlags);
+VkFormat findSupportedFormat(vkb::PhysicalDevice & physicalDevice,
+                             const std::vector<VkFormat>& candidates,
+                             VkImageTiling tiling, VkFormatFeatureFlags features);
 }
 #endif // !VK_RENDERER_H
 //

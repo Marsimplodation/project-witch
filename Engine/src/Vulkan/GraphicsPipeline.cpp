@@ -1,4 +1,5 @@
 
+#include "VkBootstrap.h"
 #include "VkRenderer.h"
 #include <iostream>
 #include <fstream>
@@ -125,6 +126,16 @@ namespace VkRenderer {
         color_blending.blendConstants[1] = 0.0f;
         color_blending.blendConstants[2] = 0.0f;
         color_blending.blendConstants[3] = 0.0f;
+        
+        VkPipelineDepthStencilStateCreateInfo depthStencil{};
+        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.minDepthBounds = 0.0f; // Optional
+        depthStencil.maxDepthBounds = 1.0f; // Optional
+
 
         VkPipelineLayoutCreateInfo pipeline_layout_info = {};
         pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -159,6 +170,7 @@ namespace VkRenderer {
         pipeline_info.renderPass = data.render_pass;
         pipeline_info.subpass = 0;
         pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
+        pipeline_info.pDepthStencilState = &depthStencil;
 
         if (init.disp.createGraphicsPipelines(VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &data.graphics_pipeline) != VK_SUCCESS) {
             std::cout << "failed to create pipline\n";
@@ -179,6 +191,7 @@ namespace VkRenderer {
         pipeline_info.renderPass = data.offscreen_pass;
         pipeline_info.subpass = 0;
         pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
+        pipeline_info.pDepthStencilState = &depthStencil;
 
         if (init.disp.createGraphicsPipelines(VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &data.offscreen_pipeline) != VK_SUCCESS) {
             std::cout << "failed to create pipline\n";

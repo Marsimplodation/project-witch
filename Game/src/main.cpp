@@ -15,8 +15,8 @@ SoulShard engine{
 	    {{-0.5f, 0.5f, -0.5f, 1.0f}, {1.0f, 1.0f, 1.0f}}
 	},
 	.indices ={
-	    4, 5, 6, 6, 7, 4,
 	    0, 1, 2, 2, 3, 0,
+	    4, 5, 6, 6, 7, 4,
 	},
     }
 };
@@ -46,13 +46,13 @@ void rotateAllModels(float deltaTime) {
 int main (int argc, char *argv[]) {
     Model quadInfo = {
 	.indexOffset=0,
-	.triangleCount=2,
-	.instanceCount=100,
+	.triangleCount=4,
+	.instanceCount=1,
 	.modelMatrices = {
 	},
     };
-    for (int i = 0; i < 100; ++i){
-	quadInfo.modelMatrices.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(0,0,1.0f/(100.0f - i))));
+    for (int i = 0; i < 1; ++i){
+	quadInfo.modelMatrices.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(0,0,1.0f/(3.0f - i))));
     }
     auto quad = engine.entities.create();
     engine.entities.emplace<Model>(quad, quadInfo);
