@@ -16,7 +16,7 @@ void InputHandler::init(GLFWwindow *window) {
     state.mousePosition = {x,y};
 }
 bool InputHandler::isKeyPressed(int key) {
-    return glfwGetKey(state.window, key) == GLFW_PRESS;
+    return glfwGetKey(state.window, key) == GLFW_PRESS || glfwGetMouseButton(state.window, key) == GLFW_PRESS;
 }
 void InputHandler::captureMouse() {
     if(glfwGetInputMode(state.window, GLFW_CURSOR) == GLFW_CURSOR_NORMAL)

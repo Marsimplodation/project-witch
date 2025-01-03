@@ -41,9 +41,11 @@ struct Vertex{
     glm::vec3 color;
     static VkVertexInputBindingDescription getBindingDescription();
     static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+    bool operator==(const Vertex& other) const;
 };
-
-struct GPUGeometry {
+template<> struct std::hash<Vertex> {
+    size_t operator()(Vertex const& vertex) const;
+};struct GPUGeometry {
     std::vector<Vertex> vertices;
     std::vector<u32> indices;
 };

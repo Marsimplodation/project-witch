@@ -16,6 +16,7 @@ void SoulShard::loadGeometry(std::string modelPath) {
     }
     auto & vertices = gpuGeometry.vertices;
     auto & indices = gpuGeometry.indices;
+    std::unordered_map<Vertex, uint32_t> uniqueVertices{};
    
     u32 count = 0;
     for (const auto& shape : shapes) {
@@ -46,9 +47,8 @@ void SoulShard::loadGeometry(std::string modelPath) {
                 attrib.texcoords[2 * index.texcoord_index + 0],
                 1.0f - attrib.texcoords[2 * index.texcoord_index + 1],
             };*/
-            vertices.push_back(vertex);
-            indices.push_back(indices.size());
-            /*
+            /*vertices.push_back(vertex);
+            indices.push_back(indices.size());*/
 
             if (uniqueVertices.count(vertex) == 0) {
                 uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
@@ -57,7 +57,7 @@ void SoulShard::loadGeometry(std::string modelPath) {
 
             indices.push_back(uniqueVertices[vertex]);
             faceIndex++;
-            count++;*/
+            count++;
         }
         u32 endIdx = indices.size();
         Model m{.active = true,

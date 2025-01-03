@@ -34,7 +34,7 @@ void ImguiModule::renderViewport(void * initPtr, void * dataPtr) {
     engine.editorCamera.view = glm::lookAt(position,
                                     position + forward,
                                     up); 
-    if(ImGui::IsWindowFocused()) {
+    if(ImGui::IsWindowHovered() && input.isKeyPressed(MOUSE_2)) {
         float deltaTime = engine.deltaTime; 
         input.captureMouse();
         auto delta = input.getMouseDelta();

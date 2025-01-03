@@ -16,7 +16,9 @@ layout(binding = 1) uniform ModelBuffer {
 };
 
 void main() {
-    gl_Position = camera.projection *camera.view * models[gl_InstanceIndex] * vec4(inPosition, 1.0);
-    fragColor = inColor;
+    vec4 worldPos= models[gl_InstanceIndex] * vec4(inPosition, 1.0);
+    gl_Position = camera.projection *camera.view * worldPos;
+    vec3 cameraWorldPos = -transpose(mat3(camera.view)) * camera.view[3].xyz;
+    fragColor = inColor * 1.0f/length(inPosition - cameraWorldPos);
 }
 

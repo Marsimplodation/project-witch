@@ -3,8 +3,30 @@
 #include "imgui.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include "../types/types.h"
 
 #include <vulkan/vulkan_core.h>
+
+struct ImGuiSerialize {
+    enum Tag {
+        Float,
+        Vec4,
+        String,
+        Text
+    } tag;
+
+    std::string name; // Use a pointer for non-trivial types
+    union {
+        float f;
+        glm::vec4 v4;
+    };
+};
+
+struct ComponentSerialize {
+    std::string componentName;
+    std::vector<ImGuiSerialize> fields;
+};
+
 class ImguiModule {
     public:
     	void init(void * initPtr, void * dataPtr);

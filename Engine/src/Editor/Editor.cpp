@@ -157,6 +157,16 @@ void ImguiModule::destroy(VkDevice device) {
 }
 
 bool textureCreated = false;
+// Function to format numbers with dots as thousands separators
+std::string formatNumberWithDots(size_t number) {
+    std::string numStr = std::to_string(number);
+    int insertPosition = static_cast<int>(numStr.length()) - 3;
+    while (insertPosition > 0) {
+        numStr.insert(insertPosition, ".");
+        insertPosition -= 3;
+    }
+    return numStr;
+}
 void ImguiModule::update(void * initPtr, void * dataPtr) {
    	VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
     	VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;
@@ -180,6 +190,11 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
 
         // Build your GUI
         renderViewport(initPtr, dataPtr);        
+        ImGui::Begin("Debug");
+        ImGui::Text("FPS %f", 1.0f/((SoulShard*)enginePtr)->deltaTime);
+        ImGui::Text("Vertices: %s", formatNumberWithDots(data.vertices->size()).c_str());
+        ImGui::Text("Triangles: %s", formatNumberWithDots(data.indices->size() / 3).c_str());
+        ImGui::End();
         ImGui::Begin("Systems");
         for(auto & system : ((SoulShard*)enginePtr)->systems) {
             const char * name = system.name.c_str();
