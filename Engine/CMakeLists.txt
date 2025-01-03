@@ -74,10 +74,8 @@ include_directories(
 )
 
 # Link dependencies for the engine
-target_link_libraries(${PROJECT_NAME} PRIVATE vk-bootstrap::vk-bootstrap glfw glm imgui tinyobjloader)
-
+target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap glfw glm imgui tinyobjloader)
 # Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 # Include the EnTT header files
 target_include_directories(${PROJECT_NAME} PUBLIC ${entt_SOURCE_DIR}/src)
-target_compile_definitions(${PROJECT_NAME} PRIVATE GAME_ONLY)

@@ -44,6 +44,7 @@ void rotateAllModels(float deltaTime) {
 };
 
 int main (int argc, char *argv[]) {
+    engine.startup();
     engine.loadGeometry("../Game/Assets/test.obj");
     engine.registerSystem(updateCamera, "Game Camera");
     //engine.registerSystem(rotateAllModels, "Rotation");

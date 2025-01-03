@@ -1,17 +1,16 @@
+#include "SoulShard.h"
+
 #include "Editor/Editor.h"
 #include "GLFW/glfw3.h"
-#include "SoulShard.h"
 #include "InputHandling/InputHandling.h"
 #include "Vulkan/VkRenderer.h"
 #include <cstdlib>
 #include <iostream>
 #include <chrono>
-VkRenderer::Init init;
-VkRenderer::RenderData render_data;
-int SoulShard::run() {
+
+
+int SoulShard::startup() {
     render_data = VkRenderer::RenderData {
-        .vertices = &gpuGeometry.vertices, 
-        .indices = &gpuGeometry.indices,
         .vertShaderPath = "./vert.spv",
         .fragShaderPath = "./frag.spv",
     };
@@ -26,16 +25,20 @@ int SoulShard::run() {
     if (0 != VkRenderer::create_graphics_pipeline(init, render_data)) return -1;
     if (0 != VkRenderer::create_framebuffers(init, render_data)) return -1;
     if (0 != VkRenderer::create_command_pool(init, render_data)) return -1;
-    if (0 != VkRenderer::createGeometryBuffers(init, render_data)) return -1;
-    if (0 != VkRenderer::createUniformBuffers(init, render_data)) return -1;
 
     
     if (0 != VkRenderer::create_command_buffers(init, render_data)) return -1;
     if (0 != VkRenderer::create_sync_objects(init, render_data)) return -1;
     inputHandler.init(init.window);
+    return 0;
+};
 
-    
-    
+int SoulShard::run() {
+    render_data.vertices = &gpuGeometry.vertices;
+    render_data.indices = &gpuGeometry.indices;
+
+    if (0 != VkRenderer::createGeometryBuffers(init, render_data)) return -1;
+    if (0 != VkRenderer::createUniformBuffers(init, render_data)) return -1;
     auto lastTime = glfwGetTime(); 
     render_data.gui = ImguiModule();
     render_data.gui.init(&init, &render_data);
