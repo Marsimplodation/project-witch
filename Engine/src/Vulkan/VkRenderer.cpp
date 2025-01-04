@@ -76,6 +76,11 @@ int VkRenderer::device_initialization() {
 
 int VkRenderer::create_swapchain() {
     vkb::SwapchainBuilder swapchain_builder{ init.device };
+    VkSurfaceFormatKHR format{
+        .format = VK_FORMAT_B8G8R8A8_SRGB,
+        .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+    };
+    swapchain_builder.set_desired_format(format);
     auto swap_ret = swapchain_builder.set_old_swapchain(init.swapchain).build();
     if (!swap_ret) {
         std::cout << swap_ret.error().message() << " " << swap_ret.vk_result() << "\n";

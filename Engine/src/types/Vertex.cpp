@@ -8,20 +8,27 @@ VkVertexInputBindingDescription Vertex::getBindingDescription() {
      return bindingDescription;
 }
 
-std::array<VkVertexInputAttributeDescription, 3> Vertex::getAttributeDescriptions() {
-    std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+std::array<VkVertexInputAttributeDescription, 4> Vertex::getAttributeDescriptions() {
+    std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
-    attributeDescriptions[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
     attributeDescriptions[0].offset = offsetof(Vertex, position);
+
     attributeDescriptions[1].binding = 0;
     attributeDescriptions[1].location = 1;
-    attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
-    attributeDescriptions[1].offset = offsetof(Vertex, uv);
+    attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributeDescriptions[1].offset = offsetof(Vertex, normal);
+
     attributeDescriptions[2].binding = 0;
     attributeDescriptions[2].location = 2;
-    attributeDescriptions[2].format = VK_FORMAT_R32_UINT;
-    attributeDescriptions[2].offset = offsetof(Vertex, materialIdx);
+    attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[2].offset = offsetof(Vertex, uv);
+
+    attributeDescriptions[3].binding = 0;
+    attributeDescriptions[3].location = 3;
+    attributeDescriptions[3].format = VK_FORMAT_R32_UINT;
+    attributeDescriptions[3].offset = offsetof(Vertex, materialIdx);
     return attributeDescriptions;
 }
 
@@ -86,14 +93,16 @@ namespace std {
         std::size_t seed = 0;
 
         // Hash individual fields
-        std::size_t h1 = std::hash<glm::vec4>()(vertex.position);
-        std::size_t h2 = std::hash<glm::vec2>()(vertex.uv);
-        std::size_t h3 = std::hash<u32>()(vertex.materialIdx);
+        std::size_t h1 = std::hash<glm::vec3>()(vertex.position);
+        std::size_t h2 = std::hash<glm::vec3>()(vertex.normal);
+        std::size_t h3 = std::hash<glm::vec2>()(vertex.uv);
+        std::size_t h4 = std::hash<u32>()(vertex.materialIdx);
 
         // Combine the hashes
         hash_combine(seed, h1);
         hash_combine(seed, h2);
         hash_combine(seed, h3);
+        hash_combine(seed, h4);
 
         return seed;
     }

@@ -33,23 +33,21 @@ void SoulShard::loadGeometry(std::string modelPath) {
         u32 startIdx = indices.size();
         for (const auto& index : shape.mesh.indices) {
             Vertex vertex{};
-            vertex.position = glm::vec4{
+            vertex.position = glm::vec3{
                 attrib.vertices[3 * index.vertex_index + 0],
                 attrib.vertices[3 * index.vertex_index + 1],
                 attrib.vertices[3 * index.vertex_index + 2],
-                1.0f,
             };
             // Retrieve material index
             int material_id = tex_materials[shape.mesh.material_ids[faceIndex/3]];
             vertex.materialIdx = material_id;
 
             // Add normals
-            /*vertex.normal = glm::vec4{
+            vertex.normal = glm::vec3{
                 attrib.normals[3 * index.normal_index + 0],
                 attrib.normals[3 * index.normal_index + 1],
-                attrib.normals[3 * index.normal_index + 2],
-                1.0f
-            };*/
+                attrib.normals[3 * index.normal_index + 2]
+            };
 
             vertex.uv = glm::vec2{
                 attrib.texcoords[2 * index.texcoord_index + 0],

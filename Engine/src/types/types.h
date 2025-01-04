@@ -37,11 +37,12 @@ struct Camera {
 };
 
 struct Vertex{
-    glm::vec4 position;
+    glm::vec3 position;
+    glm::vec3 normal;
     glm::vec2 uv;
     u32 materialIdx;
     static VkVertexInputBindingDescription getBindingDescription();
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
+    static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions();
     bool operator==(const Vertex& other) const;
 };
 template<> struct std::hash<Vertex> {
