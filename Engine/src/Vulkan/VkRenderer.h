@@ -43,6 +43,7 @@ struct VkRenderer {
         std::vector<VkDeviceMemory> offscreen_image_memory;
         std::vector<VkImageView> offscreen_image_views;
         std::vector<VkFramebuffer> offscreen_framebuffers;
+        std::vector<Texture> textures;
 
 
         VkRenderPass render_pass;
@@ -147,6 +148,8 @@ struct VkRenderer {
     VkFormat findSupportedFormat(vkb::PhysicalDevice & physicalDevice,
                                  const std::vector<VkFormat>& candidates,
                                  VkImageTiling tiling, VkFormatFeatureFlags features);
+    int loadTexture(std::string path);
+    void copyDataToImage(VkImage image,const std::vector<glm::vec4>& textureData, VkExtent2D extent, VkDeviceSize dataSize);
     void TransitionImageLayout(
         VkCommandBuffer commandBuffer,
         VkImage image,

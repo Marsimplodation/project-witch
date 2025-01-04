@@ -17,6 +17,16 @@ void SoulShard::loadGeometry(std::string modelPath) {
     auto & vertices = gpuGeometry.vertices;
     auto & indices = gpuGeometry.indices;
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+    std::vector<u32> tex_materials(0);
+
+    for (const auto & material : obj_materials) {
+        bool isAbsolute = material.diffuse_texname.front() == '/';
+        std::string texture = isAbsolute? material.diffuse_texname : base_dir + "/" + material.diffuse_texname;
+
+        if(!material.diffuse_texname.empty()) {
+            tex_materials.push_back(renderer.loadTexture(texture));
+        } else tex_materials.push_back(-1); 
+    }
    
     u32 count = 0;
     for (const auto& shape : shapes) {
@@ -31,22 +41,21 @@ void SoulShard::loadGeometry(std::string modelPath) {
                 1.0f,
             };
             // Retrieve material index
-            vertex.color = glm::vec3(1.0);
-            int material_id = shape.mesh.material_ids[faceIndex/3];
-            /*vertex.materialIdx = material_id;
+            int material_id = tex_materials[shape.mesh.material_ids[faceIndex/3]];
+            vertex.materialIdx = material_id;
 
             // Add normals
-            vertex.normal = glm::vec4{
+            /*vertex.normal = glm::vec4{
                 attrib.normals[3 * index.normal_index + 0],
                 attrib.normals[3 * index.normal_index + 1],
                 attrib.normals[3 * index.normal_index + 2],
                 1.0f
-            };
+            };*/
 
             vertex.uv = glm::vec2{
                 attrib.texcoords[2 * index.texcoord_index + 0],
                 1.0f - attrib.texcoords[2 * index.texcoord_index + 1],
-            };*/
+            };
             /*vertices.push_back(vertex);
             indices.push_back(indices.size());*/
 

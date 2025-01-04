@@ -197,6 +197,12 @@ void VkRenderer::cleanup() {
         init.disp.destroyImageView(data.offscreen_image_views[i], nullptr);
         init.disp.freeMemory(data.offscreen_image_memory[i], nullptr);
     }
+    for (size_t i = 0; i < data.textures.size(); i++) {
+        init.disp.destroyImage(data.textures[i].image, nullptr);
+        init.disp.destroyImageView(data.textures[i].view, nullptr);
+        init.disp.freeMemory(data.textures[i].memory, nullptr);
+        init.disp.destroySampler(data.textures[i].sampler, nullptr);
+    }
     init.disp.destroyImage(data.depthImage, nullptr);
     init.disp.destroyImageView(data.depthImageView, nullptr);
     init.disp.freeMemory(data.depthImageMemory, nullptr);

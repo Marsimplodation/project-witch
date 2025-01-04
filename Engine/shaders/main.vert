@@ -1,9 +1,12 @@
 #version 450
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;
+layout(location = 1) in vec2 uv;
+layout(location = 2) in uint materialIdx;
 
 layout(location = 0) out vec3 fragColor;
+layout(location = 1) out vec2 fragUV;
+layout(location = 2) out uint texIdx;
 
 
 layout(binding = 0) uniform CameraBuffer {
@@ -33,6 +36,8 @@ void main() {
     float r = random(vec2(float(index), 0.0)); // Red
     float g = random(vec2(float(index), 1.0)); // Green
     float b = random(vec2(float(index), 2.0)); // Blue
+    texIdx = materialIdx;
+    fragUV = uv;
 
     // Combine into a color
     fragColor = vec3(r, g, b);

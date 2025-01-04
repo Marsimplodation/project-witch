@@ -86,7 +86,7 @@ int main (int argc, char *argv[]) {
     engine.startup();
     engine.loadGeometry("../Game/Assets/test.obj");
     engine.registerSystem(updateCamera, "Game Camera");
-    engine.registerSystem(rotateAllModels, "Rotation");
+    //engine.registerSystem(rotateAllModels, "Rotation");
     //engine.registerSystem(printFPS, "FPS");
     engine.run();
 }
