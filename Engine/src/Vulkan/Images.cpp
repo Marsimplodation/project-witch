@@ -218,7 +218,9 @@ int VkRenderer::loadTexture(std::string path) {
     createImage(texture.image, texture.view, texture.memory, VK_FORMAT_R32G32B32A32_SFLOAT, extent, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
     VkMemoryRequirements mem_requirements;
     init.disp.getImageMemoryRequirements(texture.image, &mem_requirements);
-    VkDeviceSize dataSize = mem_requirements.size;
+    
+    VkDeviceSize imageSize = extent.width * extent.height * sizeof(glm::vec4);  // Assuming VK_FORMAT_R32G32B32A32_SFLOAT
+
 
     
     VkSamplerCreateInfo samplerInfo = {};
@@ -237,7 +239,7 @@ int VkRenderer::loadTexture(std::string path) {
     if (init.disp.createSampler(&samplerInfo, nullptr, &texture.sampler) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create sampler!");
     }
-    copyDataToImage(texture.image, textureData, extent, dataSize);
+    copyDataToImage(texture.image, textureData, extent, imageSize);
 
 
     return index;

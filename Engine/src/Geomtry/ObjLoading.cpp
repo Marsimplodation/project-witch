@@ -20,10 +20,9 @@ void SoulShard::loadGeometry(std::string modelPath) {
     std::vector<u32> tex_materials(0);
 
     for (const auto & material : obj_materials) {
-        bool isAbsolute = material.diffuse_texname.front() == '/';
-        std::string texture = isAbsolute? material.diffuse_texname : base_dir + "/" + material.diffuse_texname;
-
         if(!material.diffuse_texname.empty()) {
+            bool isAbsolute = material.diffuse_texname.front() == '/';
+            std::string texture = isAbsolute? material.diffuse_texname : base_dir + "/" + material.diffuse_texname;
             tex_materials.push_back(renderer.loadTexture(texture));
         } else tex_materials.push_back(-1); 
     }
