@@ -8,9 +8,7 @@
 
 #include "Vulkan/VkRenderer.h"
 struct SoulShard {
-    VkRenderer::Init init;
-    VkRenderer::RenderData render_data;
-
+    VkRenderer renderer;
     std::vector<System> systems;
     entt::registry entities;
     glm::vec2 renderingResolution;

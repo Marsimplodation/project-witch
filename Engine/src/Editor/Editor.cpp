@@ -167,6 +167,7 @@ std::string formatNumberWithDots(size_t number) {
     }
     return numStr;
 }
+bool lineRenderer = false;
 void ImguiModule::update(void * initPtr, void * dataPtr) {
    	VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
     	VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;

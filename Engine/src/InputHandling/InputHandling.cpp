@@ -28,15 +28,20 @@ void InputHandler::releaseMouse() {
     glfwSetInputMode(state.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
+//give glfw 10 frames to catch up on input
+int counter = 0;
 void InputHandler::update(){
     double x, y;
     glfwGetCursorPos(state.window, &x,&y);
     state.mousePosition = {x,y};
+    if(!ready)
+    ready = (counter++) >= 10;
 }
 glm::vec2 InputHandler::getMouseDelta() {
     double x, y;
     glfwGetCursorPos(state.window, &x,&y);
     glm::vec2 delta = {x-state.mousePosition.x, y-state.mousePosition.y};
     state.mousePosition = {x,y};
+    if(!ready) return glm::vec2(0);
     return delta;
 }

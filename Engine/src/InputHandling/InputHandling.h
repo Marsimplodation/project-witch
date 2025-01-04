@@ -12,5 +12,7 @@ struct InputHandler {
     void captureMouse();
     void releaseMouse();
     glm::vec2 getMouseDelta();
+private:
+    bool ready = false;
 };
 #endif // !INPUT_HANLDER_H
