@@ -1,3 +1,4 @@
+#include "entt/entity/fwd.hpp"
 #include "types/types.h"
 #include <SoulShard.h>
 #include <cstdio>
@@ -32,6 +33,17 @@ float elapsedTime = 0.0f;
 void rotateAllModels(float deltaTime) {
     auto view = engine.entities.view<Model>();
     elapsedTime += deltaTime;
+    entt::entity player;
+    for (auto entity : view) {
+    auto& model = view.get<Model>(entity);
+	if(model.name != "sponza_01") continue;
+    for (auto & matrix : model.modelMatrices) {
+	matrix = glm::translate(matrix,
+		      sinf(elapsedTime) * up * 0.001f);
+    }
+	return;;
+    }
+
     for (auto entity : view) {
         auto& model = view.get<Model>(entity);
 	for (auto & matrix : model.modelMatrices) {
@@ -47,7 +59,7 @@ int main (int argc, char *argv[]) {
     engine.startup();
     engine.loadGeometry("../Game/Assets/test.obj");
     engine.registerSystem(updateCamera, "Game Camera");
-    //engine.registerSystem(rotateAllModels, "Rotation");
+    engine.registerSystem(rotateAllModels, "Rotation");
     //engine.registerSystem(printFPS, "FPS");
     engine.run();
 }

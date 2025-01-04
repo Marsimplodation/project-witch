@@ -1,5 +1,7 @@
 #include "VkRenderer.h"
+#include "glm/fwd.hpp"
 #include <iostream>
+#include <vector>
 namespace VkRenderer{
     int create_command_pool(Init& init, RenderData& data) {
         VkCommandPoolCreateInfo pool_info = {};
@@ -55,6 +57,27 @@ namespace VkRenderer{
             1, &barrier);
     }
 
+    void renderModels(Init & init, RenderData & data, int i) {
+        std::vector<glm::mat4> matrices;
+        for (auto & model : data.models) {
+            for(int i = 0; i < model.instanceCount; ++i){
+                matrices.push_back(model.modelMatrices[i]);
+            }
+        }
+        u32 modelIndex = 0;
+        updateModelBuffer(init, data, matrices);
+        init.disp.cmdBindIndexBuffer(data.command_buffers[i], data.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        for (auto & model : data.models) {
+            vkCmdPushConstants(data.command_buffers[i],data.pipeline_layout,VK_SHADER_STAGE_VERTEX_BIT,
+                0,                  // Offset
+                sizeof(uint32_t),   // Size
+                &modelIndex
+            );
+
+            init.disp.cmdDrawIndexed(data.command_buffers[i], model.triangleCount * 3, model.instanceCount, model.indexOffset, 0,0);
+            modelIndex += model.instanceCount;
+        }
+    }
 
     void scene_offscreen_rendering(Init & init, RenderData & data, int i){
         VkRenderPassBeginInfo offsceen_pass_info = {};
@@ -96,13 +119,7 @@ namespace VkRenderer{
         init.disp.cmdBindVertexBuffers(data.command_buffers[i], 0, 1, vertexBuffers, offsets);
         init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
         update_descriptor_sets(init,data);
-        for (auto & model : data.models) {
-            if(!model.active) continue;
-            updateModelBuffer(init, data, model);
-            init.disp.cmdBindIndexBuffer(data.command_buffers[i], data.indexBuffer, model.indexOffset*sizeof(u32), VK_INDEX_TYPE_UINT32);
-            init.disp.cmdDrawIndexed(data.command_buffers[i], model.triangleCount * 3, model.instanceCount, 0, 0,0);
-        }
-
+        renderModels(init, data, i);
         init.disp.cmdEndRenderPass(data.command_buffers[i]);
 
     }
@@ -178,12 +195,7 @@ namespace VkRenderer{
         init.disp.cmdBindVertexBuffers(data.command_buffers[i], 0, 1, vertexBuffers, offsets);
         init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
         update_descriptor_sets(init,data);
-        for (auto & model : data.models) {
-            updateModelBuffer(init, data, model);
-            init.disp.cmdBindIndexBuffer(data.command_buffers[i], data.indexBuffer, model.indexOffset*sizeof(u32), VK_INDEX_TYPE_UINT32);
-            init.disp.cmdDrawIndexed(data.command_buffers[i], model.triangleCount * 3, model.instanceCount, 0, 0,0);
-        }
-
+        renderModels(init, data, i);
         init.disp.cmdEndRenderPass(data.command_buffers[i]);
     }
     

@@ -136,7 +136,7 @@ namespace VkRenderer{
         
         VkBuffer modelBuffer;
         VkDeviceMemory modelMemory;
-        createBuffer(init, sizeof(glm::mat4) * 100,
+        createBuffer(init, sizeof(glm::mat4) * 10000,
                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                  &modelBuffer,
@@ -149,8 +149,8 @@ namespace VkRenderer{
         copyDataToBuffer(init, data.uniformBuffers[0].second, &camera, sizeof(Camera)); 
     }
     
-    void updateModelBuffer(Init& init, RenderData& data, Model & model) {
-        copyDataToBuffer(init, data.uniformBuffers[1].second, model.modelMatrices.data(), sizeof(glm::mat4) * model.instanceCount); 
+    void updateModelBuffer(Init& init, RenderData& data, std::vector<glm::mat4> & matrices) {
+        copyDataToBuffer(init, data.uniformBuffers[1].second, matrices.data(), sizeof(glm::mat4) * matrices.size()); 
     }
 
     void destroyBuffers(Init& init, RenderData& data) {

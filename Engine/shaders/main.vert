@@ -11,12 +11,16 @@ layout(binding = 0) uniform CameraBuffer {
     mat4 projection;
 } camera;
 
+layout(push_constant) uniform PushConstants {
+    uint startModelIndex;    // Current draw call index
+};
+
 layout(binding = 1) uniform ModelBuffer {
-    mat4 models[100];
+    mat4 models[10000];
 };
 
 void main() {
-    vec4 worldPos= models[gl_InstanceIndex] * vec4(inPosition, 1.0);
+    vec4 worldPos= models[startModelIndex + gl_InstanceIndex] * vec4(inPosition, 1.0);
     gl_Position = camera.projection *camera.view * worldPos;
     vec3 cameraWorldPos = -transpose(mat3(camera.view)) * camera.view[3].xyz;
     fragColor = inColor * 1.0f/length(inPosition - cameraWorldPos);

@@ -3,6 +3,7 @@
 
 #include "Editor/Editor.h"
 #include "types/types.h"
+#include <vector>
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>
 
@@ -103,7 +104,7 @@ void cleanup(Init& init, RenderData& data);
 int createGeometryBuffers(Init& init, RenderData& data);
 int createUniformBuffers(Init& init, RenderData& data);
 void updateCameraBuffer(Init& init, RenderData& data, Camera & camera);
-void updateModelBuffer(Init& init, RenderData& data, Model & model);
+void updateModelBuffer(Init& init, RenderData& data, std::vector<glm::mat4> & matrices);
 void destroyBuffers(Init& init, RenderData& data);
 u32 findMemoryType(Init& init, u32 typeFilter, VkMemoryPropertyFlags properties);
 
