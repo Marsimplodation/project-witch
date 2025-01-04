@@ -40,7 +40,7 @@ void ImguiModule::renderViewport(void * initPtr, void * dataPtr) {
         auto delta = input.getMouseDelta();
         up = glm::vec3(engine.editorCamera.view[1]);
         right = glm::vec3(engine.editorCamera.view[0]);
-        forward = glm::vec3(engine.editorCamera.view[0]);
+        forward = glm::vec3(engine.editorCamera.view[2]);
         yaw -=  delta[0] * deltaTime * 40.0f;
         pitch -= delta[1] * deltaTime * 40.0f;
         auto rot = createRotationMatrix(yaw, pitch, 0.0f);

@@ -213,8 +213,10 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         }
         ImGui::End();
         
-        ImGui::Begin("Node Editor");
+        /*ImGui::Begin("Node Editor");
         editor.draw();
+        ImGui::End();*/
+        ImGui::Begin("Asset Browser");
         ImGui::End();
 
         ImGui::Render();
