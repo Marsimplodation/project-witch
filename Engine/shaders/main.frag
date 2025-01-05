@@ -8,17 +8,38 @@ layout (location = 0) out vec4 outColor;
 layout(set = 0, binding = 2) uniform sampler2D texSamplers[100];
 
 
+struct Light {
+    vec3 pos;
+    vec3 color;
+    float intensity;
+};
 
 void main() {
-    vec3 lightPosition = vec3(2,1,3);
-    vec3 lightDirection = normalize(lightPosition - fragNormal);
-    float cosDir = dot(lightDirection, fragNormal);
-    cosDir = max(0.0, cosDir);
-    if(texIdx == uint(-1)) {
-    	outColor = vec4(1) * cosDir;
-	return;
+    Light lights[1];
+    
+    // Initialize each field manually
+    lights[0].pos = vec3(-2.0, 10.0, -3.0);
+    lights[0].color = vec3(1.0, 1.0, 1.0);
+    lights[0].intensity = 1.0;
+
+    vec4 texColor = vec4(1);
+    if(texIdx != uint(-1)) {
+	vec2 uv = fragUV - floor(fragUV);
+	texColor = texture(texSamplers[texIdx], uv);
     }
-    vec2 uv = fragUV - floor(fragUV);
-    vec4 texColor = texture(texSamplers[texIdx], uv);
-    outColor = texColor * cosDir;
+    outColor = vec4(vec3(0.0), 1.0) * texColor;
+
+    for(int i = 0; i < 1; ++i) {
+	vec3 lightPosition = lights[i].pos;
+	vec3 lightDirection = normalize(lightPosition - fragNormal);
+	float cosDir = dot(lightDirection, fragNormal);
+	cosDir = max(0.0, cosDir);
+
+	// Quantize cosDir to create a cel-shading effect
+	int numSteps = 4; // Number of shading levels
+	float step = 1.0 / float(numSteps);
+	cosDir = floor(cosDir / step) * step;
+        outColor.rgb += texColor.rgb * cosDir * lights[i].color * lights[i].intensity;
+    }
+
 }
