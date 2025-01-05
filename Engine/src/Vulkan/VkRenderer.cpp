@@ -52,6 +52,7 @@ int VkRenderer::device_initialization() {
     vkb::PhysicalDeviceSelector phys_device_selector(init.instance);
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.fillModeNonSolid = VK_TRUE;
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
     phys_device_selector.set_required_features(deviceFeatures);
     auto phys_device_ret = phys_device_selector.set_surface(init.surface).select();
     if (!phys_device_ret) {
