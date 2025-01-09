@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <chrono>
+#include <vulkan/vulkan_core.h>
 
 
 int SoulShard::startup() {
@@ -18,8 +19,7 @@ int SoulShard::startup() {
     if (0 != renderer.device_initialization()) return -1;
     if (0 != renderer.create_swapchain()) return -1;
     if (0 != renderer.get_queues()) return -1;
-    if (0 != renderer.create_render_pass()) return -1;
-    if (0 != renderer.create_off_screen_render_pass()) return -1;
+    if (0 != renderer.createRenderPass()) return -1;
     if (0 != renderer.create_descriptor_pool()) return -1;
     if (0 != renderer.create_descriptor_layout()) return -1;
     
@@ -34,6 +34,7 @@ int SoulShard::startup() {
     return 0;
 };
 
+
 int SoulShard::run() {
     renderer.data.vertices = &gpuGeometry.vertices;
     renderer.data.indices = &gpuGeometry.indices;
@@ -44,17 +45,14 @@ int SoulShard::run() {
     renderer.data.gui = ImguiModule();
     renderer.data.gui.init(&renderer.init, &renderer.data);
     renderer.data.gui.enginePtr = this;
-    bool keyAvailable = true;
+
     while (!glfwWindowShouldClose(renderer.init.window)) {
         glfwPollEvents();
-        if (keyAvailable && glfwGetKey(renderer.init.window, GLFW_KEY_U) == GLFW_PRESS) {
+        if (inputHandler.isKeyPressedOnce(KEY_U)) {
             renderer.data.editorMode = !renderer.data.editorMode;
             inputHandler.releaseMouse();
-            keyAvailable = false;
         }
-        if (glfwGetKey(renderer.init.window, GLFW_KEY_U) == GLFW_RELEASE) {
-            keyAvailable = true;
-        }
+
         auto view = entities.view<Model>();
         renderer.data.models.clear();
         for (auto entity : view) {

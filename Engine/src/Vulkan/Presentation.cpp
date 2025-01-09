@@ -1,91 +1,9 @@
 #include "VkRenderer.h"
 #include <iostream>
 #include <vulkan/vulkan_core.h>
-int VkRenderer::create_off_screen_render_pass() {
-    VkAttachmentDescription colorAttachmentOffscreen = {};
-    colorAttachmentOffscreen.format = VK_FORMAT_R8G8B8A8_SRGB;
-    colorAttachmentOffscreen.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachmentOffscreen.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachmentOffscreen.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachmentOffscreen.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachmentOffscreen.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachmentOffscreen.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachmentOffscreen.finalLayout = VK_IMAGE_LAYOUT_GENERAL;
-    
-    VkAttachmentDescription depthAttachment{};
-    depthAttachment.format = findSupportedFormat(init.physicalDevice,
-    {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
-    VK_IMAGE_TILING_OPTIMAL,
-    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-    );
-    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-    VkAttachmentReference color_attachment_ref = {};
-    color_attachment_ref.attachment = 0;
-    color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    VkAttachmentReference depthAttachmentRef{};
-    depthAttachmentRef.attachment = 1;
-    depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-    VkSubpassDescription subpass = {};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &color_attachment_ref;
-    subpass.pDepthStencilAttachment = &depthAttachmentRef;
-
-    VkSubpassDependency dependency = {};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcAccessMask = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-    std::array<VkAttachmentDescription, 2> attachments = {colorAttachmentOffscreen, depthAttachment};
-    VkRenderPassCreateInfo render_pass_info = {};
-    render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    render_pass_info.attachmentCount = attachments.size();
-    render_pass_info.pAttachments = attachments.data();
-    render_pass_info.subpassCount = 1;
-    render_pass_info.pSubpasses = &subpass;
-    render_pass_info.dependencyCount = 1;
-    render_pass_info.pDependencies = &dependency;
-
-    if (init.disp.createRenderPass(&render_pass_info, nullptr, &data.offscreen_pass) != VK_SUCCESS) {
-        std::cout << "failed to create render pass\n";
-        return -1; // failed to create render pass!
-    }
-
-     //create sampler for image
-    
-    VkSamplerCreateInfo samplerInfo = {};
-    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.magFilter = VK_FILTER_LINEAR;  // Linear filtering
-    samplerInfo.minFilter = VK_FILTER_LINEAR;  // Linear filtering
-    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    samplerInfo.anisotropyEnable = VK_FALSE;
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerInfo.compareEnable = VK_FALSE;
-    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-
-    if (init.disp.createSampler(&samplerInfo, nullptr, &data.imageSampler) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create sampler!");
-    }
-    return 0;
-}
 
 
-int VkRenderer::create_render_pass() {
+int VkRenderer::createRenderPass() {
             
     VkAttachmentDescription depthAttachment{};
     depthAttachment.format = findSupportedFormat(init.physicalDevice,
@@ -148,6 +66,15 @@ int VkRenderer::create_render_pass() {
         std::cout << "failed to create render pass\n";
         return -1; // failed to create render pass!
     }
+    color_attachment.format = VK_FORMAT_R8G8B8A8_SRGB;
+    color_attachment.finalLayout = VK_IMAGE_LAYOUT_GENERAL;
+    attachments = {color_attachment, depthAttachment};
+    if (init.disp.createRenderPass(&render_pass_info, nullptr, &data.offscreen_pass) != VK_SUCCESS) {
+        std::cout << "failed to create render pass\n";
+        return -1; // failed to create render pass!
+    }
+    createImageSampler();
+
     return 0;
 }
 

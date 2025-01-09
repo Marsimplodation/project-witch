@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iterator>
 #include "../Vulkan/VkRenderer.h"
+#include "InputHandling/KeyDefines.h"
 #include "SoulShard.h"
 #include "glm/detail/qualifier.hpp"
 #include <imgui.h>
@@ -182,9 +183,21 @@ std::string formatNumberWithDots(size_t number) {
     return numStr;
 }
 bool lineRenderer = false;
+
+void editorControls(SoulShard & engine) {
+    if(engine.inputHandler.isKeyPressedOnce(KEY_F1)) {
+        engine.renderer.renderingMode = {.recreate = true, .mode = VK_POLYGON_MODE_LINE};
+    }
+    if(engine.inputHandler.isKeyPressedOnce(KEY_F2)) {
+        engine.renderer.renderingMode = {.recreate = true, .mode = VK_POLYGON_MODE_FILL};
+    }
+}
+
 void ImguiModule::update(void * initPtr, void * dataPtr) {
    	VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
     	VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;
+        SoulShard & engine = *((SoulShard*)enginePtr);
+        editorControls(engine);
 
         if(!active) return;
         if(textureCreated) {
@@ -211,7 +224,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::Text("Triangles: %s", formatNumberWithDots(data.indices->size() / 3).c_str());
         ImGui::End();
         ImGui::Begin("Systems");
-        for(auto & system : ((SoulShard*)enginePtr)->systems) {
+        for(auto & system : engine.systems) {
             const char * name = system.name.c_str();
             ImGui::Text("%s", name);
             ImGui::Checkbox((std::string("Active##") + name).c_str(), &system.active);

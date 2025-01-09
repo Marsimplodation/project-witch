@@ -23,13 +23,18 @@ struct VkRenderer {
         vkb::PhysicalDevice physicalDevice;
         vkb::DispatchTable disp;
         vkb::Swapchain swapchain;
-    };
+    }Map;
     struct Texture {
         VkImage image;
         VkImageView view;
         VkDeviceMemory memory;
         VkSampler sampler;
     };
+
+    struct {
+        bool recreate = false;
+        VkPolygonMode mode = VK_POLYGON_MODE_LINE;
+    } renderingMode;
 
     struct RenderData {
         VkQueue graphics_queue;
@@ -100,7 +105,6 @@ struct VkRenderer {
     int device_initialization();
     int create_swapchain();
     int get_queues();
-    int create_render_pass();
     std::vector<char> readFile(const std::string& filename);
     VkShaderModule createShaderModule(const std::vector<char>& data);
     int create_graphics_pipeline(VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL);
@@ -141,7 +145,9 @@ struct VkRenderer {
     int create_framebuffers();
     int create_sync_objects();
     int recreate_swapchain();
+    int createRenderPass();
     //-- Images ---//
+    int createImageSampler();
     void createImage(VkImage & image, VkImageView & view, VkDeviceMemory & memory,
                      VkFormat requestedFormat, VkExtent2D extent,
                     VkImageUsageFlags flags, VkImageAspectFlags aspectFlags);
