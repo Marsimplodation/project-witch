@@ -1,6 +1,7 @@
 #include "../SoulShard.h"
 #include "glm/fwd.hpp"
 #include "tiny_obj_loader.h"
+#include <cmath>
 #include <string>
 void SoulShard::loadGeometry(std::string modelPath) {    
     tinyobj::attrib_t attrib;
@@ -29,6 +30,8 @@ void SoulShard::loadGeometry(std::string modelPath) {
    
     u32 count = 0;
     for (const auto& shape : shapes) {
+        glm::vec3 min = glm::vec3(INFINITY);
+        glm::vec3 max = glm::vec3(-INFINITY);
         u32 faceIndex = 0;
         u32 startIdx = indices.size();
         for (const auto& index : shape.mesh.indices) {
@@ -38,6 +41,12 @@ void SoulShard::loadGeometry(std::string modelPath) {
                 attrib.vertices[3 * index.vertex_index + 1],
                 attrib.vertices[3 * index.vertex_index + 2],
             };
+            min[0] = glm::min(vertex.position[0], min[0]);
+            min[1] = glm::min(vertex.position[1], min[1]);
+            min[2] = glm::min(vertex.position[2], min[2]);
+            max[0] = glm::max(vertex.position[0], max[0]);
+            max[1] = glm::max(vertex.position[1], max[1]);
+            max[2] = glm::max(vertex.position[2], max[2]);
             // Retrieve material index
             int material_id = tex_materials[shape.mesh.material_ids[faceIndex/3]];
             vertex.materialIdx = material_id;
@@ -66,14 +75,13 @@ void SoulShard::loadGeometry(std::string modelPath) {
             count++;
         }
         u32 endIdx = indices.size();
-        Model m{.active = true,
+        GeometryInfo m{
+            .aabb = {.min = min, .max = max},
+            .active = true,
             .indexOffset = startIdx,
             .triangleCount = (endIdx-startIdx)/3,
-            .instanceCount = 1,
-            .modelMatrices = {glm::mat4(1.0f)},
-            .name = shape.name,
         };
-        auto entity = entities.create();
-        entities.emplace<Model>(entity, m);
+        scene.geometry[shape.name] = m;
+        scene.instantiateModel(shape.name, shape.name);
     }
 }

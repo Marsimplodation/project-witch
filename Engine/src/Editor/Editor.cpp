@@ -7,9 +7,11 @@
 #include "InputHandling/KeyDefines.h"
 #include "SoulShard.h"
 #include "glm/detail/qualifier.hpp"
+#include "glm/fwd.hpp"
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
+#include <string>
 #include <vulkan/vulkan_core.h>
 
 void customTheme() {
@@ -193,6 +195,7 @@ void editorControls(SoulShard & engine) {
     }
 }
 
+Instance * selectedInstance = 0x0;
 void ImguiModule::update(void * initPtr, void * dataPtr) {
    	VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
     	VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;
@@ -230,14 +233,32 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             ImGui::Checkbox((std::string("Active##") + name).c_str(), &system.active);
         }
         ImGui::End();
+
+
         ImGui::Begin("Scene");
-        auto view = ((SoulShard*)enginePtr)->entities.view<Model>();
-        for (auto entity : view) {
-            auto& model = view.get<Model>(entity);
-            const char * name = model.name.c_str();
-            ImGui::Checkbox((std::string("##") + name).c_str(), &model.active);
-            ImGui::SameLine();
+        int instanceIndex = 0;
+        for (auto & instance : engine.scene.instances) {
+            auto name = instance.name + std::string("##") + std::to_string(instanceIndex++);
+            if (ImGui::Selectable(name.c_str())) {  // Make the text clickable
+                selectedInstance = &instance;
+            }
+        }
+        ImGui::End();
+        ImGui::Begin("Selected");
+        if(selectedInstance) {
+            auto & instance = *selectedInstance;
+            const char * name = instance.name.c_str();
             ImGui::Text("%s", name);
+            glm::mat4 transform = instance.instanceOf.modelMatrices[instance.transformIdx];
+            glm::vec3 position = glm::vec3(
+                transform[3]
+            );
+            auto oldPos = position;
+            ImGui::DragFloat3("test", (float*)&position);
+            auto delta = position - oldPos;
+            if(delta != glm::vec3(0)) {
+                engine.scene.translateInstance(delta, instance);
+            }
         }
         ImGui::End();
         
@@ -245,6 +266,14 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         editor.draw();
         ImGui::End();*/
         ImGui::Begin("Asset Browser");
+        
+        for (auto & pair : engine.scene.geometry) {
+        const char * name = pair.first.c_str();
+            if (ImGui::Selectable(name)) {  // Make the text clickable
+                // Call your function to spawn a new instance here
+                engine.scene.instantiateModel(name, name); 
+            }
+        }
         ImGui::End();
 
         ImGui::Render();

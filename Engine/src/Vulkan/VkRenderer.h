@@ -11,8 +11,6 @@
 
 
 const int MAX_FRAMES_IN_FLIGHT = 1;
-const int MAX_INSTANCES = 1000;
-const int MAX_OBJECTS = 1000;
 struct VkRenderer {
     struct Init {
         GLFWwindow* window;
@@ -82,7 +80,6 @@ struct VkRenderer {
         VkDeviceMemory depthImageMemory;
         VkImageView depthImageView;
 
-        std::vector<Model> models;
         std::vector<Vertex> * vertices;
         std::vector<u32> * indices;
 
@@ -138,6 +135,7 @@ struct VkRenderer {
     void scene_onscreen_rendering(int i);
     void ui_onscreen_rendering(int i);
     void renderModels(int i);
+    void *enginePtr;
 
     //--- Presentation ----//
     int create_off_screen_render_pass();

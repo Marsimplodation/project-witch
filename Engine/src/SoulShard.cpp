@@ -31,6 +31,7 @@ int SoulShard::startup() {
     if (0 != renderer.create_command_buffers()) return -1;
     if (0 != renderer.create_sync_objects()) return -1;
     inputHandler.init(renderer.init.window);
+    renderer.enginePtr = this;
     return 0;
 };
 
@@ -53,12 +54,6 @@ int SoulShard::run() {
             inputHandler.releaseMouse();
         }
 
-        auto view = entities.view<Model>();
-        renderer.data.models.clear();
-        for (auto entity : view) {
-            auto& model = view.get<Model>(entity);
-            renderer.data.models.push_back(model);
-        }
         auto currentTime = glfwGetTime();
         deltaTime = float(currentTime - lastTime);
         lastTime = currentTime;

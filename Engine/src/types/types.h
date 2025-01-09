@@ -17,12 +17,9 @@
 
 #define u32 uint32_t
 struct Model{
-    bool active;
     u32 indexOffset;
     u32 triangleCount;
     u32 instanceCount;
-    std::vector<glm::mat4> modelMatrices;
-    std::string name;
 };
 
 struct System{

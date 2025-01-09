@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 namespace {
-    float fov = 45;
+    float fov = 70;
     glm::vec3 position = glm::vec3(0,0,15.0f);
     glm::vec3 forward = glm::vec3(0,0,-1.0f);
     glm::vec3 up = glm::vec3(0,1,0.0f);

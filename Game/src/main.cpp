@@ -1,4 +1,6 @@
+#include "Scene/Scene.h"
 #include "entt/entity/fwd.hpp"
+#include "glm/fwd.hpp"
 #include "types/types.h"
 #include <SoulShard.h>
 #include <climits>
@@ -11,7 +13,7 @@ void printFPS(float deltaTime) {
     printf("FPS %f\n", 1/deltaTime);
 }
 
-float fov = 45;
+float fov = 70;
 glm::vec3 position = glm::vec3(0,0,15.0f);
 glm::vec3 forward = glm::vec3(0,0,-1.0f);
 glm::vec3 up = glm::vec3(0,1,0.0f);
@@ -51,35 +53,14 @@ void updateCamera(float deltaTime) {
 };
 
 float elapsedTime = 0.0f;
-std::vector<glm::vec3> rotations = {{0,1,0}};
 void rotateAllModels(float deltaTime) {
-    auto view = engine.entities.view<Model>();
-    elapsedTime += deltaTime;
-    entt::entity player;
-    for (auto entity : view) {
-	auto& model = view.get<Model>(entity);
-	if(model.instanceCount >= 2000) break;
-	model.instanceCount++;
-	auto mat = glm::mat4(1.0);
-	float xi1 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
-	float xi2 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
-	float xi3 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
-	mat = glm::translate(mat, glm::vec3(xi1, xi2, xi3));
-	model.modelMatrices.push_back(mat);
-	xi1 = (2*((float)rand()/(float)INT_MAX)-1.0f);
-	xi2 = (2*((float)rand()/(float)INT_MAX)-1.0f);
-	xi3 = (2*((float)rand()/(float)INT_MAX)-1.0f);
-	rotations.push_back({xi1, xi2, xi3});
-    }
-    int i = 0;
-    for (auto entity : view) {
-        auto& model = view.get<Model>(entity);
-	for (auto & matrix : model.modelMatrices) {
-	    matrix = glm::translate(matrix,
-			  sinf(elapsedTime) * 0.0001f *  glm::normalize(glm::vec3(rotations[i++])));
-	}
-
-    }
+    if(engine.scene.instanceCount >= MAX_INSTANCES - 1) return;
+    float xi1 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
+    float xi2 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
+    float xi3 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
+    auto dir = glm::vec3(xi1, xi2, xi3);
+    auto & cube = engine.scene.instantiateModel("Cube", "Cube 1");
+    engine.scene.translateInstance(dir, cube); 
 };
 
 int main (int argc, char *argv[]) {

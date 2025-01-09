@@ -1,3 +1,4 @@
+#include "SoulShard.h"
 #include "VkRenderer.h"
 #include "glm/fwd.hpp"
 #include <iostream>
@@ -17,16 +18,12 @@ int VkRenderer::create_command_pool() {
 
 
 void VkRenderer::renderModels(int i) {
-    std::vector<glm::mat4> matrices;
-    for (auto & model : data.models) {
-        for(int i = 0; i < model.instanceCount; ++i){
-            matrices.push_back(model.modelMatrices[i]);
-        }
-    }
     u32 modelIndex = 0;
-    updateModelBuffer(matrices);
+    SoulShard & engine = *((SoulShard*)enginePtr);
+
+    updateModelBuffer(engine.scene.modelMatrices);
     init.disp.cmdBindIndexBuffer(data.command_buffers[i], data.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-    for (auto & model : data.models) {
+    for (auto & model : engine.scene.linearModels) {
         vkCmdPushConstants(data.command_buffers[i],data.pipeline_layout,VK_SHADER_STAGE_VERTEX_BIT,
             0,                  // Offset
             sizeof(uint32_t),   // Size

@@ -149,6 +149,7 @@ void VkRenderer::updateCameraBuffer(Camera & camera) {
 }
 
 void VkRenderer::updateModelBuffer(std::vector<glm::mat4> & matrices) {
+    if(matrices.size() == 0) return;
     copyDataToBuffer(data.uniformBuffers[1].second, matrices.data(), sizeof(glm::mat4) * matrices.size()); 
 }
 

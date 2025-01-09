@@ -1,6 +1,7 @@
 #ifndef SOUL_SHARD_ENINGE_H
 #define SOUL_SHARD_ENINGE_H
 #include "InputHandling/InputHandling.h"
+#include "Scene/Scene.h"
 #include "entt/entt.hpp"
 #include "types/types.h"
 #include <string>
@@ -10,11 +11,11 @@
 struct SoulShard {
     VkRenderer renderer;
     std::vector<System> systems;
-    entt::registry entities;
     glm::vec2 renderingResolution;
     GPUGeometry gpuGeometry;
     Camera mainCamera;
     Camera editorCamera;
+    Scene scene;
     float deltaTime;
     int run();
     int startup();
