@@ -3,6 +3,7 @@
 #include "Editor/Editor.h"
 #include "GLFW/glfw3.h"
 #include "InputHandling/InputHandling.h"
+#include "Physics/JoltImpl.h"
 #include "Vulkan/VkRenderer.h"
 #include <cstdlib>
 #include <iostream>
@@ -37,6 +38,7 @@ int SoulShard::startup() {
 
 
 int SoulShard::run() {
+    testPhysics();
     renderer.data.vertices = &gpuGeometry.vertices;
     renderer.data.indices = &gpuGeometry.indices;
 
