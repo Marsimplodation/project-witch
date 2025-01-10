@@ -45,7 +45,6 @@ void main() {
 
     // Skip edge detection if normal change is not significant
     float normalChangeThreshold = 0.1; // Adjust this value based on your mesh
-    outColor = vec4(normalChange, 0,0,1);
     float edgeFactor = 0.7* fresnelTerm + 0.3 * normalChange; // Weighted combination
     if (normalChange < normalChangeThreshold) {
 	edgeFactor = 0.0; 

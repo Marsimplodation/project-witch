@@ -33,6 +33,13 @@ FetchContent_Declare(
     GIT_TAG v1.91.6-docking
 )
 
+FetchContent_Declare(
+    JoltPhysics
+    GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
+    GIT_TAG "v5.2.0"
+    SOURCE_SUBDIR "Build"
+)
+
 # Fetch TinyObjLoader
 FetchContent_Declare(
   tinyobjloader
@@ -40,7 +47,7 @@ FetchContent_Declare(
   GIT_TAG v2.0.0rc13  # Replace with the version you want to use
 )
 
-FetchContent_MakeAvailable(fetch_vk_bootstrap glfw entt glm imgui tinyobjloader)
+FetchContent_MakeAvailable(fetch_vk_bootstrap glfw entt glm imgui tinyobjloader JoltPhysics)
 find_package(Vulkan REQUIRED)
 
 add_library(imgui
@@ -58,7 +65,7 @@ add_library(imgui
   ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
 ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp)
 
-target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
+target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${JoltPhysics_SOURCE_DIR}/..)
 target_link_libraries(imgui PUBLIC Vulkan::Vulkan glfw)
 file(GLOB_RECURSE SOURCES
 		"src/*.cpp"
@@ -74,7 +81,7 @@ include_directories(
 )
 
 # Link dependencies for the engine
-target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap glfw glm imgui tinyobjloader)
+target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap glfw glm imgui tinyobjloader Jolt)
 # Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 # Include the EnTT header files

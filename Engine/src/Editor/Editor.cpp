@@ -254,7 +254,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
                 transform[3]
             );
             auto oldPos = position;
-            ImGui::DragFloat3("test", (float*)&position);
+            ImGui::DragFloat3("test", (float*)&position, 0.1f);
             auto delta = position - oldPos;
             if(delta != glm::vec3(0)) {
                 engine.scene.translateInstance(delta, instance);

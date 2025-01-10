@@ -91,6 +91,14 @@ int SoulShard::run() {
     return 0;
 }
 
+void SoulShard::destroy() {
+    renderer.init.disp.deviceWaitIdle();
+
+    renderer.data.gui.destroy(renderer.init.device);
+    renderer.cleanup();
+    exit(0);
+}
+
 void SoulShard::registerSystem(void(*func)(float deltaTime), const char * name) {
     systems.push_back({.active = true,
         .func = func,

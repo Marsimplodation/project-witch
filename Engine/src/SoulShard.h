@@ -21,6 +21,7 @@ struct SoulShard {
     int startup();
     void registerSystem(void(*func)(float deltaTime), const char * name);
     void loadGeometry(std::string modelPath);
+    void destroy();
     InputHandler inputHandler;
 };
 
