@@ -1,6 +1,7 @@
 #include "Editor.h"
 #include "../SoulShard.h"
 #include "../Vulkan/VkRenderer.h"
+#include "ImGuizmo.h"
 #include "InputHandling/KeyDefines.h"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -34,6 +35,11 @@ void ImguiModule::renderViewport(void * initPtr, void * dataPtr) {
     engine.editorCamera.view = glm::lookAt(position,
                                     position + forward,
                                     up); 
+
+
+    ImGuizmo::SetDrawlist();
+    ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y);
+
     if(ImGui::IsWindowHovered() && input.isKeyPressed(MOUSE_2)) {
         float deltaTime = engine.deltaTime; 
         input.captureMouse();
@@ -41,8 +47,8 @@ void ImguiModule::renderViewport(void * initPtr, void * dataPtr) {
         up = glm::vec3(engine.editorCamera.view[1]);
         right = glm::vec3(engine.editorCamera.view[0]);
         forward = glm::vec3(engine.editorCamera.view[2]);
-        yaw -=  delta[0] * deltaTime * 40.0f;
-        pitch -= delta[1] * deltaTime * 40.0f;
+        yaw -=  delta[0] * deltaTime * 50.0f;
+        pitch -= delta[1] * deltaTime * 50.0f;
         auto rot = createRotationMatrix(yaw, pitch, 0.0f);
         glm::vec3 f = {0,0,-1};
         glm::vec3 u = {0,1,0};

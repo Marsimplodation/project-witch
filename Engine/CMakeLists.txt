@@ -1,7 +1,6 @@
 project(soulsshard)
 
 include(FetchContent)
-include(FetchContent)
 FetchContent_Declare(
     fetch_vk_bootstrap
     GIT_REPOSITORY https://github.com/charles-lunarg/vk-bootstrap
@@ -34,6 +33,13 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
+    imguizmo
+    GIT_REPOSITORY GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo
+    GIT_TAG master
+)
+
+
+FetchContent_Declare(
     JoltPhysics
     GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
     GIT_TAG "v5.2.0"
@@ -47,7 +53,16 @@ FetchContent_Declare(
   GIT_TAG v2.0.0rc13  # Replace with the version you want to use
 )
 
-FetchContent_MakeAvailable(fetch_vk_bootstrap glfw entt glm imgui tinyobjloader JoltPhysics)
+FetchContent_MakeAvailable(
+    fetch_vk_bootstrap
+    glfw
+    entt
+    glm
+    imgui
+    imguizmo
+    tinyobjloader
+    JoltPhysics
+)
 find_package(Vulkan REQUIRED)
 
 add_library(imgui
@@ -62,11 +77,23 @@ add_library(imgui
   ${imgui_SOURCE_DIR}/imstb_rectpack.h
   ${imgui_SOURCE_DIR}/imstb_textedit.h
   ${imgui_SOURCE_DIR}/imstb_truetype.h
+  ${imgui_SOURCE_DIR}/imstb_textedit.h
   ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
 ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp)
 
-target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${JoltPhysics_SOURCE_DIR}/..)
+add_library(imguizmo
+  ${imguizmo_SOURCE_DIR}/ImGuizmo.cpp
+  ${imguizmo_SOURCE_DIR}/ImGuizmo.h
+)
+
+
+target_compile_definitions(imgui PUBLIC IMGUI_DEFINE_MATH_OPERATORS)
+target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
 target_link_libraries(imgui PUBLIC Vulkan::Vulkan glfw)
+
+target_include_directories(imguizmo PUBLIC ${imguizmo_SOURCE_DIR})
+target_link_libraries(imguizmo PUBLIC imgui)
+
 file(GLOB_RECURSE SOURCES
 		"src/*.cpp"
 		"src/*.h")
@@ -78,10 +105,18 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES})
 include_directories(
     ${GLFW_INCLUDE_DIRS}
     ${imgui_SOURCE_DIR}
+    ${imguizmo_SOURCE_DIR}
+    ${JoltPhysics_SOURCE_DIR}/..
 )
 
 # Link dependencies for the engine
-target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap glfw glm imgui tinyobjloader Jolt)
+target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap
+    glfw
+    glm
+    imgui
+    imguizmo
+    tinyobjloader
+    Jolt)
 # Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 # Include the EnTT header files

@@ -32,9 +32,9 @@ struct Scene {
     Instance & instantiateModel(std::string objName, std::string instanceName);
     void translateInstance(glm::vec3 & dir, Instance & instance);
     u32 instanceCount = 0;
+    void updateModels();
 
 private:
-    void updateModels();
 };
 
 

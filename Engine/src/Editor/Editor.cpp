@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iterator>
 #include "../Vulkan/VkRenderer.h"
+#include "ImGuizmo.h"
 #include "InputHandling/KeyDefines.h"
 #include "SoulShard.h"
 #include "glm/detail/qualifier.hpp"
@@ -216,6 +217,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame(); // If using GLFW
         ImGui::NewFrame();// Set up docking
+        ImGuizmo::BeginFrame();
 
         ImGui::DockSpaceOverViewport(0);
 
@@ -246,19 +248,30 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::End();
         ImGui::Begin("Selected");
         if(selectedInstance) {
+
             auto & instance = *selectedInstance;
             const char * name = instance.name.c_str();
             ImGui::Text("%s", name);
-            glm::mat4 transform = instance.instanceOf.modelMatrices[instance.transformIdx];
-            glm::vec3 position = glm::vec3(
-                transform[3]
-            );
-            auto oldPos = position;
-            ImGui::DragFloat3("test", (float*)&position, 0.1f);
-            auto delta = position - oldPos;
-            if(delta != glm::vec3(0)) {
-                engine.scene.translateInstance(delta, instance);
+            glm::mat4 & transform = instance.instanceOf.modelMatrices[instance.transformIdx];
+            engine.editorCamera.projection[1][1] *= -1;
+            ImGuizmo::Manipulate(glm::value_ptr(engine.editorCamera.view),
+                             glm::value_ptr(engine.editorCamera.projection),
+                             ImGuizmo::OPERATION::UNIVERSAL,
+                             ImGuizmo::WORLD,
+                             glm::value_ptr(transform));
+            engine.editorCamera.projection[1][1] *= -1;
+            if (ImGuizmo::IsUsing()){
+                engine.scene.updateModels();
+
             }
+            glm::vec3 newPosition, newRotation, newScale;
+            ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform),
+                                                  glm::value_ptr(newPosition),
+                                                  glm::value_ptr(newRotation),
+                                                  glm::value_ptr(newScale));
+            ImGui::DragFloat3("position", (float*)&newPosition, 0.1f);
+            ImGui::DragFloat3("rotation", (float*)&newRotation, 0.1f);
+            ImGui::DragFloat3("scale", (float*)&newScale, 0.1f);
         }
         ImGui::End();
         
