@@ -251,7 +251,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
 
             auto & instance = *selectedInstance;
             const char * name = instance.name.c_str();
-            ImGui::Text("%s", name);
+            ImGui::Text("Name: %s", name);
             glm::mat4 & transform = instance.instanceOf.modelMatrices[instance.transformIdx];
             engine.editorCamera.projection[1][1] *= -1;
             ImGuizmo::Manipulate(glm::value_ptr(engine.editorCamera.view),
@@ -284,7 +284,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         const char * name = pair.first.c_str();
             if (ImGui::Selectable(name)) {  // Make the text clickable
                 // Call your function to spawn a new instance here
-                engine.scene.instantiateModel(name, name); 
+                selectedInstance = &engine.scene.instantiateModel(name, name); 
             }
         }
         ImGui::End();
