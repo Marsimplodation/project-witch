@@ -9,6 +9,7 @@
 #include "SoulShard.h"
 #include "glm/detail/qualifier.hpp"
 #include "glm/fwd.hpp"
+#include "types/types.h"
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
@@ -252,7 +253,8 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             auto & instance = *selectedInstance;
             const char * name = instance.name.c_str();
             ImGui::Text("Name: %s", name);
-            glm::mat4 & transform = instance.instanceOf.modelMatrices[instance.transformIdx];
+            ImGui::BeginChild("Transform Component");
+            glm::mat4 & transform = engine.scene.registry.get<TransformComponent>(instance.entity).mat;
             engine.editorCamera.projection[1][1] *= -1;
             ImGuizmo::Manipulate(glm::value_ptr(engine.editorCamera.view),
                              glm::value_ptr(engine.editorCamera.projection),
@@ -260,10 +262,6 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
                              ImGuizmo::WORLD,
                              glm::value_ptr(transform));
             engine.editorCamera.projection[1][1] *= -1;
-            if (ImGuizmo::IsUsing()){
-                engine.scene.updateModels();
-
-            }
             glm::vec3 newPosition, newRotation, newScale;
             ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform),
                                                   glm::value_ptr(newPosition),
@@ -272,6 +270,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             ImGui::DragFloat3("position", (float*)&newPosition, 0.1f);
             ImGui::DragFloat3("rotation", (float*)&newRotation, 0.1f);
             ImGui::DragFloat3("scale", (float*)&newScale, 0.1f);
+            ImGui::EndChild();
         }
         ImGui::End();
         

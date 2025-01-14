@@ -33,6 +33,7 @@ int SoulShard::startup() {
     if (0 != renderer.create_sync_objects()) return -1;
     inputHandler.init(renderer.init.window);
     renderer.enginePtr = this;
+    renderer.data.editorMode = true;
     return 0;
 };
 
@@ -51,6 +52,7 @@ int SoulShard::run() {
 
     while (!glfwWindowShouldClose(renderer.init.window)) {
         glfwPollEvents();
+        scene.updateModels();
         if (inputHandler.isKeyPressedOnce(KEY_U)) {
             renderer.data.editorMode = !renderer.data.editorMode;
             inputHandler.releaseMouse();

@@ -38,7 +38,7 @@ void main() {
     cameraWorldPos = -transpose(mat3(camera.view)) * camera.view[3].xyz;
     texIdx = materialIdx;
     fragUV = uv;
-    fragNormal = inNormal;
+    fragNormal = normalize(mat3(models[index]) * inNormal);
     fragPosition = vec3(worldPos);
 }
 

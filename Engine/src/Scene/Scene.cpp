@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "types/types.h"
 #include <string>
 
 Instance & Scene::instantiateModel(std::string objName, std::string instanceName) {
@@ -8,36 +9,19 @@ Instance & Scene::instantiateModel(std::string objName, std::string instanceName
     }
     auto & model = geometry[objName];
     model.instanceCount++;
-    model.modelMatrices.push_back(glm::mat4(1.0f));
+    model.instances.push_back(instances.size());
 
     Instance instance = {
         .name = instanceName,
-        .instanceOf = model,
-        .transformIdx = model.instanceCount - 1,
+        .entity = registry.create(),
     };
+    TransformComponent transform = {
+        glm::mat4(1.0)
+    };
+    registry.emplace<TransformComponent>(instance.entity, transform);
 
     instances.push_back(instance);
-
-    linearModels.clear();
-    modelMatrices.clear();
-    for(auto & pair : geometry) {
-        auto & info = pair.second;
-        linearModels.push_back({
-            .indexOffset = info.indexOffset,
-            .triangleCount = info.triangleCount,
-            .instanceCount = info.instanceCount,
-        });
-        for(auto & matrix : info.modelMatrices) {
-            modelMatrices.push_back(matrix);
-        }
-    }
     return instances.back();
-}
-
-void Scene::translateInstance(glm::vec3 & dir, Instance & instance) {
-    auto & mat = instance.instanceOf.modelMatrices[instance.transformIdx];
-    mat = glm::translate(mat, dir);
-    updateModels();
 }
 
 void Scene::updateModels() {
@@ -50,8 +34,10 @@ void Scene::updateModels() {
             .triangleCount = info.triangleCount,
             .instanceCount = info.instanceCount,
         });
-        for(auto & matrix : info.modelMatrices) {
-            modelMatrices.push_back(matrix);
+        for(auto & iIdx : info.instances) {
+            auto & instance = instances[iIdx];
+            auto & transform = registry.get<TransformComponent>(instance.entity);
+            modelMatrices.push_back(transform.mat);
         }
     }
 }

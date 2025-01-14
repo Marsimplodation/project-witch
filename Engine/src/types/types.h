@@ -23,6 +23,13 @@ struct Model{
     u32 instanceCount;
 };
 
+struct TransformComponent{
+    glm::mat4 mat;
+    glm::vec3 rot;
+    glm::vec3 pos;
+    glm::vec3 scale;
+};
+
 struct System{
     bool active;
     void(*func)(float deltaTime);
