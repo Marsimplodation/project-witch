@@ -31,33 +31,6 @@ float calculateFresnelInAir(float dot) {
 void main() {
         // Calculate view direction
     vec3 viewDir = normalize(cameraPosition - fragPosition);
-
-    // Fresnel term: Highlight edges based on the angle between the normal and view direction
-    float fresnelTerm = 1.0 - abs(dot(normalize(fragNormal), viewDir));
-    fresnelTerm = pow(fresnelTerm, 3.0); // Sharpen Fresnel effect
-
-    // Screen-space derivative-based edge detection
-    vec3 dNormalX = dFdx(fragNormal);
-    vec3 dNormalY = dFdy(fragNormal);
-
-    // Measure the rate of change in normals
-    float normalChange = length(dNormalX) + length(dNormalY);
-
-    // Skip edge detection if normal change is not significant
-    float normalChangeThreshold = 0.1; // Adjust this value based on your mesh
-    float edgeFactor = 0.7* fresnelTerm + 0.3 * normalChange; // Weighted combination
-    if (normalChange < normalChangeThreshold) {
-	edgeFactor = 0.0; 
-    }
-
-    // Combine Fresnel and derivative edges
-    float outlineThreshold = 0.3; // Final outline threshold
-
-    if (edgeFactor > outlineThreshold) {
-        // Render outline as black
-        outColor = vec4(0.0, 0.0, 0.0, 1.0);
-        return;
-    }
     Light lights[1];
     
     // Initialize each field manually
@@ -76,11 +49,6 @@ void main() {
 	vec3 lightDirection = normalize(lightPosition - fragNormal);
 	float cosDir = dot(lightDirection, fragNormal);
 	cosDir = max(0.1, cosDir);
-
-	// Quantize cosDir to create a cel-shading effect
-	int numSteps = 2; // Number of shading levels
-	float step = 1.0 / float(numSteps);
-	cosDir = floor(cosDir / step) * step;
         outColor.rgb += texColor.rgb * cosDir * lights[i].color * lights[i].intensity;
     }
 
