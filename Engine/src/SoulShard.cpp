@@ -34,12 +34,14 @@ int SoulShard::startup() {
     inputHandler.init(renderer.init.window);
     renderer.enginePtr = this;
     renderer.data.editorMode = true;
+    initPhysics();
+
     return 0;
 };
 
 
 int SoulShard::run() {
-    testPhysics();
+    //testPhysics();
     renderer.data.vertices = &gpuGeometry.vertices;
     renderer.data.indices = &gpuGeometry.indices;
 
@@ -51,16 +53,18 @@ int SoulShard::run() {
     renderer.data.gui.enginePtr = this;
 
     while (!glfwWindowShouldClose(renderer.init.window)) {
+        auto currentTime = glfwGetTime();
+        deltaTime = float(currentTime - lastTime);
+        lastTime = currentTime;
+
         glfwPollEvents();
+        updatePhysics(deltaTime, scene);
         scene.updateModels();
         if (inputHandler.isKeyPressedOnce(KEY_U)) {
             renderer.data.editorMode = !renderer.data.editorMode;
             inputHandler.releaseMouse();
         }
 
-        auto currentTime = glfwGetTime();
-        deltaTime = float(currentTime - lastTime);
-        lastTime = currentTime;
         if (!renderer.data.editorMode) {
             renderingResolution[0] = renderer.init.swapchain.extent.width;
             renderingResolution[1] = renderer.init.swapchain.extent.height;

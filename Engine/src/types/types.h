@@ -1,5 +1,8 @@
 #ifndef SOUL_SHARD_TYPES_H
 #define SOUL_SHARD_TYPES_H
+#include <Jolt/Jolt.h>
+#include "Jolt/Physics/Body/BodyID.h"
+#include "Jolt/Physics/Collision/Shape/BoxShape.h"
 #include <cstdint>
 #include <array>
 #include <glm/fwd.hpp>
@@ -8,12 +11,14 @@
 
 //glm imports
 #define GLM_FORCE_RADIANS
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <vulkan/vulkan_core.h>
 
 #define u32 uint32_t
@@ -28,6 +33,11 @@ struct TransformComponent{
     glm::vec3 rot;
     glm::vec3 pos;
     glm::vec3 scale;
+};
+
+struct PhysicsComponent {
+    JPH::BodyID bodyID;
+    JPH::BoxShapeSettings* shapeSettings;
 };
 
 struct System{

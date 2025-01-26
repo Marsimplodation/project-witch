@@ -1,5 +1,6 @@
 #ifndef JOLT_IMPLEMENTATION_H
 #define JOLT_IMPLEMENTATION_H
+#include "Scene/Scene.h"
 #include <Jolt/Jolt.h>
 
 // Jolt includes
@@ -66,5 +67,8 @@ public:
 
 
 int testPhysics();
+void initPhysics();
+void createRigidBody(Instance & instance, Scene & scene);
+void updatePhysics(float deltaTime, Scene & scene);
 
 #endif // !JOLT_IMPLEMENTATION_H

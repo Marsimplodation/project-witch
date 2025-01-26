@@ -1,3 +1,4 @@
+#include "Physics/JoltImpl.h"
 #include "Scene/Scene.h"
 #include "entt/entity/fwd.hpp"
 #include "glm/fwd.hpp"
@@ -57,10 +58,11 @@ float elapsedTime = 0.0f;
 void spawnModels(float deltaTime) {
     if(engine.scene.instanceCount >= 100) return;
     float xi1 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
-    float xi2 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
+    float xi2 = (((float)rand()/(float)INT_MAX)) * 20;
     float xi3 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
     auto dir = glm::vec3(xi1, xi2, xi3);
     auto & cube = engine.scene.instantiateModel("Cube", "Cube 1");
+    createRigidBody(cube, engine.scene);
     auto & trans = engine.scene.registry.get<TransformComponent>(cube.entity);
     trans.mat = glm::translate(trans.mat, dir); 
 };
@@ -68,7 +70,7 @@ void rotateModels(float deltaTime) {
     auto view = engine.scene.registry.view<TransformComponent>();
     for (auto & entity : view) {
 	auto & trans = engine.scene.registry.get<TransformComponent>(entity);
-	trans.mat = glm::rotate(trans.mat, deltaTime * glm::radians(90.0f), glm::normalize(glm::vec3(0,0.0,1.0))); 
+	trans.mat = glm::rotate(trans.mat, deltaTime * glm::radians(180.0f), glm::normalize(glm::vec3(0,0.0,1.0))); 
     }
 };
 
@@ -77,7 +79,7 @@ int main (int argc, char *argv[]) {
     engine.loadGeometry("../Game/Assets/test.obj");
     engine.registerSystem(updateCamera, "Game Camera");
     engine.registerSystem(spawnModels, "spawn Models");
-    engine.registerSystem(rotateModels, "Rotation");
+    //engine.registerSystem(rotateModels, "Rotation");
     //engine.registerSystem(printFPS, "FPS");
     engine.run();
 }

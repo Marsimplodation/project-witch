@@ -1,4 +1,5 @@
 #include "../SoulShard.h"
+#include "Physics/JoltImpl.h"
 #include "glm/fwd.hpp"
 #include "tiny_obj_loader.h"
 #include <cmath>
@@ -82,6 +83,7 @@ void SoulShard::loadGeometry(std::string modelPath) {
             .triangleCount = (endIdx-startIdx)/3,
         };
         scene.geometry[shape.name] = m;
-        scene.instantiateModel(shape.name, shape.name);
+        auto & instance = scene.instantiateModel(shape.name, shape.name);
+        createRigidBody(instance, scene);
     }
 }
