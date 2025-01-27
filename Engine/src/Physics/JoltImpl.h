@@ -70,5 +70,6 @@ int testPhysics();
 void initPhysics();
 void createRigidBody(Instance & instance, Scene & scene);
 void updatePhysics(float deltaTime, Scene & scene);
+void AddLinearVelocity(Instance & instance, Vec3 v, Scene & scene);
 
 #endif // !JOLT_IMPLEMENTATION_H

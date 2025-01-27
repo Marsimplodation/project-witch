@@ -56,7 +56,7 @@ void updateCamera(float deltaTime) {
 
 float elapsedTime = 0.0f;
 void spawnModels(float deltaTime) {
-    if(engine.scene.instanceCount >= 100) return;
+    if(engine.scene.instanceCount >= 400) return;
     float xi1 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
     float xi2 = (((float)rand()/(float)INT_MAX)) * 20;
     float xi3 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
@@ -65,6 +65,7 @@ void spawnModels(float deltaTime) {
     createRigidBody(cube, engine.scene);
     auto & trans = engine.scene.registry.get<TransformComponent>(cube.entity);
     trans.mat = glm::translate(trans.mat, dir); 
+    AddLinearVelocity(cube, Vec3(-xi1, xi2, -xi3),engine.scene);
 };
 void rotateModels(float deltaTime) {
     auto view = engine.scene.registry.view<TransformComponent>();
@@ -79,6 +80,7 @@ int main (int argc, char *argv[]) {
     engine.loadGeometry("../Game/Assets/test.obj");
     engine.registerSystem(updateCamera, "Game Camera");
     engine.registerSystem(spawnModels, "spawn Models");
+    engine.systems.back().active = false;
     //engine.registerSystem(rotateModels, "Rotation");
     //engine.registerSystem(printFPS, "FPS");
     engine.run();

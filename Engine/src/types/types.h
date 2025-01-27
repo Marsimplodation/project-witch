@@ -37,6 +37,7 @@ struct TransformComponent{
 
 struct PhysicsComponent {
     JPH::BodyID bodyID;
+    JPH::Body* body;
     JPH::BoxShapeSettings* shapeSettings;
 };
 

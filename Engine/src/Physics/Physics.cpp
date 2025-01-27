@@ -8,7 +8,7 @@ namespace {
     }
 
     TempAllocatorImpl& getTempAllocator() {
-        static TempAllocatorImpl temp_allocator(10 * 1024 * 1024);
+        static TempAllocatorImpl temp_allocator(30 * 1024 * 1024);
         return temp_allocator;
     }
 
@@ -73,12 +73,22 @@ void createRigidBody(Instance & instance, Scene & scene) {
     BodyInterface &bodyInterface = getPhysicsSystem().GetBodyInterface();
     PhysicsComponent phys = {
         JPH::BodyID(),                             // Default initialize bodyID
+	0x0,
         new JPH::BoxShapeSettings(JPH::Vec3(1.0f, 1.0f, 1.0f)) // Initialize shapeSettings
     };
     BodyCreationSettings cubeSettings(phys.shapeSettings, RVec3(0.0_r, 0.0_r, 0.0_r), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-    phys.bodyID = bodyInterface.CreateAndAddBody(cubeSettings, EActivation::Activate);
+    phys.body = bodyInterface.CreateBody(cubeSettings);
+    phys.bodyID = phys.body->GetID();
+    bodyInterface.AddBody(phys.bodyID, EActivation::Activate); 
     scene.registry.emplace<PhysicsComponent>(instance.entity, phys);
 };
+
+void AddLinearVelocity(Instance & instance, Vec3 v, Scene & scene) {
+    auto & phys = scene.registry.get<PhysicsComponent>(instance.entity);
+    BodyInterface &bodyInterface = getPhysicsSystem().GetBodyInterface();
+    bodyInterface.SetLinearVelocity(phys.bodyID, v);
+}
+
 
 void updatePhysics(float deltaTime, Scene &scene) {
     auto view = scene.registry.view<TransformComponent, PhysicsComponent>();
@@ -106,7 +116,6 @@ void updatePhysics(float deltaTime, Scene &scene) {
 	    JPH::Vec4(normalizedMat[2][0], normalizedMat[2][1], normalizedMat[2][2], normalizedMat[2][3]),
 	    JPH::Vec4(normalizedMat[3][0], normalizedMat[3][1], normalizedMat[3][2], normalizedMat[3][3])
 	);
-
 	bodyInterface.SetPositionAndRotation(phys.bodyID, mat.GetTranslation(), mat.GetRotation().GetQuaternion(), EActivation::Activate);
     }
     getPhysicsSystem().Update(deltaTime, 1, &getTempAllocator(), &getJobSystem());
@@ -114,7 +123,7 @@ void updatePhysics(float deltaTime, Scene &scene) {
     for (auto & entity : view) {
 	auto & phys = scene.registry.get<PhysicsComponent>(entity); 
 	auto & transform = scene.registry.get<TransformComponent>(entity);
-	auto mat = bodyInterface.GetWorldTransform(phys.bodyID);
+	auto mat = phys.body->GetWorldTransform();
 	transform.mat = ConvertToGLM(mat);
     }
 }
