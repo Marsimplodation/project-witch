@@ -199,6 +199,7 @@ void editorControls(SoulShard & engine) {
 }
 
 Instance * selectedInstance = 0x0;
+std::vector<ImTextureID> textures;
 void ImguiModule::update(void * initPtr, void * dataPtr) {
    	VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
     	VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;
@@ -208,6 +209,16 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         if(!active) return;
         if(textureCreated) {
             ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(textureID));
+            for(auto & texture : textures)
+            ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(texture));
+        }
+        textures.resize(data.textures.size());
+        for(int i = 0; i < data.textures.size(); ++i) {
+            textures[i] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
+            data.textures[i].sampler,
+            data.textures[i].view,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // Image layout for sampling
+        ));
         }
         textureID = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
             data.imageSampler,
@@ -237,6 +248,13 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             ImGui::Checkbox((std::string("Active##") + name).c_str(), &system.active);
         }
         ImGui::End();
+            for(int i = 0; i < data.textures.size(); ++i) {
+        ImGui::Begin("Textures");
+        ImGui::Image(textures[i], ImVec2(512, 512));
+        ImGui::End();
+
+        }
+
 
 
         ImGui::Begin("Scene");

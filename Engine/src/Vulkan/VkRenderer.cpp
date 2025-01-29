@@ -38,6 +38,7 @@ int VkRenderer::device_initialization() {
     init.window = create_window_glfw("Vulkan Triangle", true);
 
     vkb::InstanceBuilder instance_builder;
+    instance_builder.set_app_version(VK_API_VERSION_1_3);
     auto instance_ret = instance_builder.use_default_debug_messenger().request_validation_layers().build();
     if (!instance_ret) {
         std::cout << instance_ret.error().message() << "\n";
@@ -50,10 +51,17 @@ int VkRenderer::device_initialization() {
     init.surface = create_surface_glfw(init.instance, init.window);
 
     vkb::PhysicalDeviceSelector phys_device_selector(init.instance);
+    VkPhysicalDeviceVulkan12Features vk12Features{};
+    vk12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    vk12Features.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+    vk12Features.descriptorIndexing = VK_TRUE;
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.fillModeNonSolid = VK_TRUE;
     deviceFeatures.samplerAnisotropy = VK_TRUE;
     phys_device_selector.set_required_features(deviceFeatures);
+    phys_device_selector.set_required_features_12(vk12Features);
+    phys_device_selector.add_required_extension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
+    phys_device_selector.add_required_extension(VK_KHR_MAINTENANCE3_EXTENSION_NAME);
     auto phys_device_ret = phys_device_selector.set_surface(init.surface).select();
     if (!phys_device_ret) {
         std::cout << phys_device_ret.error().message() << "\n";

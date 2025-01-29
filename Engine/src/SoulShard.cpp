@@ -64,7 +64,7 @@ int SoulShard::run() {
     scenePtr = &scene;
     renderer.data.vertices = &gpuGeometry.vertices;
     renderer.data.indices = &gpuGeometry.indices;
-    std::thread thread(runAt60fps);
+    //std::thread thread(runAt60fps);
 
     if (0 != renderer.createGeometryBuffers()) return -1;
     if (0 != renderer.createUniformBuffers()) return -1;
@@ -116,7 +116,7 @@ int SoulShard::run() {
 
     renderer.data.gui.destroy(renderer.init.device);
     renderer.cleanup();
-    thread.join();
+    //thread.join();
     return 0;
 }
 
