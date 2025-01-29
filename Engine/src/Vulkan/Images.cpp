@@ -222,6 +222,10 @@ int VkRenderer::loadTexture(std::string path) {
             float g = pixels[pixelIndex + 1] / 255.0f;
             float b = pixels[pixelIndex + 2] / 255.0f;
             float a = pixels[pixelIndex + 3] / 255.0f;
+            //gamma correction
+            r = std::powf(r, 2.2f);
+            g = std::powf(g, 2.2f);
+            b = std::powf(b, 2.2f);
             textureData.push_back({ r, g, b, a});
         }
     }
