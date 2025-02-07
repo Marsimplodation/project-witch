@@ -47,13 +47,21 @@ struct VkRenderer {
         std::vector<VkImageView> offscreen_image_views;
         std::vector<VkFramebuffer> offscreen_framebuffers;
         std::vector<Texture> textures;
+        
+        VkImage shadow_image;
+        VkDeviceMemory shadow_image_memory;
+        VkImageView shadow_image_view;
+        VkFramebuffer shadow_framebuffer;
 
 
         VkRenderPass render_pass;
         VkRenderPass offscreen_pass;
+        VkRenderPass shadow_pass;
         VkPipelineLayout pipeline_layout;
+        VkPipelineLayout shadow_pipeline_layout;
         VkPipeline graphics_pipeline;
         VkPipeline offscreen_pipeline;
+        VkPipeline shadow_pipeline;
         VkSampler imageSampler;
         bool swapchain_out_of_date;
         bool editorMode;
@@ -89,6 +97,8 @@ struct VkRenderer {
 
         const char * vertShaderPath;
         const char * fragShaderPath;
+        const char * shadowVertShaderPath;
+        const char * shadowFragShaderPath;
 
         size_t current_frame = 0;
         int current_img_index = 0;
@@ -103,9 +113,16 @@ struct VkRenderer {
     int create_swapchain();
     int get_queues();
     std::vector<char> readFile(const std::string& filename);
+
+    struct ShaderStage {
+        VkShaderModule module;
+        VkPipelineShaderStageCreateInfo info;
+    };
+
     VkShaderModule createShaderModule(const std::vector<char>& data);
     int create_graphics_pipeline(VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL);
     int recreate_graphics_pipeline(VkPolygonMode newMode);
+    void createShaderStages(VkRenderer::ShaderStage * stages, const std::string& vert, const std::string& frag);
     int draw_frame();
     void cleanup();
 
@@ -134,6 +151,7 @@ struct VkRenderer {
     void scene_offscreen_rendering(int i);
     void scene_onscreen_rendering(int i);
     void ui_onscreen_rendering(int i);
+    void scene_shadow_rendering(int i);
     void renderModels(int i);
     void *enginePtr;
 

@@ -10,7 +10,6 @@ layout(location = 1) out vec3 fragNormal;
 layout(location = 2) out vec2 fragUV;
 layout(location = 3) out uint texIdx;
 layout(location = 4) out vec3 cameraWorldPos;
-layout(location = 5) out vec4 positionInLight;
 
 
 
@@ -38,10 +37,9 @@ float random(vec2 seed) {
 void main() {
     uint index = startModelIndex + gl_InstanceIndex;
     vec4 worldPos= models[index] * vec4(inPosition, 1.0);
-    gl_Position = camera.projection *camera.view * worldPos;
     mat4 lightView = getLightViewMatrix();
     mat4 lightProj = getLightOrthoMatrix();
-    positionInLight = lightProj * lightView * worldPos;
+    gl_Position = lightProj * lightView * worldPos;
     cameraWorldPos = -transpose(mat3(camera.view)) * camera.view[3].xyz;
     texIdx = materialIdx;
     fragUV = uv;

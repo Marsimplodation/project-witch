@@ -73,6 +73,18 @@ int VkRenderer::createRenderPass() {
         std::cout << "failed to create render pass\n";
         return -1; // failed to create render pass!
     }
+    
+    render_pass_info.attachmentCount = 1;
+    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    attachments = {depthAttachment};
+    depthAttachmentRef.attachment = 0;
+    subpass.colorAttachmentCount = 0;
+    subpass.pColorAttachments = VK_NULL_HANDLE;
+    render_pass_info.pAttachments = attachments.data();
+    if (init.disp.createRenderPass(&render_pass_info, nullptr, &data.shadow_pass) != VK_SUCCESS) {
+        std::cout << "failed to create render pass\n";
+        return -1; // failed to create render pass!
+    }
     createImageSampler();
 
     return 0;
@@ -90,6 +102,15 @@ void VkRenderer::createDepthResources() {
     createImage(data.depthImage,
                 data.depthImageView,
                 data.depthImageMemory,
+                depthFormat,
+                extent,
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                VK_IMAGE_ASPECT_DEPTH_BIT);
+    extent.width = 1024;
+    extent.height = 1024; 
+    createImage(data.shadow_image,
+                data.shadow_image_view,
+                data.shadow_image_memory,
                 depthFormat,
                 extent,
                 VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
@@ -154,6 +175,19 @@ int VkRenderer::create_framebuffers() {
             return -1; // failed to create framebuffer
         }
     }
+    std::array<VkImageView, 1> attachments = { data.shadow_image_view};
+
+    VkFramebufferCreateInfo framebuffer_info = {};
+    framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    framebuffer_info.renderPass = data.shadow_pass;
+    framebuffer_info.attachmentCount = 1;
+    framebuffer_info.pAttachments = attachments.data();
+    framebuffer_info.width = 1024; 
+    framebuffer_info.height = 1024 ;
+    framebuffer_info.layers = 1;
+    if (init.disp.createFramebuffer(&framebuffer_info, nullptr, &data.shadow_framebuffer) != VK_SUCCESS) {
+        return -1; // failed to create framebuffer
+    }
     return 0;
 }
 
@@ -176,6 +210,10 @@ int VkRenderer::recreate_swapchain() {
     init.disp.destroyImage(data.depthImage, nullptr);
     init.disp.destroyImageView(data.depthImageView, nullptr);
     init.disp.freeMemory(data.depthImageMemory, nullptr);
+    init.disp.destroyFramebuffer(data.shadow_framebuffer, nullptr);
+    init.disp.destroyImage(data.shadow_image, nullptr);
+    init.disp.destroyImageView(data.shadow_image_view, nullptr);
+    init.disp.freeMemory(data.shadow_image_memory, nullptr);
 
     init.swapchain.destroy_image_views(data.swapchain_image_views);
 

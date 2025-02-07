@@ -42,15 +42,15 @@ int VkRenderer::recreate_graphics_pipeline(VkPolygonMode newMode) {
     init.disp.destroyPipelineLayout(data.pipeline_layout, nullptr);
     return create_graphics_pipeline(newMode);
 }
-int VkRenderer::create_graphics_pipeline(VkPolygonMode polygonMode) {
-    auto vert_code = readFile(data.vertShaderPath);
-    auto frag_code = readFile(data.fragShaderPath);
+
+void VkRenderer::createShaderStages(VkRenderer::ShaderStage * stages, const std::string& vert, const std::string& frag){
+    auto vert_code = readFile(vert);
+    auto frag_code = readFile(frag);
 
     VkShaderModule vert_module = createShaderModule(vert_code);
     VkShaderModule frag_module = createShaderModule(frag_code);
     if (vert_module == VK_NULL_HANDLE || frag_module == VK_NULL_HANDLE) {
         std::cout << "failed to create shader module\n";
-        return -1; // failed to create shader modules
     }
 
     VkPipelineShaderStageCreateInfo vert_stage_info = {};
@@ -64,8 +64,20 @@ int VkRenderer::create_graphics_pipeline(VkPolygonMode polygonMode) {
     frag_stage_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
     frag_stage_info.module = frag_module;
     frag_stage_info.pName = "main";
+    stages[0].module = vert_module;
+    stages[1].module = frag_module;
+    stages[0].info = vert_stage_info;
+    stages[1].info = frag_stage_info;
+}
 
-    VkPipelineShaderStageCreateInfo shader_stages[] = { vert_stage_info, frag_stage_info };
+int VkRenderer::create_graphics_pipeline(VkPolygonMode polygonMode) {
+    VkRenderer::ShaderStage graphicsShaders[2];
+    VkRenderer::ShaderStage shadowShaders[2];
+    createShaderStages(graphicsShaders, data.vertShaderPath, data.fragShaderPath);
+    createShaderStages(shadowShaders, data.shadowVertShaderPath, data.shadowFragShaderPath);
+    
+    VkPipelineShaderStageCreateInfo shader_stages[] = { graphicsShaders[0].info, graphicsShaders[1].info };
+    VkPipelineShaderStageCreateInfo shadow_shader_stages[] = { shadowShaders[0].info, shadowShaders[1].info };
 
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -208,8 +220,31 @@ int VkRenderer::create_graphics_pipeline(VkPolygonMode polygonMode) {
         std::cout << "failed to create pipline\n";
         return -1; // failed to create graphics pipeline
     }
+    
+    pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipeline_info.stageCount = 2;
+    pipeline_info.pStages = shadow_shader_stages;
+    pipeline_info.pVertexInputState = &vertex_input_info;
+    pipeline_info.pInputAssemblyState = &input_assembly;
+    pipeline_info.pViewportState = &viewport_state;
+    pipeline_info.pRasterizationState = &rasterizer;
+    pipeline_info.pMultisampleState = &multisampling;
+    pipeline_info.pColorBlendState = &color_blending;
+    pipeline_info.pDynamicState = &dynamic_info;
+    pipeline_info.layout = data.pipeline_layout;
+    pipeline_info.renderPass = data.shadow_pass;
+    pipeline_info.subpass = 0;
+    pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
+    pipeline_info.pDepthStencilState = &depthStencil;
 
-    init.disp.destroyShaderModule(frag_module, nullptr);
-    init.disp.destroyShaderModule(vert_module, nullptr);
+    if (init.disp.createGraphicsPipelines(VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &data.shadow_pipeline) != VK_SUCCESS) {
+        std::cout << "failed to create pipline\n";
+        return -1; // failed to create graphics pipeline
+    }
+
+    init.disp.destroyShaderModule(graphicsShaders[0].module, nullptr);
+    init.disp.destroyShaderModule(graphicsShaders[1].module, nullptr);
+    init.disp.destroyShaderModule(shadowShaders[0].module, nullptr);
+    init.disp.destroyShaderModule(shadowShaders[1].module, nullptr);
     return 0;
 }

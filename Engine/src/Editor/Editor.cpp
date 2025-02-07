@@ -212,7 +212,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             for(auto & texture : textures)
             ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(texture));
         }
-        textures.resize(data.textures.size());
+        textures.resize(data.textures.size() + 1);
         for(int i = 0; i < data.textures.size(); ++i) {
             textures[i] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
             data.textures[i].sampler,
@@ -220,6 +220,11 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // Image layout for sampling
         ));
         }
+        textures[textures.size() -1] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
+        data.imageSampler,
+        data.shadow_image_view,
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // Image layout for sampling
+        ));
         textureID = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
             data.imageSampler,
             data.offscreen_image_views[data.current_frame],                       // VkSampler
@@ -248,12 +253,12 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             ImGui::Checkbox((std::string("Active##") + name).c_str(), &system.active);
         }
         ImGui::End();
-            for(int i = 0; i < data.textures.size(); ++i) {
         ImGui::Begin("Textures");
-        ImGui::Image(textures[i], ImVec2(512, 512));
-        ImGui::End();
-
+        ImGui::Image(textures[textures.size() -1], ImVec2(512, 512));
+        for(int i = 0; i < data.textures.size(); ++i) {
+            ImGui::Image(textures[i], ImVec2(512, 512));
         }
+        ImGui::End();
 
 
 

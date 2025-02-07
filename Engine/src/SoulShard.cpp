@@ -15,6 +15,8 @@ int SoulShard::startup() {
     renderer.data = {
         .vertShaderPath = "./vert.spv",
         .fragShaderPath = "./frag.spv",
+        .shadowVertShaderPath = "./shadowVert.spv",
+        .shadowFragShaderPath = "./shadowFrag.spv",
     };
 
     if (0 != renderer.device_initialization()) return -1;

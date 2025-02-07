@@ -224,10 +224,17 @@ void VkRenderer::cleanup() {
     init.disp.destroyImage(data.depthImage, nullptr);
     init.disp.destroyImageView(data.depthImageView, nullptr);
     init.disp.freeMemory(data.depthImageMemory, nullptr);
+    init.disp.destroyFramebuffer(data.shadow_framebuffer, nullptr);
+    init.disp.destroyImage(data.shadow_image, nullptr);
+    init.disp.destroyImageView(data.shadow_image_view, nullptr);
+    init.disp.freeMemory(data.shadow_image_memory, nullptr);
+
 
     init.disp.destroyPipeline(data.graphics_pipeline, nullptr);
+    init.disp.destroyPipeline(data.shadow_pipeline, nullptr);
     init.disp.destroyPipeline(data.offscreen_pipeline, nullptr);
     init.disp.destroyPipelineLayout(data.pipeline_layout, nullptr);
+    init.disp.destroyRenderPass(data.shadow_pass, nullptr);
     init.disp.destroyRenderPass(data.render_pass, nullptr);
     init.disp.destroyRenderPass(data.offscreen_pass, nullptr);
     init.disp.destroySampler(data.imageSampler, nullptr);

@@ -30,7 +30,7 @@ void ImguiModule::renderViewport(void * initPtr, void * dataPtr) {
     engine.editorCamera.projection = glm::perspective(
                                         glm::radians(fov),
                                         engine.renderingResolution[0] / engine.renderingResolution[1],
-                                        0.1f, 1000.0f);
+                                        0.0001f, 1000.0f);
     engine.editorCamera.projection[1][1] *= -1;
     engine.editorCamera.view = glm::lookAt(position,
                                     position + forward,
