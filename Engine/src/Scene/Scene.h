@@ -34,8 +34,8 @@ struct Scene {
     std::vector<Model> linearModels;
     entt::registry registry;
     DirectionLight sceneLight = DirectionLight{
-        .view = glm::lookAt(glm::vec3(5,2,-1), glm::vec3(0.0f), glm::vec3(0,1,0)), 
-        .projection = glm::ortho(-5.0f, 5.0f, -5.0f,5.0f, 1.0f, 6.5f),
+        .position = glm::vec4(4,1.5,4,0),
+        .direction = glm::vec4(-1,-1,-1,0),
         .color = glm::vec4(1.0f),
         .intensity = 1.0f,
     };
@@ -43,6 +43,7 @@ struct Scene {
     Instance & instantiateModel(std::string objName, std::string instanceName);
     u32 instanceCount = 0;
     void updateModels();
+    void updateLights();
     void initScene();
 
 private:

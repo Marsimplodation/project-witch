@@ -43,7 +43,7 @@ void main() {
     uint index = startModelIndex + gl_InstanceIndex;
     vec4 worldPos= models[index] * vec4(inPosition, 1.0);
     gl_Position = camera.projection *camera.view * worldPos;
-    positionInLight = light.projection * light.view * worldPos;
+    positionInLight = bias* light.projection * light.view * worldPos;
     cameraWorldPos = -transpose(mat3(camera.view)) * camera.view[3].xyz;
     texIdx = materialIdx;
     fragUV = uv;

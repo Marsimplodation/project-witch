@@ -36,6 +36,8 @@ struct TransformComponent{
 };
 
 struct DirectionLight {
+    glm::vec4 position; 
+    glm::vec4 direction; 
     glm::mat4 view;
     glm::mat4 projection;
     glm::vec4 color;

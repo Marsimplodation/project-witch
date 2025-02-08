@@ -195,6 +195,7 @@ int VkRenderer::record_command_buffer(int i) {
     init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
     update_descriptor_sets();
     scene_shadow_rendering(i);
+    engine.scene.updateLights();
     updateLightBuffer(engine.scene.sceneLight);
     if(data.editorMode){
         scene_offscreen_rendering(i);

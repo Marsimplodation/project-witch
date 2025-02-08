@@ -9,7 +9,6 @@ layout(location = 0) out vec3 fragPosition;
 layout(location = 1) out vec3 fragNormal;
 layout(location = 2) out vec2 fragUV;
 layout(location = 3) out uint texIdx;
-layout(location = 4) out vec3 cameraWorldPos;
 
 
 
@@ -35,13 +34,10 @@ layout(binding = 3) uniform LightBuffer {
     DirectionLight light;
 };
 
-
-
 void main() {
     uint index = startModelIndex + gl_InstanceIndex;
     vec4 worldPos= models[index] * vec4(inPosition, 1.0);
     gl_Position = light.projection * light.view * worldPos;
-    cameraWorldPos = -transpose(mat3(camera.view)) * camera.view[3].xyz;
     texIdx = materialIdx;
     fragUV = uv;
     fragNormal = normalize(mat3(models[index]) * inNormal);

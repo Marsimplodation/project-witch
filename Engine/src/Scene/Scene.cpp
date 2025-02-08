@@ -1,9 +1,17 @@
 #include "Scene.h"
+#include "glm/ext/matrix_clip_space.hpp"
 #include "types/types.h"
 #include <string>
 
-void Scene::initScene() {
-    sceneLight.projection[1][1] *= -1;
+void Scene::updateLights() {
+    sceneLight.direction = glm::normalize(-sceneLight.position);
+    sceneLight.view = glm::lookAt(glm::vec3(sceneLight.position),
+                                  glm::vec3(0), glm::vec3(0,1,0)); 
+
+
+    
+    float near_plane = 1.0f, far_plane = 1000.5f;
+    sceneLight.projection = glm::perspective(glm::radians(100.0f), 1.0f, near_plane, far_plane);
 };
 
 Instance & Scene::instantiateModel(std::string objName, std::string instanceName) {

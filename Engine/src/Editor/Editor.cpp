@@ -271,6 +271,11 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             }
         }
         ImGui::End();
+        ImGui::Begin("Light");
+        ImGui::DragFloat3("position", (float*)&engine.scene.sceneLight.position, 0.1f);
+        ImGui::DragFloat3("direction", (float*)&engine.scene.sceneLight.direction, 0.1f);
+
+        ImGui::End();
         ImGui::Begin("Selected");
         if(selectedInstance) {
 
