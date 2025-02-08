@@ -12,19 +12,15 @@ layout(location = 5) in vec4 positionInLight;
 layout(location = 0) out vec4 outColor;
 layout(set = 0, binding = 2) uniform sampler2D texSamplers[100];
 
-//opengl tutorial
 float ShadowCalculation(vec4 fragPosLightSpace)
 {
-    // perform perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    // transform to [0,1] range
     projCoords = projCoords * 0.5 + 0.5;
-    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    float closestDepth = texture(texSamplers[nonuniformEXT(0)], projCoords.xy).r;
-    // get depth of current fragment from light's perspective
-    float currentDepth = projCoords.z;
-    // check whether current frag pos is in shadow
-    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+
+    if (projCoords.z > 1.0)
+        return 0.0;
+
+    float shadow = texture(texSamplers[0], projCoords.xy).r < projCoords.z ? 1.0 : 0.0;
 
     return shadow;
 }

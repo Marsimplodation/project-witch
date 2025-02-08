@@ -44,9 +44,8 @@ void VkRenderer::scene_shadow_rendering(int i){
     extent.height = 1024; 
     offsceen_pass_info.renderArea.extent = extent; 
     std::array<VkClearValue, 2> clearValues{};
-    clearValues[1].color = {0.0f, 0.0f, 0.0f, 1.0f};
     clearValues[0].depthStencil = {1.0f, 0};
-    offsceen_pass_info.clearValueCount = 2;
+    offsceen_pass_info.clearValueCount = 1;
     offsceen_pass_info.pClearValues = clearValues.data();
 
     VkViewport viewport = {};
@@ -196,6 +195,7 @@ int VkRenderer::record_command_buffer(int i) {
     init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
     update_descriptor_sets();
     scene_shadow_rendering(i);
+    updateLightBuffer(engine.scene.sceneLight);
     if(data.editorMode){
         scene_offscreen_rendering(i);
         ui_onscreen_rendering(i);

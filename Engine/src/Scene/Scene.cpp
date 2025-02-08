@@ -2,6 +2,10 @@
 #include "types/types.h"
 #include <string>
 
+void Scene::initScene() {
+    sceneLight.projection[1][1] *= -1;
+};
+
 Instance & Scene::instantiateModel(std::string objName, std::string instanceName) {
     if(++instanceCount >= MAX_INSTANCES) {
         printf("too many instances\n");

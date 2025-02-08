@@ -31,15 +31,16 @@ float random(vec2 seed) {
     return fract(sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
+layout(binding = 3) uniform LightBuffer {
+    DirectionLight light;
+};
 
 
 
 void main() {
     uint index = startModelIndex + gl_InstanceIndex;
     vec4 worldPos= models[index] * vec4(inPosition, 1.0);
-    mat4 lightView = getLightViewMatrix();
-    mat4 lightProj = getLightOrthoMatrix();
-    gl_Position = lightProj * lightView * worldPos;
+    gl_Position = light.projection * light.view * worldPos;
     cameraWorldPos = -transpose(mat3(camera.view)) * camera.view[3].xyz;
     texIdx = materialIdx;
     fragUV = uv;

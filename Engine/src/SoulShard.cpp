@@ -37,6 +37,7 @@ int SoulShard::startup() {
     renderer.enginePtr = this;
     renderer.data.editorMode = true;
     initPhysics();
+    scene.initScene();
 
     return 0;
 };

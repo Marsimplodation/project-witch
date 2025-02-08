@@ -137,6 +137,7 @@ struct VkRenderer {
     VkResult createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
                   VkBuffer* buffer, VkDeviceMemory* bufferMemory);
     void updateCameraBuffer(Camera & camera);
+    void updateLightBuffer(DirectionLight & light);
     u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
 
     //--- Descriptors ----//

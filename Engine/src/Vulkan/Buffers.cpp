@@ -1,5 +1,6 @@
 #include "VkRenderer.h"
 #include "glm/fwd.hpp"
+#include "types/types.h"
 #include <glm/fwd.hpp>
 #include <utility>
 #include <vulkan/vulkan_core.h>
@@ -141,6 +142,15 @@ int VkRenderer::createUniformBuffers() {
              &modelBuffer,
              &modelMemory);
     data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(modelBuffer, modelMemory));
+    
+    VkBuffer lightBuffer;
+    VkDeviceMemory lightMemory;
+    createBuffer(sizeof(DirectionLight),
+             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+             &lightBuffer,
+             &lightMemory);
+    data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(lightBuffer, lightMemory));
     return 0;
 }
 
@@ -151,6 +161,10 @@ void VkRenderer::updateCameraBuffer(Camera & camera) {
 void VkRenderer::updateModelBuffer(std::vector<glm::mat4> & matrices) {
     if(matrices.size() == 0) return;
     copyDataToBuffer(data.uniformBuffers[1].second, matrices.data(), sizeof(glm::mat4) * matrices.size()); 
+}
+
+void VkRenderer::updateLightBuffer(DirectionLight & light) {
+    copyDataToBuffer(data.uniformBuffers[2].second, &light, sizeof(DirectionLight)); 
 }
 
 void VkRenderer::destroyBuffers() {

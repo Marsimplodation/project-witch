@@ -35,6 +35,13 @@ struct TransformComponent{
     glm::vec3 scale;
 };
 
+struct DirectionLight {
+    glm::mat4 view;
+    glm::mat4 projection;
+    glm::vec4 color;
+    float intensity; 
+};
+
 struct PhysicsComponent {
     JPH::BodyID bodyID;
     JPH::Body* body;

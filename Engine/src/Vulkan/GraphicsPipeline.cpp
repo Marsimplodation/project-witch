@@ -123,6 +123,16 @@ int VkRenderer::create_graphics_pipeline(VkPolygonMode polygonMode) {
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
+    
+    VkPipelineRasterizationStateCreateInfo shadowRasterizer = {};
+    shadowRasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    shadowRasterizer.depthClampEnable = VK_FALSE;
+    shadowRasterizer.rasterizerDiscardEnable = VK_FALSE;
+    shadowRasterizer.polygonMode = polygonMode;
+    shadowRasterizer.lineWidth = 1.0f;
+    shadowRasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
+    shadowRasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    shadowRasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = {};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -227,7 +237,7 @@ int VkRenderer::create_graphics_pipeline(VkPolygonMode polygonMode) {
     pipeline_info.pVertexInputState = &vertex_input_info;
     pipeline_info.pInputAssemblyState = &input_assembly;
     pipeline_info.pViewportState = &viewport_state;
-    pipeline_info.pRasterizationState = &rasterizer;
+    pipeline_info.pRasterizationState = &shadowRasterizer;
     pipeline_info.pMultisampleState = &multisampling;
     pipeline_info.pColorBlendState = &color_blending;
     pipeline_info.pDynamicState = &dynamic_info;

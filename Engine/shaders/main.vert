@@ -27,6 +27,10 @@ layout(binding = 1) uniform ModelBuffer {
     mat4 models[10000];
 };
 
+layout(binding = 3) uniform LightBuffer {
+    DirectionLight light;
+};
+
 // Pseudo-random number generator
 float random(vec2 seed) {
     return fract(sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453);
@@ -39,9 +43,7 @@ void main() {
     uint index = startModelIndex + gl_InstanceIndex;
     vec4 worldPos= models[index] * vec4(inPosition, 1.0);
     gl_Position = camera.projection *camera.view * worldPos;
-    mat4 lightView = getLightViewMatrix();
-    mat4 lightProj = getLightOrthoMatrix();
-    positionInLight = lightProj * lightView * worldPos;
+    positionInLight = light.projection * light.view * worldPos;
     cameraWorldPos = -transpose(mat3(camera.view)) * camera.view[3].xyz;
     texIdx = materialIdx;
     fragUV = uv;
