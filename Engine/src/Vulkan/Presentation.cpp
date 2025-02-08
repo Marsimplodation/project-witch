@@ -113,7 +113,7 @@ void VkRenderer::createDepthResources() {
                 data.shadow_image_memory,
                 depthFormat,
                 extent,
-                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 

@@ -21,8 +21,6 @@ void VkRenderer::renderModels(int i) {
     u32 modelIndex = 0;
     SoulShard & engine = *((SoulShard*)enginePtr);
 
-    updateModelBuffer(engine.scene.modelMatrices);
-    init.disp.cmdBindIndexBuffer(data.command_buffers[i], data.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
     for (auto & model : engine.scene.linearModels) {
         vkCmdPushConstants(data.command_buffers[i],data.pipeline_layout,VK_SHADER_STAGE_VERTEX_BIT,
             0,                  // Offset
@@ -69,11 +67,6 @@ void VkRenderer::scene_shadow_rendering(int i){
 
     init.disp.cmdBindPipeline(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.shadow_pipeline);
 
-    VkDeviceSize offsets[] = {0};
-    VkBuffer vertexBuffers[] = {data.vertexBuffer};
-    init.disp.cmdBindVertexBuffers(data.command_buffers[i], 0, 1, vertexBuffers, offsets);
-    init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
-    update_descriptor_sets();
     renderModels(i);
     init.disp.cmdEndRenderPass(data.command_buffers[i]);
 }
@@ -113,11 +106,6 @@ void VkRenderer::scene_offscreen_rendering(int i){
 
     init.disp.cmdBindPipeline(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.offscreen_pipeline);
 
-    VkDeviceSize offsets[] = {0};
-    VkBuffer vertexBuffers[] = {data.vertexBuffer};
-    init.disp.cmdBindVertexBuffers(data.command_buffers[i], 0, 1, vertexBuffers, offsets);
-    init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
-    update_descriptor_sets();
     renderModels(i);
     init.disp.cmdEndRenderPass(data.command_buffers[i]);
 
@@ -188,12 +176,6 @@ void VkRenderer::scene_onscreen_rendering(int i){
     init.disp.cmdBeginRenderPass(data.command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
     init.disp.cmdBindPipeline(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.graphics_pipeline);
-
-    VkDeviceSize offsets[] = {0};
-    VkBuffer vertexBuffers[] = {data.vertexBuffer};
-    init.disp.cmdBindVertexBuffers(data.command_buffers[i], 0, 1, vertexBuffers, offsets);
-    init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
-    update_descriptor_sets();
     renderModels(i);
     init.disp.cmdEndRenderPass(data.command_buffers[i]);
 }
@@ -205,8 +187,16 @@ int VkRenderer::record_command_buffer(int i) {
     if (init.disp.beginCommandBuffer(data.command_buffers[i], &begin_info) != VK_SUCCESS) {
         return -1; // failed to begin recording command buffer
     }
+    SoulShard & engine = *((SoulShard*)enginePtr);
+    updateModelBuffer(engine.scene.modelMatrices);
+    init.disp.cmdBindIndexBuffer(data.command_buffers[i], data.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    VkDeviceSize offsets[] = {0};
+    VkBuffer vertexBuffers[] = {data.vertexBuffer};
+    init.disp.cmdBindVertexBuffers(data.command_buffers[i], 0, 1, vertexBuffers, offsets);
+    init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
+    update_descriptor_sets();
+    scene_shadow_rendering(i);
     if(data.editorMode){
-        scene_shadow_rendering(i);
         scene_offscreen_rendering(i);
         ui_onscreen_rendering(i);
     } else {
