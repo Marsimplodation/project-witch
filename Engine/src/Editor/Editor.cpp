@@ -274,7 +274,8 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::Begin("Light");
         ImGui::DragFloat3("position", (float*)&engine.scene.sceneLight.position, 0.1f);
         ImGui::DragFloat3("direction", (float*)&engine.scene.sceneLight.direction, 0.1f);
-
+        ImGui::ColorEdit4("Color", (float*)&engine.scene.sceneLight.color);
+        ImGui::DragFloat("intensity", (float*)&engine.scene.sceneLight.intensity);
         ImGui::End();
         ImGui::Begin("Selected");
         if(selectedInstance) {

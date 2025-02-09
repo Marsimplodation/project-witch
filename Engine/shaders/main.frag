@@ -19,9 +19,20 @@ layout(binding = 3) uniform LightBuffer {
 float ShadowCalculation(vec4 fragPosLightSpace)
 {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-
-    float shadow = texture(texSamplers[0], projCoords.xy).r < projCoords.z - 0.005 ? 1.0 : 0.0;
-
+    float shadow = 0.0f;
+    if(projCoords.z > 1.0)
+        return shadow;
+        
+    float bias = max(0.05 * (1.0 - dot(fragNormal, light.direction.xyz)), 0.005);
+    for(int i = -1; i < 2; ++i){
+        for(int j = -1; j < 2; ++j){
+            vec2 coords = projCoords.xy;
+            coords.x += i;
+            coords.y += j;
+            shadow += texture(texSamplers[0], coords.xy).r < projCoords.z - bias ? 1.0 : 0.0;
+        }
+    }
+    shadow/=9;
     return shadow;
 }
 
@@ -56,7 +67,7 @@ void main() {
     
 
     // Diffuse shading (cel shaded)
-    vec3 diffuse = celShading * vec3(1.0); 
+    vec3 diffuse = celShading * light.color.rgb * light.intensity; 
 
 
     // Accumulate lighting

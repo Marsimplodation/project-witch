@@ -106,8 +106,8 @@ void VkRenderer::createDepthResources() {
                 extent,
                 VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                 VK_IMAGE_ASPECT_DEPTH_BIT);
-    extent.width = 1024;
-    extent.height = 1024; 
+    extent.width = SHADOW_MAP_RES;
+    extent.height = SHADOW_MAP_RES; 
     createImage(data.shadow_image,
                 data.shadow_image_view,
                 data.shadow_image_memory,
@@ -182,8 +182,8 @@ int VkRenderer::create_framebuffers() {
     framebuffer_info.renderPass = data.shadow_pass;
     framebuffer_info.attachmentCount = 1;
     framebuffer_info.pAttachments = attachments.data();
-    framebuffer_info.width = 1024; 
-    framebuffer_info.height = 1024 ;
+    framebuffer_info.width = SHADOW_MAP_RES; 
+    framebuffer_info.height = SHADOW_MAP_RES;
     framebuffer_info.layers = 1;
     if (init.disp.createFramebuffer(&framebuffer_info, nullptr, &data.shadow_framebuffer) != VK_SUCCESS) {
         return -1; // failed to create framebuffer

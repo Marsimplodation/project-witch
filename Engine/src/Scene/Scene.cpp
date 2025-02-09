@@ -11,7 +11,7 @@ void Scene::updateLights() {
 
     
     float near_plane = 1.0f, far_plane = 1000.5f;
-    sceneLight.projection = glm::perspective(glm::radians(100.0f), 1.0f, near_plane, far_plane);
+    sceneLight.projection = glm::perspective(glm::radians(45.0f), 1.0f, near_plane, far_plane);
 };
 
 Instance & Scene::instantiateModel(std::string objName, std::string instanceName) {

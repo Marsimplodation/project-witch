@@ -246,6 +246,8 @@ int VkRenderer::create_graphics_pipeline(VkPolygonMode polygonMode) {
     pipeline_info.subpass = 0;
     pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
     pipeline_info.pDepthStencilState = &depthStencil;
+    viewport.width = (float)SHADOW_MAP_RES;
+    viewport.height = (float)SHADOW_MAP_RES;
 
     if (init.disp.createGraphicsPipelines(VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &data.shadow_pipeline) != VK_SUCCESS) {
         std::cout << "failed to create pipline\n";

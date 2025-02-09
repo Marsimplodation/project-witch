@@ -40,8 +40,8 @@ void VkRenderer::scene_shadow_rendering(int i){
     offsceen_pass_info.framebuffer = data.shadow_framebuffer;
     offsceen_pass_info.renderArea.offset = { 0, 0 };
     VkExtent2D extent;
-    extent.width = 1024; 
-    extent.height = 1024; 
+    extent.width = SHADOW_MAP_RES; 
+    extent.height = SHADOW_MAP_RES; 
     offsceen_pass_info.renderArea.extent = extent; 
     std::array<VkClearValue, 2> clearValues{};
     clearValues[0].depthStencil = {1.0f, 0};
@@ -51,14 +51,14 @@ void VkRenderer::scene_shadow_rendering(int i){
     VkViewport viewport = {};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float)extent.width;
-    viewport.height = (float)extent.height;
+    viewport.width = SHADOW_MAP_RES; 
+    viewport.height = SHADOW_MAP_RES;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor = {};
     scissor.offset = { 0, 0 };
-    scissor.extent = init.swapchain.extent;
+    scissor.extent = extent;
     init.disp.cmdSetViewport(data.command_buffers[i], 0, 1, &viewport);
     init.disp.cmdSetScissor(data.command_buffers[i], 0, 1, &scissor);
 
@@ -188,15 +188,19 @@ int VkRenderer::record_command_buffer(int i) {
     }
     SoulShard & engine = *((SoulShard*)enginePtr);
     updateModelBuffer(engine.scene.modelMatrices);
+    engine.scene.updateLights();
+    updateLightBuffer(engine.scene.sceneLight);
+
     init.disp.cmdBindIndexBuffer(data.command_buffers[i], data.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
     VkDeviceSize offsets[] = {0};
     VkBuffer vertexBuffers[] = {data.vertexBuffer};
     init.disp.cmdBindVertexBuffers(data.command_buffers[i], 0, 1, vertexBuffers, offsets);
-    init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
+
     update_descriptor_sets();
+    init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
+
     scene_shadow_rendering(i);
-    engine.scene.updateLights();
-    updateLightBuffer(engine.scene.sceneLight);
+
     if(data.editorMode){
         scene_offscreen_rendering(i);
         ui_onscreen_rendering(i);

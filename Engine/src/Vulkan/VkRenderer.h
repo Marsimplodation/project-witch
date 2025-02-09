@@ -11,6 +11,7 @@
 
 
 const int MAX_FRAMES_IN_FLIGHT = 1;
+const int SHADOW_MAP_RES = 4096;
 struct VkRenderer {
     struct Init {
         GLFWwindow* window;
