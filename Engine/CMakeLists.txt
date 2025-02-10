@@ -1,6 +1,12 @@
 project(soulsshard)
 
 include(FetchContent)
+
+find_package(Vulkan REQUIRED)
+find_package(TBB REQUIRED)
+find_package(X11 REQUIRED)
+find_package(pxr REQUIRED)
+
 FetchContent_Declare(
     fetch_vk_bootstrap
     GIT_REPOSITORY https://github.com/charles-lunarg/vk-bootstrap
@@ -42,7 +48,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   tinyobjloader
   GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
-  GIT_TAG v2.0.0rc13  # Replace with the version you want to use
+  GIT_TAG v2.0.0rc13
 )
 
 FetchContent_MakeAvailable(
@@ -54,7 +60,7 @@ FetchContent_MakeAvailable(
     imguizmo
     tinyobjloader
 )
-find_package(Vulkan REQUIRED)
+
 
 add_library(imgui
   ${imgui_SOURCE_DIR}/imgui.cpp
@@ -97,6 +103,7 @@ include_directories(
     ${GLFW_INCLUDE_DIRS}
     ${imgui_SOURCE_DIR}
     ${imguizmo_SOURCE_DIR}
+    ${pxr_DIR}/lib
 )
 
 # Link dependencies for the engine
@@ -106,6 +113,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap
     imgui
     imguizmo
     tinyobjloader
+    ${PXR_LIBRARIES}
     )
 # Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
