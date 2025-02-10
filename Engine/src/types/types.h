@@ -1,8 +1,5 @@
 #ifndef SOUL_SHARD_TYPES_H
 #define SOUL_SHARD_TYPES_H
-#include <Jolt/Jolt.h>
-#include "Jolt/Physics/Body/BodyID.h"
-#include "Jolt/Physics/Collision/Shape/BoxShape.h"
 #include <cstdint>
 #include <array>
 #include <glm/fwd.hpp>
@@ -42,12 +39,6 @@ struct DirectionLight {
     glm::mat4 projection;
     glm::vec4 color;
     float intensity; 
-};
-
-struct PhysicsComponent {
-    JPH::BodyID bodyID;
-    JPH::Body* body;
-    JPH::BoxShapeSettings* shapeSettings;
 };
 
 struct System{

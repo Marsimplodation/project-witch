@@ -6,7 +6,6 @@
 #include "../Vulkan/VkRenderer.h"
 #include "ImGuizmo.h"
 #include "InputHandling/KeyDefines.h"
-#include "Physics/JoltImpl.h"
 #include "SoulShard.h"
 #include "glm/detail/qualifier.hpp"
 #include "glm/fwd.hpp"
@@ -314,7 +313,6 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             if (ImGui::Selectable(name)) {  // Make the text clickable
                 // Call your function to spawn a new instance here
                 selectedInstance = &engine.scene.instantiateModel(name, name); 
-                createRigidBody(*selectedInstance, engine.scene);
             }
         }
         ImGui::End();

@@ -1,4 +1,3 @@
-#include "Physics/JoltImpl.h"
 #include "Scene/Scene.h"
 #include "entt/entity/fwd.hpp"
 #include "glm/fwd.hpp"
@@ -62,10 +61,8 @@ void spawnModels(float deltaTime) {
     float xi3 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
     auto dir = glm::vec3(xi1, xi2, xi3);
     auto & cube = engine.scene.instantiateModel("Cube", "Cube 1");
-    createRigidBody(cube, engine.scene);
     auto & trans = engine.scene.registry.get<TransformComponent>(cube.entity);
     trans.mat = glm::translate(trans.mat, dir); 
-    AddLinearVelocity(cube, Vec3(-xi1, xi2, -xi3),engine.scene);
 };
 void rotateModels(float deltaTime) {
     auto view = engine.scene.registry.view<TransformComponent>();

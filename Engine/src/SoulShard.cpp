@@ -3,7 +3,6 @@
 #include "Editor/Editor.h"
 #include "GLFW/glfw3.h"
 #include "InputHandling/InputHandling.h"
-#include "Physics/JoltImpl.h"
 #include "Vulkan/VkRenderer.h"
 #include <cstdlib>
 #include <iostream>
@@ -36,34 +35,13 @@ int SoulShard::startup() {
     inputHandler.init(renderer.init.window);
     renderer.enginePtr = this;
     renderer.data.editorMode = true;
-    initPhysics();
 
     return 0;
 };
 
-std::atomic<bool> running{true};
-Scene * scenePtr;
-void runAt60fps() {
-    using namespace std::chrono;
-
-    const milliseconds frameDuration(16); // 16ms per frame
-    while (running.load()) {
-        auto start = steady_clock::now();
-
-        updatePhysics(1.0f/60.0f, *scenePtr);
-
-        // Calculate elapsed time and sleep for the remaining duration
-        auto end = steady_clock::now();
-        auto elapsed = duration_cast<milliseconds>(end - start);
-        if (elapsed < frameDuration) {
-            std::this_thread::sleep_for(frameDuration - elapsed);
-        }
-    }
-}
 
 int SoulShard::run() {
     //testPhysics();
-    scenePtr = &scene;
     renderer.data.vertices = &gpuGeometry.vertices;
     renderer.data.indices = &gpuGeometry.indices;
     //std::thread thread(runAt60fps);

@@ -38,14 +38,6 @@ FetchContent_Declare(
     GIT_TAG master
 )
 
-
-FetchContent_Declare(
-    JoltPhysics
-    GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
-    GIT_TAG "v5.2.0"
-    SOURCE_SUBDIR "Build"
-)
-
 # Fetch TinyObjLoader
 FetchContent_Declare(
   tinyobjloader
@@ -61,7 +53,6 @@ FetchContent_MakeAvailable(
     imgui
     imguizmo
     tinyobjloader
-    JoltPhysics
 )
 find_package(Vulkan REQUIRED)
 
@@ -106,7 +97,6 @@ include_directories(
     ${GLFW_INCLUDE_DIRS}
     ${imgui_SOURCE_DIR}
     ${imguizmo_SOURCE_DIR}
-    ${JoltPhysics_SOURCE_DIR}/..
 )
 
 # Link dependencies for the engine
@@ -116,7 +106,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap
     imgui
     imguizmo
     tinyobjloader
-    Jolt)
+    )
 # Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 # Include the EnTT header files
