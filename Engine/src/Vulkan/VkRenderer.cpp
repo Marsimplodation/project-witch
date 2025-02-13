@@ -135,10 +135,6 @@ int VkRenderer::draw_frame() {
         std::cout << "failed to acquire swapchain image. Error " << result << "\n";
         return -1;
     }
-    if(renderingMode.recreate) {
-        recreate_graphics_pipeline(renderingMode.mode);
-    }
-
 
     data.current_img_index = image_index;
     if (data.image_in_flight[image_index] != VK_NULL_HANDLE) {

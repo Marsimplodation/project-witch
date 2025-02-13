@@ -188,22 +188,12 @@ std::string formatNumberWithDots(size_t number) {
 }
 bool lineRenderer = false;
 
-void editorControls(SoulShard & engine) {
-    if(engine.inputHandler.isKeyPressedOnce(KEY_F1)) {
-        engine.renderer.renderingMode = {.recreate = true, .mode = VK_POLYGON_MODE_LINE};
-    }
-    if(engine.inputHandler.isKeyPressedOnce(KEY_F2)) {
-        engine.renderer.renderingMode = {.recreate = true, .mode = VK_POLYGON_MODE_FILL};
-    }
-}
-
 Instance * selectedInstance = 0x0;
 std::vector<ImTextureID> textures;
 void ImguiModule::update(void * initPtr, void * dataPtr) {
    	VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
     	VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;
         SoulShard & engine = *((SoulShard*)enginePtr);
-        editorControls(engine);
 
         if(!active) return;
         if(textureCreated) {

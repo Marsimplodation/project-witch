@@ -30,11 +30,6 @@ struct VkRenderer {
         VkSampler sampler;
     };
 
-    struct {
-        bool recreate = false;
-        VkPolygonMode mode = VK_POLYGON_MODE_LINE;
-    } renderingMode;
-
     struct RenderData {
         VkQueue graphics_queue;
         VkQueue present_queue;
@@ -121,8 +116,6 @@ struct VkRenderer {
     };
 
     VkShaderModule createShaderModule(const std::vector<char>& data);
-    int create_graphics_pipeline(VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL);
-    int recreate_graphics_pipeline(VkPolygonMode newMode);
     void createShaderStages(VkRenderer::ShaderStage * stages, const std::string& vert, const std::string& frag);
     int draw_frame();
     void cleanup();
@@ -140,6 +133,16 @@ struct VkRenderer {
     void updateCameraBuffer(Camera & camera);
     void updateLightBuffer(DirectionLight & light);
     u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
+    //---Graphics Pipeline--//
+    VkPipeline createGraphicsPipeline(
+        const VkPipelineShaderStageCreateInfo* shader_stages,
+        VkPipelineRasterizationStateCreateInfo rasterizer,
+        VkRenderPass renderPass
+    );
+    void createGraphicsPipelineLayout();
+    int createRenderingPipeline();
+    void destroyShaderModules(const VkRenderer::ShaderStage* stages);
+
 
     //--- Descriptors ----//
     int create_descriptor_pool();

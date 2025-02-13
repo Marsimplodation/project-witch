@@ -25,7 +25,7 @@ int SoulShard::startup() {
     if (0 != renderer.create_descriptor_pool()) return -1;
     if (0 != renderer.create_descriptor_layout()) return -1;
     
-    if (0 != renderer.create_graphics_pipeline()) return -1;
+    if (0 != renderer.createRenderingPipeline()) return -1;
     if (0 != renderer.create_framebuffers()) return -1;
     if (0 != renderer.create_command_pool()) return -1;
 
