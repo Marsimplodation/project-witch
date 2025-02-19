@@ -39,6 +39,9 @@ struct DirectionLight {
     glm::mat4 projection;
     glm::vec4 color;
     float intensity; 
+    float nearPlane;
+    float farPlane;
+    glm::vec2 extents;
 };
 
 struct System{

@@ -23,7 +23,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     if(projCoords.z > 1.0)
         return shadow;
         
-    float bias = max(0.05 * (1.0 - dot(fragNormal, light.direction.xyz)), 0.005);
+    float bias = max(0.005 * (1.0 - dot(fragNormal, light.direction.xyz)), 0.0005);
     shadow += texture(texSamplers[0], projCoords.xy).r < projCoords.z - bias ? 1.0 : 0.0;
     return shadow;
 }
@@ -34,7 +34,7 @@ void main() {
     vec3 fragViewDir = normalize(fragPosition - cameraPosition);
 
     // Ambient light term (higher for anime style)
-    vec3 ambient = vec3(0.2);
+    vec3 ambient = light.color.rgb * 0.15f * light.intensity;
 
     // Sample texture
     vec4 texColor = vec4(1.0);
@@ -53,7 +53,7 @@ void main() {
 
 
     // Hard threshold for cel shading (Anime Style)
-    float shadowThreshold = 0.5;  // Adjust for more or less shadow
+    float shadowThreshold = 0.2;  // Adjust for more or less shadow
     float celShading = step(shadowThreshold, cosDir); 
     celShading = min(celShading, (1.0 - ShadowCalculation(positionInLight)));
     
