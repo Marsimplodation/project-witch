@@ -16,17 +16,36 @@ layout(binding = 3) uniform LightBuffer {
     DirectionLight light;
 };
 
+
 float ShadowCalculation(vec4 fragPosLightSpace)
 {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     float shadow = 0.0f;
     if(projCoords.z > 1.0)
         return shadow;
-        
+    
     float bias = max(0.005 * (1.0 - dot(fragNormal, light.direction.xyz)), 0.0005);
-    shadow += texture(texSamplers[0], projCoords.xy).r < projCoords.z - bias ? 1.0 : 0.0;
-    return shadow;
+
+    float weights[3][3] = float[3][3](
+        float[3](0.05, 0.1, 0.05),
+        float[3](0.1,  0.4, 0.1),
+        float[3](0.05, 0.1, 0.05)
+    );
+
+    float totalWeight = 0.0;
+    
+    for(int i = -1; i <= 1; ++i){
+        for(int j = -1; j <= 1; ++j){
+            vec2 coords = projCoords.xy + vec2(i, j) / 4096.0;
+            float sampleShadow = texture(texSamplers[0], coords.xy).r < projCoords.z - bias ? 1.0 : 0.0;
+            shadow += sampleShadow * weights[i + 1][j + 1];
+            totalWeight += weights[i + 1][j + 1];
+        }
+    }
+
+    return shadow / totalWeight;
 }
+
 
 void main() {
     // Normalize the fragment normal
