@@ -245,11 +245,13 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         }
         ImGui::End();
         ImGui::Begin("Textures");
-        for(int i = 0; i < SHADOW_CASCADES; ++i) {
-            ImGui::Image(textures[textures.size() -SHADOW_CASCADES + i], ImVec2(512, 512));
+        for(int i = 0; i < SHADOW_CASCADES; i+=2) {
+            ImGui::Image(textures[textures.size() -SHADOW_CASCADES + i], ImVec2(128, 128));
+            ImGui::SameLine();
+            ImGui::Image(textures[textures.size() -SHADOW_CASCADES + i +1], ImVec2(128, 128));
         }
         for(int i = 0; i < data.textures.size(); ++i) {
-            ImGui::Image(textures[i], ImVec2(512, 512));
+            ImGui::Image(textures[i], ImVec2(256, 256));
         }
         ImGui::End();
 
@@ -269,6 +271,8 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::DragFloat3("direction", (float*)&engine.scene.sceneLight.direction, 0.1f);
         ImGui::ColorEdit4("Color", (float*)&engine.scene.sceneLight.color);
         ImGui::DragFloat("intensity", (float*)&engine.scene.sceneLight.intensity);
+        ImGui::DragFloat("f1", (float*)&engine.scene.sceneLight.f1);
+        ImGui::DragFloat("f2", (float*)&engine.scene.sceneLight.f2);
         ImGui::End();
         ImGui::Begin("Selected");
         if(selectedInstance) {

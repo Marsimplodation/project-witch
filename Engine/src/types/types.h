@@ -40,6 +40,9 @@ struct DirectionLight {
     glm::mat4 projections[SHADOW_CASCADES];
     glm::vec4 color;
     float intensity; 
+    float splitDepths[SHADOW_CASCADES];
+    float f1;
+    float f2;
 };
 
 struct System{

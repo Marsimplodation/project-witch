@@ -25,7 +25,7 @@ float ShadowCalculation()
         vec4 posLightSpace = lBias * light.projections[i] * light.views[i] * vec4(fragPosition, 1.0);
         vec3 projCoords = posLightSpace.xyz / posLightSpace.w;
 
-        if (projCoords.z <= 1.0 - 0.01f) {
+        if (posLightSpace.z <= -light.splitDepths[i]) {
             cascadeIndex = i;
             break;
         }
@@ -40,7 +40,7 @@ float ShadowCalculation()
     if(projCoords.z > 1.0)
         return shadow;
     
-    float bias = max(0.005 * (1.0 - dot(fragNormal, light.direction.xyz)), 0.0005);
+    float bias = max(0.0005 * tan(acos(dot(fragNormal, light.direction.xyz))), 0.002);
 
     float weights[3][3] = float[3][3](
         float[3](0.05, 0.1, 0.05),
@@ -52,7 +52,7 @@ float ShadowCalculation()
     
     for(int i = -1; i <= 1; ++i){
         for(int j = -1; j <= 1; ++j){
-            vec2 coords = projCoords.xy + vec2(i, j) / 4096.0;
+            vec2 coords = projCoords.xy + vec2(i, j) / (4096.0 * 2);
             float sampleShadow = texture(texSamplers[cascadeIndex], coords.xy).r < projCoords.z - bias ? 1.0 : 0.0;
             shadow += sampleShadow * weights[i + 1][j + 1];
             totalWeight += weights[i + 1][j + 1];

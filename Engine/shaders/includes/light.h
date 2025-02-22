@@ -13,5 +13,6 @@ struct DirectionLight {
     mat4 projections[SHADOW_CASCADES];
     vec4 color;
     float intensity; 
+    float splitDepths[SHADOW_CASCADES];
 };
 #endif

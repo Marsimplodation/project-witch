@@ -12,16 +12,18 @@ std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const 
     // Inverse of the combined projection and view matrix
     glm::mat4 inv = glm::inverse(proj * view);  
 
-    std::vector<glm::vec3> corners{
-            glm::vec3(-1.0f,  1.0f, 0.0f),
-            glm::vec3( 1.0f,  1.0f, 0.0f),
-            glm::vec3( 1.0f, -1.0f, 0.0f),
-            glm::vec3(-1.0f, -1.0f, 0.0f),
-            glm::vec3(-1.0f,  1.0f,  1.0f),
-            glm::vec3( 1.0f,  1.0f,  1.0f),
-            glm::vec3( 1.0f, -1.0f,  1.0f),
-            glm::vec3(-1.0f, -1.0f,  1.0f),
-    };
+    
+std::vector<glm::vec3> corners{
+    {-1.0f,  1.0f, -1.0f},
+    { 1.0f,  1.0f, -1.0f},
+    { 1.0f, -1.0f, -1.0f},
+    {-1.0f, -1.0f, -1.0f},
+    {-1.0f,  1.0f,  1.0f},
+    { 1.0f,  1.0f,  1.0f},
+    { 1.0f, -1.0f,  1.0f},
+    {-1.0f, -1.0f,  1.0f},
+};
+
 
     // Transform each corner from NDC to world space
     // Project frustum corners into world space
@@ -84,8 +86,15 @@ void Scene::updateLights() {
         glm::vec3 minExtents = -maxExtents;
 
         glm::vec3 lightDir = normalize(-sceneLight.position);
-        sceneLight.views[cascadeIndex] = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-        sceneLight.projections[cascadeIndex] = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, minExtents.z, maxExtents.z);
+        sceneLight.views[cascadeIndex] = sceneLight.views[cascadeIndex] = glm::lookAt(frustumCenter - lightDir * maxExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        sceneLight.projections[cascadeIndex] = glm::ortho(minExtents.x,
+                                                          maxExtents.x,
+                                                          minExtents.y, 
+                                                          maxExtents.y, 
+                                                          0.01f + minExtents.z, 
+                                                          maxExtents.z - minExtents.z);
+        sceneLight.splitDepths[cascadeIndex] = (0.001f + cascadeFar * clipRange) * -1.0f;
     }
 };
 
