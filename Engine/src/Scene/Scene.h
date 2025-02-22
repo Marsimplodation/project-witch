@@ -33,6 +33,7 @@ struct Scene {
     std::vector<Instance> instances;
     std::vector<Model> linearModels;
     entt::registry registry;
+
     DirectionLight sceneLight = DirectionLight{
         .position = glm::vec4(4,1.5,4,0),
         .direction = glm::vec4(-1,-1,-1,0),
@@ -45,6 +46,7 @@ struct Scene {
     void updateModels();
     void updateLights();
     void initScene();
+    void *enginePtr;
 
 private:
 };

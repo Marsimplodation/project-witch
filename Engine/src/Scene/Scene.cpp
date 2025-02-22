@@ -1,17 +1,95 @@
 #include "Scene.h"
+#include "SoulShard.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/geometric.hpp"
 #include "types/types.h"
 #include <string>
 
+
+std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const glm::mat4& view, float nearPlane, float farPlane) {
+    
+    // Inverse of the combined projection and view matrix
+    glm::mat4 inv = glm::inverse(proj * view);  
+
+    std::vector<glm::vec3> corners{
+            glm::vec3(-1.0f,  1.0f, 0.0f),
+            glm::vec3( 1.0f,  1.0f, 0.0f),
+            glm::vec3( 1.0f, -1.0f, 0.0f),
+            glm::vec3(-1.0f, -1.0f, 0.0f),
+            glm::vec3(-1.0f,  1.0f,  1.0f),
+            glm::vec3( 1.0f,  1.0f,  1.0f),
+            glm::vec3( 1.0f, -1.0f,  1.0f),
+            glm::vec3(-1.0f, -1.0f,  1.0f),
+    };
+
+    // Transform each corner from NDC to world space
+    // Project frustum corners into world space
+    for (uint32_t j = 0; j < 8; j++) {
+            glm::vec4 invCorner = inv * glm::vec4(corners[j], 1.0f);
+            corners[j] = invCorner / invCorner.w;
+    }
+
+    for (uint32_t j = 0; j < 4; j++) {
+            glm::vec3 dist = corners[j + 4] - corners[j];
+            corners[j + 4] = corners[j] + (dist * farPlane);
+            corners[j] = corners[j] + (dist * nearPlane);
+    }
+    return corners;
+}
+
+
+
 void Scene::updateLights() {
+    SoulShard & engine = *((SoulShard*)enginePtr);
     sceneLight.direction = glm::normalize(-sceneLight.position);
     sceneLight.view = glm::lookAt(glm::vec3(sceneLight.position),
                                   glm::vec3(0), glm::vec3(0,1,0)); 
 
+    
+    const int cascadeCount = 4;
+    std::vector<float> cascadeSplits(cascadeCount);
+    float nearClip = 0.001f;
+    float farClip = 1000.0f;
 
-    sceneLight.projection = glm::ortho(sceneLight.extents.x, -sceneLight.extents.x,
-                                       sceneLight.extents.y, -sceneLight.extents.y, sceneLight.nearPlane, sceneLight.farPlane);
+    float clipRange = farClip - nearClip;
+
+    float minZ = nearClip;
+    float maxZ = nearClip + clipRange;
+
+    float range = maxZ - minZ;
+    float ratio = maxZ / minZ;
+
+    for (uint32_t i = 0; i < cascadeCount; i++) {
+            float p = (i + 1) / static_cast<float>(cascadeCount);
+            float log = minZ * std::pow(ratio, p);
+            float uniform = minZ + range * p;
+            float d = 0.97f * (log - uniform) + uniform;
+            cascadeSplits[i] = (d - nearClip) / clipRange;
+    }
+    int cascadeIndex = sceneLight.extents.x;
+    float cascadeFar = cascadeSplits[cascadeIndex  ];
+    float cascadeNear = (cascadeIndex - 1 >= 0) ? cascadeSplits[cascadeIndex - 1] : 0.0;
+    std::vector<glm::vec3> frustumCorners = GetFrustumCornersWorldSpace(engine.editorCamera.projection, engine.editorCamera.view, cascadeNear, cascadeFar);
+
+    glm::vec3 frustumCenter = glm::vec3(0.0f);
+    for (uint32_t j = 0; j < 8; j++) {
+            frustumCenter += frustumCorners[j];
+    }
+    frustumCenter /= 8.0f;
+
+    float radius = 0.0f;
+    for (uint32_t j = 0; j < 8; j++) {
+            float distance = glm::length(frustumCorners[j] - frustumCenter);
+            radius = glm::max(radius, distance);
+    }
+    radius = std::ceil(radius * 16.0f) / 16.0f;
+
+    glm::vec3 maxExtents = glm::vec3(radius);
+    glm::vec3 minExtents = -maxExtents;
+
+    glm::vec3 lightDir = normalize(-sceneLight.position);
+    sceneLight.view = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+    sceneLight.projection = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, minExtents.z, maxExtents.z);
 };
 
 Instance & Scene::instantiateModel(std::string objName, std::string instanceName) {

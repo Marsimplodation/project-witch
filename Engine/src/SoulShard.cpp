@@ -34,6 +34,7 @@ int SoulShard::startup() {
     if (0 != renderer.create_sync_objects()) return -1;
     inputHandler.init(renderer.init.window);
     renderer.enginePtr = this;
+    scene.enginePtr = this;
     renderer.data.editorMode = true;
 
     return 0;
