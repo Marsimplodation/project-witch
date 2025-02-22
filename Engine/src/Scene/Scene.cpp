@@ -1,5 +1,6 @@
 #include "Scene.h"
 #include "SoulShard.h"
+#include "Vulkan/VkRenderer.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/geometric.hpp"
 #include "types/types.h"
@@ -42,14 +43,9 @@ std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const 
 void Scene::updateLights() {
     SoulShard & engine = *((SoulShard*)enginePtr);
     sceneLight.direction = glm::normalize(-sceneLight.position);
-    sceneLight.view = glm::lookAt(glm::vec3(sceneLight.position),
-                                  glm::vec3(0), glm::vec3(0,1,0)); 
-
-    
-    const int cascadeCount = 4;
-    std::vector<float> cascadeSplits(cascadeCount);
+    std::vector<float> cascadeSplits(SHADOW_CASCADES);
     float nearClip = 0.001f;
-    float farClip = 1000.0f;
+    float farClip = 1000.0f; //shadow max distance
 
     float clipRange = farClip - nearClip;
 
@@ -59,37 +55,38 @@ void Scene::updateLights() {
     float range = maxZ - minZ;
     float ratio = maxZ / minZ;
 
-    for (uint32_t i = 0; i < cascadeCount; i++) {
-            float p = (i + 1) / static_cast<float>(cascadeCount);
+    for (uint32_t i = 0; i < SHADOW_CASCADES; i++) {
+            float p = (i + 1) / static_cast<float>(SHADOW_CASCADES);
             float log = minZ * std::pow(ratio, p);
             float uniform = minZ + range * p;
-            float d = 0.97f * (log - uniform) + uniform;
+            float d = 0.91f * (log - uniform) + uniform;
             cascadeSplits[i] = (d - nearClip) / clipRange;
     }
-    int cascadeIndex = sceneLight.extents.x;
-    float cascadeFar = cascadeSplits[cascadeIndex  ];
-    float cascadeNear = (cascadeIndex - 1 >= 0) ? cascadeSplits[cascadeIndex - 1] : 0.0;
-    std::vector<glm::vec3> frustumCorners = GetFrustumCornersWorldSpace(engine.editorCamera.projection, engine.editorCamera.view, cascadeNear, cascadeFar);
+    for (int cascadeIndex = 0; cascadeIndex < SHADOW_CASCADES; cascadeIndex++) {
+        float cascadeFar = cascadeSplits[cascadeIndex];
+        float cascadeNear = (cascadeIndex - 1 >= 0) ? cascadeSplits[cascadeIndex - 1] : 0.0;
+        std::vector<glm::vec3> frustumCorners = GetFrustumCornersWorldSpace(engine.editorCamera.projection, engine.editorCamera.view, cascadeNear, cascadeFar);
 
-    glm::vec3 frustumCenter = glm::vec3(0.0f);
-    for (uint32_t j = 0; j < 8; j++) {
-            frustumCenter += frustumCorners[j];
+        glm::vec3 frustumCenter = glm::vec3(0.0f);
+        for (uint32_t j = 0; j < 8; j++) {
+                frustumCenter += frustumCorners[j];
+        }
+        frustumCenter /= 8.0f;
+
+        float radius = 0.0f;
+        for (uint32_t j = 0; j < 8; j++) {
+                float distance = glm::length(frustumCorners[j] - frustumCenter);
+                radius = glm::max(radius, distance);
+        }
+        radius = std::ceil(radius * 16.0f) / 16.0f;
+
+        glm::vec3 maxExtents = glm::vec3(radius);
+        glm::vec3 minExtents = -maxExtents;
+
+        glm::vec3 lightDir = normalize(-sceneLight.position);
+        sceneLight.views[cascadeIndex] = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+        sceneLight.projections[cascadeIndex] = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, minExtents.z, maxExtents.z);
     }
-    frustumCenter /= 8.0f;
-
-    float radius = 0.0f;
-    for (uint32_t j = 0; j < 8; j++) {
-            float distance = glm::length(frustumCorners[j] - frustumCenter);
-            radius = glm::max(radius, distance);
-    }
-    radius = std::ceil(radius * 16.0f) / 16.0f;
-
-    glm::vec3 maxExtents = glm::vec3(radius);
-    glm::vec3 minExtents = -maxExtents;
-
-    glm::vec3 lightDir = normalize(-sceneLight.position);
-    sceneLight.view = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-    sceneLight.projection = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, minExtents.z, maxExtents.z);
 };
 
 Instance & Scene::instantiateModel(std::string objName, std::string instanceName) {

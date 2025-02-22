@@ -220,10 +220,12 @@ void VkRenderer::cleanup() {
     init.disp.destroyImage(data.depthImage, nullptr);
     init.disp.destroyImageView(data.depthImageView, nullptr);
     init.disp.freeMemory(data.depthImageMemory, nullptr);
-    init.disp.destroyFramebuffer(data.shadow_framebuffer, nullptr);
-    init.disp.destroyImage(data.shadow_image, nullptr);
-    init.disp.destroyImageView(data.shadow_image_view, nullptr);
-    init.disp.freeMemory(data.shadow_image_memory, nullptr);
+    for (size_t i = 0; i < SHADOW_CASCADES; i++) {
+        init.disp.destroyFramebuffer(data.shadow_framebuffers[i], nullptr);
+        init.disp.destroyImage(data.shadow_images[i], nullptr);
+        init.disp.destroyImageView(data.shadow_image_views[i], nullptr);
+        init.disp.freeMemory(data.shadow_image_memory[i], nullptr);
+    }
 
 
     init.disp.destroyPipeline(data.graphics_pipeline, nullptr);

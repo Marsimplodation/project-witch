@@ -19,6 +19,7 @@ layout(binding = 0) uniform CameraBuffer {
 
 layout(push_constant) uniform PushConstants {
     uint startModelIndex;    // Current draw call index
+    uint lightIdx;    // Current draw call index
 };
 
 layout(binding = 1) uniform ModelBuffer {
@@ -37,7 +38,7 @@ layout(binding = 3) uniform LightBuffer {
 void main() {
     uint index = startModelIndex + gl_InstanceIndex;
     vec4 worldPos= models[index] * vec4(inPosition, 1.0);
-    gl_Position = light.projection * light.view * worldPos;
+    gl_Position = light.projections[lightIdx] * light.views[lightIdx] * worldPos;
     texIdx = materialIdx;
     fragUV = uv;
     fragNormal = normalize(mat3(models[index]) * inNormal);

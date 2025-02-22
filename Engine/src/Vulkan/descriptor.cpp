@@ -5,7 +5,7 @@ int VkRenderer::create_descriptor_pool() {
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = 3 * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = 1 + 100 * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+    poolSizes[1].descriptorCount = (SHADOW_CASCADES + 100) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     
     VkDescriptorPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -38,7 +38,7 @@ int VkRenderer::create_descriptor_layout() {
     VkDescriptorSetLayoutBinding textureLayoutBinding{};
     textureLayoutBinding.binding = 2;  // Binding index
     textureLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    textureLayoutBinding.descriptorCount = 1 + 100;
+    textureLayoutBinding.descriptorCount = SHADOW_CASCADES + 100;
     textureLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     textureLayoutBinding.pImmutableSamplers = nullptr;  // No static samplers
     
@@ -90,14 +90,16 @@ int VkRenderer::update_descriptor_sets() {
     lightBufferInfo.offset = 0;
     lightBufferInfo.range = VK_WHOLE_SIZE;
     
-    std::vector<VkDescriptorImageInfo> textureInfos(data.textures.size() + 1);
-        textureInfos[0].sampler = data.imageSampler;
-        textureInfos[0].imageView = data.shadow_image_view;
-        textureInfos[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    std::vector<VkDescriptorImageInfo> textureInfos(data.textures.size() + SHADOW_CASCADES);
+    for(int i = 0; i < SHADOW_CASCADES; ++i) {
+        textureInfos[i].sampler = data.imageSampler;
+        textureInfos[i].imageView = data.shadow_image_views[i];
+        textureInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
     for(int i = 0; i < data.textures.size(); ++i) {
-        textureInfos[i + 1].sampler = data.textures[i].sampler;
-        textureInfos[i + 1].imageView = data.textures[i].view;
-        textureInfos[i + 1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        textureInfos[i + SHADOW_CASCADES].sampler = data.textures[i].sampler;
+        textureInfos[i + SHADOW_CASCADES].imageView = data.textures[i].view;
+        textureInfos[i + SHADOW_CASCADES].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
     
 

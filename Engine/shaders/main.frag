@@ -8,7 +8,6 @@ layout(location = 1) in vec3 fragNormal;
 layout(location = 2) in vec2 fragUV;
 layout(location = 3) flat in uint texIdx;
 layout(location = 4) in vec3 cameraPosition;
-layout(location = 5) in vec4 positionInLight;
 
 layout(location = 0) out vec4 outColor;
 layout(set = 0, binding = 2) uniform sampler2D texSamplers[100];
@@ -17,8 +16,25 @@ layout(binding = 3) uniform LightBuffer {
 };
 
 
-float ShadowCalculation(vec4 fragPosLightSpace)
+float ShadowCalculation()
 {
+    // Find the correct cascade
+    int cascadeIndex = -1;
+    mat4 lBias = bias;
+    for (int i = 0; i < SHADOW_CASCADES; i++) {
+        vec4 posLightSpace = lBias * light.projections[i] * light.views[i] * vec4(fragPosition, 1.0);
+        vec3 projCoords = posLightSpace.xyz / posLightSpace.w;
+
+        if (projCoords.z <= 1.0 - 0.01f) {
+            cascadeIndex = i;
+            break;
+        }
+    }
+
+    if (cascadeIndex == -1) {
+        return 0.0; // No shadow if fragment is outside all cascades
+    }
+    vec4 fragPosLightSpace = lBias * light.projections[cascadeIndex] * light.views[cascadeIndex] * vec4(fragPosition, 1.0);
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     float shadow = 0.0f;
     if(projCoords.z > 1.0)
@@ -37,7 +53,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     for(int i = -1; i <= 1; ++i){
         for(int j = -1; j <= 1; ++j){
             vec2 coords = projCoords.xy + vec2(i, j) / 4096.0;
-            float sampleShadow = texture(texSamplers[0], coords.xy).r < projCoords.z - bias ? 1.0 : 0.0;
+            float sampleShadow = texture(texSamplers[cascadeIndex], coords.xy).r < projCoords.z - bias ? 1.0 : 0.0;
             shadow += sampleShadow * weights[i + 1][j + 1];
             totalWeight += weights[i + 1][j + 1];
         }
@@ -59,7 +75,7 @@ void main() {
     vec4 texColor = vec4(1.0);
     if (texIdx != uint(-1)) {
         // 0 is allocated for the shadowMap
-        texColor = texture(texSamplers[nonuniformEXT(texIdx + 1)], fragUV);
+        texColor = texture(texSamplers[nonuniformEXT(texIdx + SHADOW_CASCADES)], fragUV);
     }
     if (texColor.a < 0.3) discard;
 
@@ -74,7 +90,7 @@ void main() {
     // Hard threshold for cel shading (Anime Style)
     float shadowThreshold = 0.2;  // Adjust for more or less shadow
     float celShading = step(shadowThreshold, cosDir); 
-    celShading = min(celShading, (1.0 - ShadowCalculation(positionInLight)));
+    celShading = min(celShading, (1.0 - ShadowCalculation()));
     
 
     // Diffuse shading (cel shaded)

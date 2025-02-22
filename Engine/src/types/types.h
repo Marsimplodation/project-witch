@@ -19,6 +19,7 @@
 #include <vulkan/vulkan_core.h>
 
 #define u32 uint32_t
+#define SHADOW_CASCADES 4
 struct Model{
     u32 indexOffset;
     u32 triangleCount;
@@ -35,13 +36,10 @@ struct TransformComponent{
 struct DirectionLight {
     glm::vec4 position; 
     glm::vec4 direction; 
-    glm::mat4 view;
-    glm::mat4 projection;
+    glm::mat4 views[SHADOW_CASCADES];
+    glm::mat4 projections[SHADOW_CASCADES];
     glm::vec4 color;
     float intensity; 
-    float nearPlane;
-    float farPlane;
-    glm::vec2 extents;
 };
 
 struct System{

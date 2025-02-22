@@ -34,40 +34,47 @@ void VkRenderer::renderModels(int i) {
 }
 
 void VkRenderer::scene_shadow_rendering(int i){
-    VkRenderPassBeginInfo offsceen_pass_info = {};
-    offsceen_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    offsceen_pass_info.renderPass = data.shadow_pass;
-    offsceen_pass_info.framebuffer = data.shadow_framebuffer;
-    offsceen_pass_info.renderArea.offset = { 0, 0 };
-    VkExtent2D extent;
-    extent.width = SHADOW_MAP_RES; 
-    extent.height = SHADOW_MAP_RES; 
-    offsceen_pass_info.renderArea.extent = extent; 
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].depthStencil = {1.0f, 0};
-    offsceen_pass_info.clearValueCount = 1;
-    offsceen_pass_info.pClearValues = clearValues.data();
+    for (int c = 0; c < SHADOW_CASCADES; ++c) {
+        VkRenderPassBeginInfo offsceen_pass_info = {};
+        offsceen_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        offsceen_pass_info.renderPass = data.shadow_pass;
+        offsceen_pass_info.framebuffer = data.shadow_framebuffers[c];
+        offsceen_pass_info.renderArea.offset = { 0, 0 };
+        VkExtent2D extent;
+        extent.width = SHADOW_MAP_RES; 
+        extent.height = SHADOW_MAP_RES; 
+        offsceen_pass_info.renderArea.extent = extent; 
+        std::array<VkClearValue, 1> clearValues{};
+        clearValues[0].depthStencil = {1.0f, 0};
+        offsceen_pass_info.clearValueCount = 1;
+        offsceen_pass_info.pClearValues = clearValues.data();
 
-    VkViewport viewport = {};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = SHADOW_MAP_RES; 
-    viewport.height = SHADOW_MAP_RES;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
+        VkViewport viewport = {};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = SHADOW_MAP_RES; 
+        viewport.height = SHADOW_MAP_RES;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
 
-    VkRect2D scissor = {};
-    scissor.offset = { 0, 0 };
-    scissor.extent = extent;
-    init.disp.cmdSetViewport(data.command_buffers[i], 0, 1, &viewport);
-    init.disp.cmdSetScissor(data.command_buffers[i], 0, 1, &scissor);
+        VkRect2D scissor = {};
+        scissor.offset = { 0, 0 };
+        scissor.extent = extent;
+        init.disp.cmdSetViewport(data.command_buffers[i], 0, 1, &viewport);
+        init.disp.cmdSetScissor(data.command_buffers[i], 0, 1, &scissor);
 
-    init.disp.cmdBeginRenderPass(data.command_buffers[i], &offsceen_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+        init.disp.cmdBeginRenderPass(data.command_buffers[i], &offsceen_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-    init.disp.cmdBindPipeline(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.shadow_pipeline);
+        init.disp.cmdBindPipeline(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.shadow_pipeline);
 
-    renderModels(i);
-    init.disp.cmdEndRenderPass(data.command_buffers[i]);
+        vkCmdPushConstants(data.command_buffers[i],data.pipeline_layout,VK_SHADER_STAGE_VERTEX_BIT,
+            4,                  // Offset
+            sizeof(uint32_t),   // Size
+            &c
+        );
+        renderModels(i);
+        init.disp.cmdEndRenderPass(data.command_buffers[i]);
+    }
 }
 
 void VkRenderer::scene_offscreen_rendering(int i){

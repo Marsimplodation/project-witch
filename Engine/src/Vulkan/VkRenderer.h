@@ -44,11 +44,10 @@ struct VkRenderer {
         std::vector<VkFramebuffer> offscreen_framebuffers;
         std::vector<Texture> textures;
         
-        VkImage shadow_image;
-        VkDeviceMemory shadow_image_memory;
-        VkImageView shadow_image_view;
-        VkFramebuffer shadow_framebuffer;
-
+        std::vector<VkImage> shadow_images;
+        std::vector<VkDeviceMemory> shadow_image_memory;
+        std::vector<VkImageView>  shadow_image_views;
+        std::vector<VkFramebuffer> shadow_framebuffers;
 
         VkRenderPass render_pass;
         VkRenderPass offscreen_pass;

@@ -6,6 +6,8 @@ build:
 
 	glslc Engine/shaders/main.vert -o build/vert.spv  --target-spv=spv1.0
 	glslc Engine/shaders/main.frag -o build/frag.spv  --target-spv=spv1.0
+	glslc Engine/shaders/shadow.vert -o build/shadowVert.spv  --target-spv=spv1.0
+	glslc Engine/shaders/shadow.frag -o build/shadowFrag.spv  --target-spv=spv1.0
 
 	cd build && ./Game/witch
 release:

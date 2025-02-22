@@ -10,7 +10,6 @@ layout(location = 1) out vec3 fragNormal;
 layout(location = 2) out vec2 fragUV;
 layout(location = 3) out uint texIdx;
 layout(location = 4) out vec3 cameraWorldPos;
-layout(location = 5) out vec4 positionInLight;
 
 
 
@@ -21,6 +20,7 @@ layout(binding = 0) uniform CameraBuffer {
 
 layout(push_constant) uniform PushConstants {
     uint startModelIndex;    // Current draw call index
+    uint lightIdx;    // Current draw call index
 };
 
 layout(binding = 1) uniform ModelBuffer {
@@ -43,7 +43,6 @@ void main() {
     uint index = startModelIndex + gl_InstanceIndex;
     vec4 worldPos= models[index] * vec4(inPosition, 1.0);
     gl_Position = camera.projection *camera.view * worldPos;
-    positionInLight = bias* light.projection * light.view * worldPos;
     cameraWorldPos = -transpose(mat3(camera.view)) * camera.view[3].xyz;
     texIdx = materialIdx;
     fragUV = uv;

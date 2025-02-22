@@ -201,7 +201,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             for(auto & texture : textures)
             ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(texture));
         }
-        textures.resize(data.textures.size() + 1);
+        textures.resize(data.textures.size() + SHADOW_CASCADES);
         for(int i = 0; i < data.textures.size(); ++i) {
             textures[i] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
             data.textures[i].sampler,
@@ -209,11 +209,13 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // Image layout for sampling
         ));
         }
-        textures[textures.size() -1] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
-        data.imageSampler,
-        data.shadow_image_view,
-        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // Image layout for sampling
-        ));
+        for(int i = 0; i < SHADOW_CASCADES; ++i) {
+            textures[textures.size() - SHADOW_CASCADES + i] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
+            data.imageSampler,
+            data.shadow_image_views[i],
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // Image layout for sampling
+            ));
+        }
         textureID = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
             data.imageSampler,
             data.offscreen_image_views[data.current_frame],                       // VkSampler
@@ -243,7 +245,9 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         }
         ImGui::End();
         ImGui::Begin("Textures");
-        ImGui::Image(textures[textures.size() -1], ImVec2(512, 512));
+        for(int i = 0; i < SHADOW_CASCADES; ++i) {
+            ImGui::Image(textures[textures.size() -SHADOW_CASCADES + i], ImVec2(512, 512));
+        }
         for(int i = 0; i < data.textures.size(); ++i) {
             ImGui::Image(textures[i], ImVec2(512, 512));
         }
@@ -265,9 +269,6 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::DragFloat3("direction", (float*)&engine.scene.sceneLight.direction, 0.1f);
         ImGui::ColorEdit4("Color", (float*)&engine.scene.sceneLight.color);
         ImGui::DragFloat("intensity", (float*)&engine.scene.sceneLight.intensity);
-        ImGui::DragFloat("near", (float*)&engine.scene.sceneLight.nearPlane);
-        ImGui::DragFloat("far", (float*)&engine.scene.sceneLight.farPlane);
-        ImGui::DragFloat2("extents", (float*)&engine.scene.sceneLight.extents);
         ImGui::End();
         ImGui::Begin("Selected");
         if(selectedInstance) {

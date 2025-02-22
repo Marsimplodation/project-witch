@@ -1,7 +1,7 @@
 #version 450
 // Enable the use of nonuniformEXT(index) to access bindless textures
 #extension GL_EXT_nonuniform_qualifier : enable
-
+#include "includes/light.h"
 layout(location = 0) in vec3 fragPosition;
 layout(location = 1) in vec3 fragNormal;
 layout(location = 2) in vec2 fragUV;
@@ -16,7 +16,7 @@ void main() {
     vec4 texColor = vec4(1.0);
     if (texIdx != uint(-1)) {
         // 0 is allocated for the shadowMap
-        texColor = texture(texSamplers[nonuniformEXT(texIdx + 1)], fragUV);
+        texColor = texture(texSamplers[nonuniformEXT(texIdx + SHADOW_CASCADES)], fragUV);
     }
     if (texColor.a < 0.3) discard;
 

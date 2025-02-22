@@ -1,6 +1,7 @@
 #ifndef ENGINE_SCENE
 #define ENGINE_SCENE
 #include "../types/types.h"
+#include "Vulkan/VkRenderer.h"
 #include "entt/entt.hpp"
 #include "entt/entity/fwd.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
