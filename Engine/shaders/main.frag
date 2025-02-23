@@ -7,7 +7,7 @@ layout(location = 0) in vec3 fragPosition;
 layout(location = 1) in vec3 fragNormal;
 layout(location = 2) in vec2 fragUV;
 layout(location = 3) flat in uint texIdx;
-layout(location = 4) in vec3 cameraPosition;
+layout(location = 4) in vec3 fragView;
 
 layout(location = 0) out vec4 outColor;
 layout(set = 0, binding = 2) uniform sampler2D texSamplers[100];
@@ -16,16 +16,55 @@ layout(binding = 3) uniform LightBuffer {
 };
 
 
-float ShadowCalculation()
-{
-    // Find the correct cascade
-    int cascadeIndex = -1;
-    mat4 lBias = bias;
-    for (int i = 0; i < SHADOW_CASCADES; i++) {
-        vec4 posLightSpace = lBias * light.projections[i] * light.views[i] * vec4(fragPosition, 1.0);
-        vec3 projCoords = posLightSpace.xyz / posLightSpace.w;
+float calculateShadowAtCascade(int cascadeIndex) {
+    vec4 fragPosLightSpace = bias * light.projections[cascadeIndex] * light.views[cascadeIndex] * vec4(fragPosition, 1.0);
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    
+    // Check if the fragment is outside the shadow map
+    if(projCoords.z > 1.0)
+        return 0.0; // No shadow outside the cascade
 
-        if (posLightSpace.z <= -light.splitDepths[i]) {
+    // Smoother bias calculation
+    float bias = max(0.0005 * tan(acos(dot(fragNormal, light.direction.xyz))), 0.002);
+    
+    // Adjust bias for smooth transitions between cascades
+    float blendBias = bias ;
+    
+    // Larger 5x5 kernel for smoother shadow filtering
+    float weights[5][5] = float[5][5](
+        float[5](0.002216, 0.01774, 0.0808, 0.01774, 0.002216),
+        float[5](0.01774, 0.1331, 0.6150, 0.1331, 0.01774),
+        float[5](0.0808, 0.6150, 2.0970, 0.6150, 0.0808),
+        float[5](0.01774, 0.1331, 0.6150, 0.1331, 0.01774),
+        float[5](0.002216, 0.01774, 0.0808, 0.01774, 0.002216)
+    );
+
+    float shadow = 0.0;
+    float totalWeight = 0.0;
+
+    // Perform PCF with 5x5 kernel for smoother shadows
+    for(int i = -2; i <= 2; ++i) {
+        for(int j = -2; j <= 2; ++j) {
+            vec2 coords = projCoords.xy + (vec2(i, j) / 4096.0);
+            float sampleShadow = texture(texSamplers[nonuniformEXT(cascadeIndex)], coords.xy).r < projCoords.z - blendBias ? 1.0 : 0.0;
+            shadow += sampleShadow * weights[i + 2][j + 2];
+            totalWeight += weights[i + 2][j + 2];
+        }
+    }
+
+    return shadow / totalWeight;
+}
+
+
+
+
+float ShadowCalculation() {
+    // Initialize variables
+    int cascadeIndex = SHADOW_CASCADES -1;
+    
+    // Find the cascade the fragment belongs to
+    for (int i = 0; i < SHADOW_CASCADES; i++) {
+        if (abs(fragView.z) <= light.splitDepths[i]) {
             cascadeIndex = i;
             break;
         }
@@ -34,42 +73,23 @@ float ShadowCalculation()
     if (cascadeIndex == -1) {
         return 0.0; // No shadow if fragment is outside all cascades
     }
-    vec4 fragPosLightSpace = lBias * light.projections[cascadeIndex] * light.views[cascadeIndex] * vec4(fragPosition, 1.0);
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    float shadow = 0.0f;
-    if(projCoords.z > 1.0)
-        return shadow;
-    
-    float bias = max(0.0005 * tan(acos(dot(fragNormal, light.direction.xyz))), 0.002);
 
-    float weights[3][3] = float[3][3](
-        float[3](0.05, 0.1, 0.05),
-        float[3](0.1,  0.4, 0.1),
-        float[3](0.05, 0.1, 0.05)
-    );
+    // Calculate shadow for the current cascade
+    float shadow = calculateShadowAtCascade(cascadeIndex);
 
-    float totalWeight = 0.0;
-    
-    for(int i = -1; i <= 1; ++i){
-        for(int j = -1; j <= 1; ++j){
-            vec2 coords = projCoords.xy + vec2(i, j) / (4096.0 * 2);
-            float sampleShadow = texture(texSamplers[cascadeIndex], coords.xy).r < projCoords.z - bias ? 1.0 : 0.0;
-            shadow += sampleShadow * weights[i + 1][j + 1];
-            totalWeight += weights[i + 1][j + 1];
-        }
-    }
-
-    return shadow / totalWeight;
+    return shadow;
 }
+
+
+
 
 
 void main() {
     // Normalize the fragment normal
     vec3 normal = normalize(fragNormal);
-    vec3 fragViewDir = normalize(fragPosition - cameraPosition);
 
     // Ambient light term (higher for anime style)
-    vec3 ambient = light.color.rgb * 0.15f * light.intensity;
+    vec3 ambient = light.color.rgb * 0.15f;
 
     // Sample texture
     vec4 texColor = vec4(1.0);
@@ -90,11 +110,11 @@ void main() {
     // Hard threshold for cel shading (Anime Style)
     float shadowThreshold = 0.2;  // Adjust for more or less shadow
     float celShading = step(shadowThreshold, cosDir); 
-    celShading = min(celShading, (1.0 - ShadowCalculation()));
+    celShading = min(celShading, abs((1.0 - ShadowCalculation())));
     
 
     // Diffuse shading (cel shaded)
-    vec3 diffuse = celShading * light.color.rgb * light.intensity; 
+    vec3 diffuse = celShading * light.color.rgb ; 
 
 
     // Accumulate lighting

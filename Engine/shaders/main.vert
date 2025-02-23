@@ -9,7 +9,7 @@ layout(location = 0) out vec3 fragPosition;
 layout(location = 1) out vec3 fragNormal;
 layout(location = 2) out vec2 fragUV;
 layout(location = 3) out uint texIdx;
-layout(location = 4) out vec3 cameraWorldPos;
+layout(location = 4) out vec3 fragView;
 
 
 
@@ -43,7 +43,9 @@ void main() {
     uint index = startModelIndex + gl_InstanceIndex;
     vec4 worldPos= models[index] * vec4(inPosition, 1.0);
     gl_Position = camera.projection *camera.view * worldPos;
-    cameraWorldPos = -transpose(mat3(camera.view)) * camera.view[3].xyz;
+    vec4 viewM = (camera.view * worldPos);
+    fragView = viewM.xyz;
+    fragView.z *= -1;
     texIdx = materialIdx;
     fragUV = uv;
     fragNormal = normalize(mat3(models[index]) * inNormal);

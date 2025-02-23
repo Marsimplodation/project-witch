@@ -30,6 +30,7 @@ struct GeometryInfo {
 
 
 struct Scene {
+    AABB bounds;
     std::vector<glm::mat4> modelMatrices;
     std::vector<Instance> instances;
     std::vector<Model> linearModels;
@@ -39,7 +40,6 @@ struct Scene {
         .position = glm::vec4(4,1.5,4,0),
         .direction = glm::vec4(-1,-1,-1,0),
         .color = glm::vec4(1.0f),
-        .intensity = 1.0f,
     };
     std::unordered_map<std::string, GeometryInfo> geometry;
     Instance & instantiateModel(std::string objName, std::string instanceName);

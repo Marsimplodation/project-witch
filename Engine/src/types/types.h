@@ -33,18 +33,16 @@ struct TransformComponent{
     glm::vec3 scale;
 };
 
-struct DirectionLight {
-    glm::vec4 position; 
-    glm::vec4 direction; 
-    glm::mat4 views[SHADOW_CASCADES];
-    glm::mat4 projections[SHADOW_CASCADES];
-    glm::vec4 color;
-    float intensity; 
-    float splitDepths[SHADOW_CASCADES];
-    float f1;
-    float f2;
-};
 
+struct DirectionLight {
+    glm::mat4 views[SHADOW_CASCADES];  // 16-byte alignment
+    glm::mat4 projections[SHADOW_CASCADES]; // 16-byte alignment
+    glm::vec4 position;               // 16-byte alignment
+    glm::vec4 direction;              // 16-byte alignment
+    glm::vec4 color;                  // 16-byte alignment
+    glm::vec4 splitDepths; // this can follow vectors without padding
+    glm::vec4 debugFactors;
+};
 struct System{
     bool active;
     void(*func)(float deltaTime);
