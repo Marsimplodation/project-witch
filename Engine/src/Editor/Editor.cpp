@@ -9,6 +9,7 @@
 #include "SoulShard.h"
 #include "glm/detail/qualifier.hpp"
 #include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include "types/types.h"
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -188,6 +189,65 @@ std::string formatNumberWithDots(size_t number) {
 }
 bool lineRenderer = false;
 
+struct RadialSliderState {
+    bool isActive = false;
+    ImVec2 pos;
+    ImVec2 lastDelta{0,0};
+} sliderState;
+
+// Function to draw radial light direction selector (perimeter only)
+void RadialLightSlider(const char* label, float& outX, float& outY, float& outZ){
+    RadialSliderState& state = sliderState;
+
+    ImVec2 center = ImGui::GetCursorScreenPos()+ImVec2{20, 0};
+    float radius = 50.0f; // Radius of the radial slider
+    ImVec2 mousePos = ImGui::GetMousePos();
+    ImVec2 delta(0, 0);
+
+    bool isHovered = ImGui::IsWindowHovered();
+    bool isClicked = ImGui::IsMouseDown(0);
+    bool isInCircle = glm::distance(
+        glm::vec2(center.x, center.y)+ glm::vec2(radius, radius),
+        glm::vec2(mousePos.x, mousePos.y)) <= radius;
+
+    if (isHovered && isClicked && isInCircle) {
+        state.isActive = true;
+    } else if (!isClicked) {
+        state.isActive = false;
+    }
+
+    if (state.isActive) {
+        // Compute direction from center
+        delta = ImVec2(mousePos.x - (center.x + radius), mousePos.y - (center.y + radius));
+        float dist = sqrtf(delta.x * delta.x + delta.y * delta.y);
+
+        // Clamp to circle bounds
+        if (dist > radius) {
+            delta.x = (delta.x / dist) * radius;
+            delta.y = (delta.y / dist) * radius;
+        }
+
+        // Store last valid position
+        state.pos = ImVec2(center.x + radius + delta.x, center.y + radius + delta.y);
+        state.lastDelta = delta;
+    }
+
+    // Convert 2D position to 3D unit sphere (full range)
+    float nx = (state.lastDelta.x) / radius;     
+    float ny = (state.lastDelta.y) / radius;
+    float nz = sqrtf(fmaxf(0.0f, 1.0f - nx * nx - ny * ny)); // Compute Z
+
+    // Map to correct light direction
+    outX = -nx;
+    outY = -nz;  // Middle = -Y, Up = -Z
+    outZ = -ny;
+    // Draw the circle and handle
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->AddCircle(center + ImVec2(radius, radius), radius, IM_COL32(255, 255, 255, 255));
+    draw_list->AddCircleFilled(state.pos, 5.0f, IM_COL32(255, 0, 0, 255));
+    ImGui::Dummy(ImVec2(radius * 2, radius * 2)); // Reserve space
+}
+
 Instance * selectedInstance = 0x0;
 std::vector<ImTextureID> textures;
 void ImguiModule::update(void * initPtr, void * dataPtr) {
@@ -267,8 +327,8 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         }
         ImGui::End();
         ImGui::Begin("Light");
-        ImGui::DragFloat3("position", (float*)&engine.scene.sceneLight.position, 0.1f);
-        ImGui::DragFloat3("direction", (float*)&engine.scene.sceneLight.direction, 0.1f);
+        glm::vec3 & c = *(glm::vec3*)&engine.scene.sceneLight.direction;
+        RadialLightSlider("light dir", c.x, c.y, c.z);
         ImGui::ColorEdit4("Color", (float*)&engine.scene.sceneLight.color);
         ImGui::DragFloat4("Debug", (float*)&engine.scene.sceneLight.debugFactors);
         ImGui::End();

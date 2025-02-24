@@ -44,7 +44,6 @@ std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const 
 
 void Scene::updateLights() {
     SoulShard & engine = *((SoulShard*)enginePtr);
-    sceneLight.direction = glm::normalize(-sceneLight.position);
     std::vector<float> cascadeSplits(SHADOW_CASCADES);
     float nearClip = 0.1;
     float farClip = engine.renderer.data.editorMode ? engine.editorCamera.far : engine.mainCamera.far;
@@ -61,7 +60,7 @@ void Scene::updateLights() {
             float p = (i + 1) / static_cast<float>(SHADOW_CASCADES);
             float log = minZ * std::pow(ratio, p);
             float uniform = minZ + range * p;
-            float d = 0.91f * (log - uniform) + uniform;
+            float d = 0.85f * (log - uniform) + uniform;
             cascadeSplits[i] = (d - nearClip) / clipRange;
     }
     for (int cascadeIndex = 0; cascadeIndex < SHADOW_CASCADES; cascadeIndex++) {
@@ -89,8 +88,8 @@ void Scene::updateLights() {
         glm::vec3 maxExtents = glm::vec3(radius*2);
         glm::vec3 minExtents = -maxExtents;
 
-        glm::vec3 lightDir = normalize(-sceneLight.position);
-        float distanceFactor = 8.0f;
+        glm::vec3 lightDir = sceneLight.direction;
+        float distanceFactor = 4.0f;
         sceneLight.views[cascadeIndex] = glm::lookAt(frustumCenter - lightDir * -minExtents.z * distanceFactor, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 
         
