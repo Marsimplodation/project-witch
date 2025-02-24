@@ -40,6 +40,7 @@ struct Scene {
         .position = glm::vec4(4,1.5,4,0),
         .direction = glm::vec4(-1,-1,-1,0),
         .color = glm::vec4(1.0f),
+        .debugFactors=glm::vec4(1.0f),
     };
     std::unordered_map<std::string, GeometryInfo> geometry;
     Instance & instantiateModel(std::string objName, std::string instanceName);

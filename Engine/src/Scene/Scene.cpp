@@ -60,7 +60,7 @@ void Scene::updateLights() {
             float p = (i + 1) / static_cast<float>(SHADOW_CASCADES);
             float log = minZ * std::pow(ratio, p);
             float uniform = minZ + range * p;
-            float d = 0.85f * (log - uniform) + uniform;
+            float d = sceneLight.debugFactors[1] * (log - uniform) + uniform;
             cascadeSplits[i] = (d - nearClip) / clipRange;
     }
     for (int cascadeIndex = 0; cascadeIndex < SHADOW_CASCADES; cascadeIndex++) {
@@ -89,7 +89,7 @@ void Scene::updateLights() {
         glm::vec3 minExtents = -maxExtents;
 
         glm::vec3 lightDir = sceneLight.direction;
-        float distanceFactor = 4.0f;
+        float distanceFactor = sceneLight.debugFactors[0];
         sceneLight.views[cascadeIndex] = glm::lookAt(frustumCenter - lightDir * -minExtents.z * distanceFactor, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 
         

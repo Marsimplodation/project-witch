@@ -21,15 +21,12 @@ float calculateShadowAtCascade(int cascadeIndex) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     
     // Check if the fragment is outside the shadow map
-    if(projCoords.z > 1.0)
+    if (projCoords.z > 1.0)
         return 0.0; // No shadow outside the cascade
 
     // Smoother bias calculation
     float bias = max(0.0005 * tan(acos(dot(fragNormal, light.direction.xyz))), 0.002);
-    
-    // Adjust bias for smooth transitions between cascades
-    float blendBias = bias ;
-    
+
     // Larger 5x5 kernel for smoother shadow filtering
     float weights[5][5] = float[5][5](
         float[5](0.002216, 0.01774, 0.0808, 0.01774, 0.002216),
@@ -43,10 +40,10 @@ float calculateShadowAtCascade(int cascadeIndex) {
     float totalWeight = 0.0;
 
     // Perform PCF with 5x5 kernel for smoother shadows
-    for(int i = -2; i <= 2; ++i) {
-        for(int j = -2; j <= 2; ++j) {
+    for (int i = -2; i <= 2; ++i) {
+        for (int j = -2; j <= 2; ++j) {
             vec2 coords = projCoords.xy + (vec2(i, j) / 4096.0);
-            float sampleShadow = texture(texSamplers[nonuniformEXT(cascadeIndex)], coords.xy).r < projCoords.z - blendBias ? 1.0 : 0.0;
+            float sampleShadow = texture(texSamplers[nonuniformEXT(cascadeIndex)], coords.xy).r < projCoords.z - bias ? 1.0 : 0.0;
             shadow += sampleShadow * weights[i + 2][j + 2];
             totalWeight += weights[i + 2][j + 2];
         }
@@ -55,30 +52,37 @@ float calculateShadowAtCascade(int cascadeIndex) {
     return shadow / totalWeight;
 }
 
-
-
-
 float ShadowCalculation() {
     // Initialize variables
-    int cascadeIndex = SHADOW_CASCADES -1;
-    
-    // Find the cascade the fragment belongs to
+    int primaryCascade = SHADOW_CASCADES - 1;
+    int secondaryCascade = SHADOW_CASCADES - 1;
+
+    // Find the two closest cascades
     for (int i = 0; i < SHADOW_CASCADES; i++) {
         if (abs(fragView.z) <= light.splitDepths[i]) {
-            cascadeIndex = i;
+            primaryCascade = i;
+            secondaryCascade = max(0, i - 1); // Use the previous cascade for blending
             break;
         }
     }
 
-    if (cascadeIndex == -1) {
+    if (primaryCascade == -1) {
         return 0.0; // No shadow if fragment is outside all cascades
     }
 
-    // Calculate shadow for the current cascade
-    float shadow = calculateShadowAtCascade(cascadeIndex);
+    // Compute blending factor between the two cascades
+    float depthRatio = (abs(fragView.z) - light.splitDepths[secondaryCascade]) / 
+                       (light.splitDepths[primaryCascade] - light.splitDepths[secondaryCascade]);
+    depthRatio = clamp(depthRatio, 0.0, 1.0);
 
-    return shadow;
+    // Calculate shadows for both cascades
+    float shadowPrimary = calculateShadowAtCascade(primaryCascade);
+    float shadowSecondary = calculateShadowAtCascade(secondaryCascade);
+
+    // Blend shadows smoothly
+    return mix(shadowSecondary, shadowPrimary, depthRatio);
 }
+
 
 
 
