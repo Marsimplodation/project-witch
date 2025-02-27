@@ -54,6 +54,7 @@ struct Camera {
     glm::mat4 projection;
     float near;
     float far;
+    float fov;
 };
 
 struct Vertex{

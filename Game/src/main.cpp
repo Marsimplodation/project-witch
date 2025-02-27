@@ -26,11 +26,13 @@ float pitch = 0.0f;
 void updateCamera(float deltaTime) {
     if(engine.renderer.data.editorMode) return;
     engine.mainCamera.near=0.1f;
-    engine.mainCamera.far=1000.0f;
+    engine.mainCamera.far=100.0f;
+    engine.mainCamera.fov=glm::radians(fov);
     engine.mainCamera.projection = glm::perspective(
-					glm::radians(fov),
+					engine.mainCamera.fov,
 					engine.renderingResolution[0] / engine.renderingResolution[1],
-					0.1f, 1000.0f);
+					engine.mainCamera.near,
+					engine.mainCamera.far);
     engine.mainCamera.projection[1][1] *= -1;
     engine.mainCamera.view = glm::lookAt(position,
                                     position + forward,
@@ -76,7 +78,7 @@ void rotateModels(float deltaTime) {
 
 int main (int argc, char *argv[]) {
     engine.startup();
-    engine.loadGeometry("../Game/Assets/Sponza/sponza.obj");
+    engine.loadGeometry("../Game/Assets/test.obj");
     engine.registerSystem(updateCamera, "Game Camera");
     engine.registerSystem(spawnModels, "spawn Models");
     engine.systems.back().active = false;

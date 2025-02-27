@@ -3,6 +3,7 @@
 #include "tiny_obj_loader.h"
 #include <cmath>
 #include <string>
+#include <unordered_map>
 void SoulShard::loadGeometry(std::string modelPath) {    
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -17,6 +18,7 @@ void SoulShard::loadGeometry(std::string modelPath) {
     }
     auto & vertices = gpuGeometry.vertices;
     auto & indices = gpuGeometry.indices;
+    std::unordered_map<std::string, u32> textureAtlas;
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
     std::vector<u32> tex_materials(0);
 
@@ -24,7 +26,11 @@ void SoulShard::loadGeometry(std::string modelPath) {
         if(!material.diffuse_texname.empty()) {
             bool isAbsolute = material.diffuse_texname.front() == '/';
             std::string texture = isAbsolute? material.diffuse_texname : base_dir + "/" + material.diffuse_texname;
-            tex_materials.push_back(renderer.loadTexture(texture));
+            if (textureAtlas.find(texture) == textureAtlas.end()) {
+                u32 id = renderer.loadTexture(texture); 
+               textureAtlas[texture] = id;
+                tex_materials.push_back(id);
+            } else tex_materials.push_back(textureAtlas[texture]); 
         } else tex_materials.push_back(-1); 
     }
    

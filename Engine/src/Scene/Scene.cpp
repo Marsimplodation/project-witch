@@ -45,9 +45,11 @@ std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const 
 void Scene::updateLights() {
     SoulShard & engine = *((SoulShard*)enginePtr);
     std::vector<float> cascadeSplits(SHADOW_CASCADES);
-    float nearClip = 0.1;
-    float farClip = engine.renderer.data.editorMode ? engine.editorCamera.far : engine.mainCamera.far;
-
+    float nearClip = 0.01f;
+    float farClip = 100.0f; //max shadow distance
+    float lambda = 0.95f;
+    float distanceFactor = 16.0f;//sceneLight.debugFactors[0];
+    
     float clipRange = farClip - nearClip;
 
     float minZ = nearClip;
@@ -56,11 +58,16 @@ void Scene::updateLights() {
     float range = maxZ - minZ;
     float ratio = maxZ / minZ;
 
+    auto proj = glm::perspective(engine.renderer.data.editorMode ? engine.editorCamera.fov : engine.mainCamera.fov, 
+					engine.renderingResolution[0] / engine.renderingResolution[1],
+					nearClip,
+					farClip);
+
     for (uint32_t i = 0; i < SHADOW_CASCADES; i++) {
             float p = (i + 1) / static_cast<float>(SHADOW_CASCADES);
             float log = minZ * std::pow(ratio, p);
             float uniform = minZ + range * p;
-            float d = sceneLight.debugFactors[1] * (log - uniform) + uniform;
+            float d = lambda * (log - uniform) + uniform;
             cascadeSplits[i] = (d - nearClip) / clipRange;
     }
     for (int cascadeIndex = 0; cascadeIndex < SHADOW_CASCADES; cascadeIndex++) {
@@ -68,7 +75,7 @@ void Scene::updateLights() {
         float cascadeNear = (cascadeIndex > 0) ? cascadeSplits[cascadeIndex - 1] : 0.0;
         std::vector<glm::vec3> frustumCorners = GetFrustumCornersWorldSpace(
             //switch between editor and game camera
-            engine.renderer.data.editorMode ? engine.editorCamera.projection : engine.mainCamera.projection,
+            proj,
             engine.renderer.data.editorMode ? engine.editorCamera.view : engine.mainCamera.view,
             cascadeNear, cascadeFar);
 
@@ -89,7 +96,6 @@ void Scene::updateLights() {
         glm::vec3 minExtents = -maxExtents;
 
         glm::vec3 lightDir = sceneLight.direction;
-        float distanceFactor = sceneLight.debugFactors[0];
         sceneLight.views[cascadeIndex] = glm::lookAt(frustumCenter - lightDir * -minExtents.z * distanceFactor, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 
         

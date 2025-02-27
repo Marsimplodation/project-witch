@@ -78,9 +78,11 @@ float ShadowCalculation() {
     // Calculate shadows for both cascades
     float shadowPrimary = calculateShadowAtCascade(primaryCascade);
     float shadowSecondary = calculateShadowAtCascade(secondaryCascade);
+    float shadow = mix(shadowSecondary, shadowPrimary, depthRatio);
+    shadow = max(shadow, shadowPrimary);
 
     // Blend shadows smoothly
-    return mix(shadowSecondary, shadowPrimary, depthRatio);
+    return shadow;
 }
 
 
