@@ -48,7 +48,9 @@ void Scene::updateLights() {
     float nearClip = 0.01f;
     float farClip = 100.0f; //max shadow distance
     float lambda = 0.95f;
-    float distanceFactor = 16.0f;//sceneLight.debugFactors[0];
+    //account for scene height
+    //a value of 2 worked good in testing, not sure why
+    float distanceFactor = (bounds.max.y - bounds.min.y) / 2; 
     
     float clipRange = farClip - nearClip;
 
