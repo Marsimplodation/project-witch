@@ -196,8 +196,10 @@ void VkRenderer::cleanup() {
         init.disp.destroySemaphore(data.available_semaphores[i], nullptr);
         init.disp.destroyFence(data.in_flight_fences[i], nullptr);
         init.disp.destroyDescriptorSetLayout(data.descriptorLayouts[i], nullptr);
+        init.disp.destroyDescriptorSetLayout(data.descriptorShadowLayouts[i], nullptr);
     }
     init.disp.destroyDescriptorPool(data.descriptorPool, nullptr);
+    init.disp.destroyDescriptorPool(data.descriptorShadowPool, nullptr);
 
     init.disp.destroyCommandPool(data.command_pool, nullptr);
     destroyBuffers();
@@ -232,6 +234,7 @@ void VkRenderer::cleanup() {
     init.disp.destroyPipeline(data.shadow_pipeline, nullptr);
     init.disp.destroyPipeline(data.offscreen_pipeline, nullptr);
     init.disp.destroyPipelineLayout(data.pipeline_layout, nullptr);
+    init.disp.destroyPipelineLayout(data.shadow_pipeline_layout, nullptr);
     init.disp.destroyRenderPass(data.shadow_pass, nullptr);
     init.disp.destroyRenderPass(data.render_pass, nullptr);
     init.disp.destroyRenderPass(data.offscreen_pass, nullptr);

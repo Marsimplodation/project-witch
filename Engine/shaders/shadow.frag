@@ -16,7 +16,7 @@ void main() {
     vec4 texColor = vec4(1.0);
     if (texIdx != uint(-1)) {
         // 0 is allocated for the shadowMap
-        texColor = texture(texSamplers[nonuniformEXT(texIdx + SHADOW_CASCADES)], fragUV);
+        texColor = texture(texSamplers[nonuniformEXT(texIdx)], fragUV);
     }
     if (texColor.a < 0.3) discard;
 

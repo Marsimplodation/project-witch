@@ -67,7 +67,7 @@ void VkRenderer::scene_shadow_rendering(int i){
 
         init.disp.cmdBindPipeline(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.shadow_pipeline);
 
-        vkCmdPushConstants(data.command_buffers[i],data.pipeline_layout,VK_SHADER_STAGE_VERTEX_BIT,
+        vkCmdPushConstants(data.command_buffers[i],data.shadow_pipeline_layout,VK_SHADER_STAGE_VERTEX_BIT,
             4,                  // Offset
             sizeof(uint32_t),   // Size
             &c
@@ -203,10 +203,13 @@ int VkRenderer::record_command_buffer(int i) {
     VkBuffer vertexBuffers[] = {data.vertexBuffer};
     init.disp.cmdBindVertexBuffers(data.command_buffers[i], 0, 1, vertexBuffers, offsets);
 
+
+    update_shadow_descriptor_sets();
+    init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.shadow_pipeline_layout, 0, 1, &data.descriptorShadowSets[data.current_frame], 0, nullptr);
+    scene_shadow_rendering(i);
+
     update_descriptor_sets();
     init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);
-
-    scene_shadow_rendering(i);
 
     if(data.editorMode){
         scene_offscreen_rendering(i);

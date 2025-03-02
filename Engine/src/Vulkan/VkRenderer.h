@@ -72,8 +72,11 @@ struct VkRenderer {
         std::vector<VkFence> image_in_flight;
 
         VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
+        VkDescriptorSet descriptorShadowSets[MAX_FRAMES_IN_FLIGHT];
         VkDescriptorSetLayout descriptorLayouts[MAX_FRAMES_IN_FLIGHT];
+        VkDescriptorSetLayout descriptorShadowLayouts[MAX_FRAMES_IN_FLIGHT];
         VkDescriptorPool descriptorPool;
+        VkDescriptorPool descriptorShadowPool;
         VkBuffer vertexBuffer;
         VkBuffer indexBuffer;
         VkDeviceMemory vertexBufferMemory;
@@ -136,7 +139,7 @@ struct VkRenderer {
     VkPipeline createGraphicsPipeline(
         const VkPipelineShaderStageCreateInfo* shader_stages,
         VkPipelineRasterizationStateCreateInfo rasterizer,
-        VkRenderPass renderPass
+        VkRenderPass renderPass, VkPipelineLayout pipelineLayout
     );
     void createGraphicsPipelineLayout();
     int createRenderingPipeline();
@@ -147,6 +150,7 @@ struct VkRenderer {
     int create_descriptor_pool();
     int create_descriptor_layout(); 
     int update_descriptor_sets();
+    int update_shadow_descriptor_sets();
 
     //--- Command Buffer ---//
     int record_command_buffer(int i);

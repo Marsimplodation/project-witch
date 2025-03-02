@@ -77,12 +77,17 @@ void VkRenderer::createGraphicsPipelineLayout() {
         std::cerr << "Failed to create pipeline layout\n";
         return;
     }
+    pipeline_layout_info.pSetLayouts = data.descriptorShadowLayouts;
+    if (init.disp.createPipelineLayout(&pipeline_layout_info, nullptr, &data.shadow_pipeline_layout) != VK_SUCCESS) {
+        std::cerr << "Failed to create pipeline layout\n";
+        return;
+    }
 }
 
 VkPipeline VkRenderer::createGraphicsPipeline(
     const VkPipelineShaderStageCreateInfo* shader_stages,
     VkPipelineRasterizationStateCreateInfo rasterizer,
-    VkRenderPass renderPass) {
+    VkRenderPass renderPass, VkPipelineLayout pipelineLayout) {
 
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -150,7 +155,7 @@ VkPipeline VkRenderer::createGraphicsPipeline(
     pipeline_info.pMultisampleState = &multisampling;
     pipeline_info.pColorBlendState = &color_blending;
     pipeline_info.pDynamicState = &dynamic_info;
-    pipeline_info.layout = data.pipeline_layout;
+    pipeline_info.layout = pipelineLayout;
     pipeline_info.renderPass = renderPass;
     pipeline_info.subpass = 0;
     pipeline_info.pDepthStencilState = &depthStencil;
@@ -187,9 +192,9 @@ int VkRenderer::createRenderingPipeline() {
     shadowRasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
 
     createGraphicsPipelineLayout();
-    data.graphics_pipeline = createGraphicsPipeline(graphicsShadersInfos, rasterizer, data.render_pass);
-    data.offscreen_pipeline = createGraphicsPipeline(graphicsShadersInfos, rasterizer, data.offscreen_pass);
-    data.shadow_pipeline = createGraphicsPipeline(shadowShadersInfos, shadowRasterizer, data.shadow_pass);
+    data.graphics_pipeline = createGraphicsPipeline(graphicsShadersInfos, rasterizer, data.render_pass, data.pipeline_layout);
+    data.offscreen_pipeline = createGraphicsPipeline(graphicsShadersInfos, rasterizer, data.offscreen_pass,  data.pipeline_layout);
+    data.shadow_pipeline = createGraphicsPipeline(shadowShadersInfos, shadowRasterizer, data.shadow_pass,  data.shadow_pipeline_layout);
 
     destroyShaderModules(graphicsShaders);
     destroyShaderModules(shadowShaders);
