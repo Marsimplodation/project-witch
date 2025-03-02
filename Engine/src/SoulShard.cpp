@@ -36,6 +36,7 @@ int SoulShard::startup() {
     renderer.enginePtr = this;
     scene.enginePtr = this;
     renderer.data.editorMode = true;
+    renderer.loadTexture("./textures/dummy.png");
 
     return 0;
 };

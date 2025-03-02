@@ -1,4 +1,5 @@
 #include "VkRenderer.h"
+#include "types/types.h"
 #include <cstdio>
 #include <vulkan/vulkan_core.h>
 int VkRenderer::create_descriptor_pool() {
@@ -117,7 +118,13 @@ int VkRenderer::update_descriptor_sets() {
     lightBufferInfo.offset = 0;
     lightBufferInfo.range = VK_WHOLE_SIZE;
     
-    std::vector<VkDescriptorImageInfo> textureInfos(data.textures.size() + SHADOW_CASCADES);
+    std::vector<VkDescriptorImageInfo> textureInfos(100 + SHADOW_CASCADES);
+    // Initialize all slots to VK_NULL_HANDLE (optional, but safe)
+    for (int i = 0; i < 100 + SHADOW_CASCADES; ++i) {
+        textureInfos[i].sampler = data.textures[0].sampler;
+        textureInfos[i].imageView = data.textures[0].view;
+        textureInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
     for(int i = 0; i < SHADOW_CASCADES; ++i) {
         textureInfos[i].sampler = data.imageSampler;
         textureInfos[i].imageView = data.shadow_image_views[i];
@@ -178,7 +185,13 @@ int VkRenderer::update_shadow_descriptor_sets() {
     lightBufferInfo.offset = 0;
     lightBufferInfo.range = VK_WHOLE_SIZE;
     
-    std::vector<VkDescriptorImageInfo> textureInfos(data.textures.size());
+    std::vector<VkDescriptorImageInfo> textureInfos(100);
+    // Initialize all slots to VK_NULL_HANDLE (optional, but safe)
+    for (int i = 0; i < 100; ++i) {
+        textureInfos[i].sampler = data.textures[0].sampler;
+        textureInfos[i].imageView = data.textures[0].view;
+        textureInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
     for(int i = 0; i < data.textures.size(); ++i) {
         textureInfos[i].sampler = data.textures[i].sampler;
         textureInfos[i].imageView = data.textures[i].view;
