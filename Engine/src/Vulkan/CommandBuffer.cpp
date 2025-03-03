@@ -38,7 +38,7 @@ void VkRenderer::scene_shadow_rendering(int i){
         VkRenderPassBeginInfo offsceen_pass_info = {};
         offsceen_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         offsceen_pass_info.renderPass = data.shadow_pass;
-        offsceen_pass_info.framebuffer = data.shadow_framebuffers[c];
+        offsceen_pass_info.framebuffer = data.shadow_framebuffers[i][c];
         offsceen_pass_info.renderArea.offset = { 0, 0 };
         VkExtent2D extent;
         extent.width = SHADOW_MAP_RES; 

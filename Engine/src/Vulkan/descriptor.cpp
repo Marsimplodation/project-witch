@@ -127,7 +127,7 @@ int VkRenderer::update_descriptor_sets() {
     }
     for(int i = 0; i < SHADOW_CASCADES; ++i) {
         textureInfos[i].sampler = data.imageSampler;
-        textureInfos[i].imageView = data.shadow_image_views[i];
+        textureInfos[i].imageView = data.shadow_image_views[data.current_img_index][i];
         textureInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
     for(int i = 0; i < data.textures.size(); ++i) {

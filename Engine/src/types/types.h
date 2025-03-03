@@ -1,5 +1,6 @@
 #ifndef SOUL_SHARD_TYPES_H
 #define SOUL_SHARD_TYPES_H
+#include <chrono>
 #include <cstdint>
 #include <array>
 #include <glm/fwd.hpp>
@@ -17,9 +18,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <vulkan/vulkan_core.h>
-
-#define u32 uint32_t
-#define SHADOW_CASCADES 4
+#include "defines.h"
 struct Model{
     u32 indexOffset;
     u32 triangleCount;
@@ -33,6 +32,13 @@ struct TransformComponent{
     glm::vec3 scale;
 };
 
+struct Timer {
+    Timer(const char* name);
+    ~Timer();
+    const char *name;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start;
+};
+
 
 struct DirectionLight {
     glm::mat4 views[SHADOW_CASCADES];  // 16-byte alignment
@@ -43,6 +49,13 @@ struct DirectionLight {
     glm::vec4 splitDepths; // this can follow vectors without padding
     glm::vec4 debugFactors;
 };
+
+struct PointLight {
+    glm::vec4 position;               // 16-byte alignment
+    glm::vec4 color;
+    float radius;
+};
+
 struct System{
     bool active;
     void(*func)(float deltaTime);

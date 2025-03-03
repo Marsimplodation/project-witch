@@ -212,6 +212,9 @@ void VkRenderer::cleanup() {
         init.disp.destroyImage(data.offscreen_images[i], nullptr);
         init.disp.destroyImageView(data.offscreen_image_views[i], nullptr);
         init.disp.freeMemory(data.offscreen_image_memory[i], nullptr);
+        init.disp.destroyImage(data.depthImages[i], nullptr);
+        init.disp.destroyImageView(data.depthImageViews[i], nullptr);
+        init.disp.freeMemory(data.depthImageMemorys[i], nullptr);
     }
     for (size_t i = 0; i < data.textures.size(); i++) {
         init.disp.destroyImage(data.textures[i].image, nullptr);
@@ -219,14 +222,13 @@ void VkRenderer::cleanup() {
         init.disp.freeMemory(data.textures[i].memory, nullptr);
         init.disp.destroySampler(data.textures[i].sampler, nullptr);
     }
-    init.disp.destroyImage(data.depthImage, nullptr);
-    init.disp.destroyImageView(data.depthImageView, nullptr);
-    init.disp.freeMemory(data.depthImageMemory, nullptr);
-    for (size_t i = 0; i < SHADOW_CASCADES; i++) {
-        init.disp.destroyFramebuffer(data.shadow_framebuffers[i], nullptr);
-        init.disp.destroyImage(data.shadow_images[i], nullptr);
-        init.disp.destroyImageView(data.shadow_image_views[i], nullptr);
-        init.disp.freeMemory(data.shadow_image_memory[i], nullptr);
+    for (size_t i = 0; i < data.swapchain_image_views.size(); i++) {
+        for (size_t j = 0; j < SHADOW_CASCADES; j++) {
+            init.disp.destroyFramebuffer(data.shadow_framebuffers[i][j], nullptr);
+            init.disp.destroyImage(data.shadow_images[i][j], nullptr);
+            init.disp.destroyImageView(data.shadow_image_views[i][j], nullptr);
+            init.disp.freeMemory(data.shadow_image_memory[i][j], nullptr);
+        }
     }
 
 

@@ -66,7 +66,7 @@ void Scene::updateLights() {
 					farClip);
 
     for (uint32_t i = 0; i < SHADOW_CASCADES; i++) {
-            float p = (i + 1) / static_cast<float>(SHADOW_CASCADES);
+            float p = (i + 1) / static_cast<float>(SHADOW_CASCADES +1);
             float log = minZ * std::pow(ratio, p);
             float uniform = minZ + range * p;
             float d = lambda * (log - uniform) + uniform;
@@ -130,31 +130,38 @@ Instance & Scene::instantiateModel(std::string objName, std::string instanceName
     registry.emplace<TransformComponent>(instance.entity, transform);
 
     instances.push_back(instance);
+
+    geometryList.clear();
+    for(auto & pair : geometry) {
+        auto & info = pair.second;
+        geometryList.push_back(info);
+    }
+    linearModels.resize(instances.size());
+    modelMatrices.resize(instances.size());
+
     return instances.back();
 }
 
 void Scene::updateModels() {
-    linearModels.clear();
-    modelMatrices.clear();
     bounds = AABB{
         .min = glm::vec3(FLT_MAX),
         .max = glm::vec3(-FLT_MAX),
     };
-    for(auto & pair : geometry) {
-        auto & info = pair.second;
-        linearModels.push_back({
-            .indexOffset = info.indexOffset,
-            .triangleCount = info.triangleCount,
-            .instanceCount = info.instanceCount,
-        });
-        for(auto & iIdx : info.instances) {
-            auto & instance = instances[iIdx];
+    u32 iIdx = 0;
+    u32 gIdx = 0;
+    for(auto & info : geometryList) {
+        linearModels[gIdx].indexOffset = info.indexOffset;
+        linearModels[gIdx].triangleCount = info.triangleCount;
+        linearModels[gIdx].instanceCount = info.instanceCount;
+        for(auto & idx : info.instances) {
+            auto & instance = instances[idx];
             auto & transform = registry.get<TransformComponent>(instance.entity);
-            modelMatrices.push_back(transform.mat);
-            auto min = glm::vec3(transform.mat * glm::vec4(pair.second.aabb.min, 1.0f));
-            auto max = glm::vec3(transform.mat * glm::vec4(pair.second.aabb.max, 1.0f));
+            modelMatrices[iIdx++] = (transform.mat);
+            auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
+            auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
             bounds.min = glm::min(bounds.min, min);
             bounds.max = glm::max(bounds.max, max);
         }
+        gIdx++;
     }
 }

@@ -10,8 +10,6 @@
 #include <VkBootstrap.h>
 
 
-const int MAX_FRAMES_IN_FLIGHT = 1;
-const int SHADOW_MAP_RES = 4096;
 struct VkRenderer {
     struct Init {
         GLFWwindow* window;
@@ -44,10 +42,15 @@ struct VkRenderer {
         std::vector<VkFramebuffer> offscreen_framebuffers;
         std::vector<Texture> textures;
         
-        std::vector<VkImage> shadow_images;
-        std::vector<VkDeviceMemory> shadow_image_memory;
-        std::vector<VkImageView>  shadow_image_views;
-        std::vector<VkFramebuffer> shadow_framebuffers;
+        std::vector<std::vector<VkImage>> shadow_images;
+        std::vector<std::vector<VkDeviceMemory>> shadow_image_memory;
+        std::vector<std::vector<VkImageView>>  shadow_image_views;
+        std::vector<std::vector<VkFramebuffer>> shadow_framebuffers;
+
+
+        std::vector<VkImage> depthImages;
+        std::vector<VkDeviceMemory> depthImageMemorys;
+        std::vector<VkImageView> depthImageViews;
 
         VkRenderPass render_pass;
         VkRenderPass offscreen_pass;
@@ -82,9 +85,6 @@ struct VkRenderer {
         VkDeviceMemory vertexBufferMemory;
         VkDeviceMemory indexBufferMemory;
 
-        VkImage depthImage;
-        VkDeviceMemory depthImageMemory;
-        VkImageView depthImageView;
 
         std::vector<Vertex> * vertices;
         std::vector<u32> * indices;

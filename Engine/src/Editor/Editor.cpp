@@ -130,7 +130,7 @@ void ImguiModule::init(void * initPtr, void * dataPtr) {
     VkDescriptorPoolCreateInfo pool_info = {};
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    pool_info.maxSets = 1000;
+    pool_info.maxSets = 1000 * MAX_FRAMES_IN_FLIGHT;
     pool_info.poolSizeCount = std::size(pool_sizes);
     pool_info.pPoolSizes = pool_sizes;
 
@@ -249,15 +249,16 @@ void RadialLightSlider(const char* label, float& outX, float& outY, float& outZ)
 }
 
 Instance * selectedInstance = 0x0;
-std::vector<ImTextureID> textures;
+std::vector<ImTextureID> texturesPerFrame[MAX_FRAMES_IN_FLIGHT];
 void ImguiModule::update(void * initPtr, void * dataPtr) {
-   	VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
-    	VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;
-        SoulShard & engine = *((SoulShard*)enginePtr);
+    VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
+    VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;
+    SoulShard & engine = *((SoulShard*)enginePtr);
+    auto & textures = texturesPerFrame[data.current_frame];
 
         if(!active) return;
         if(textureCreated) {
-            ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(textureID));
+            ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(sceneViews[data.current_frame]));
             for(auto & texture : textures)
             ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(texture));
         }
@@ -272,13 +273,13 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         for(int i = 0; i < SHADOW_CASCADES; ++i) {
             textures[textures.size() - SHADOW_CASCADES + i] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
             data.imageSampler,
-            data.shadow_image_views[i],
+            data.shadow_image_views[data.current_img_index][i],
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // Image layout for sampling
             ));
         }
-        textureID = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
+        sceneViews[data.current_frame] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
             data.imageSampler,
-            data.offscreen_image_views[data.current_frame],                       // VkSampler
+            data.offscreen_image_views[data.current_img_index],                       // VkSampler
             VK_IMAGE_LAYOUT_GENERAL // Image layout for sampling
         ));
         textureCreated = true;

@@ -43,6 +43,7 @@ struct Scene {
         .debugFactors=glm::vec4(1.0f),
     };
     std::unordered_map<std::string, GeometryInfo> geometry;
+    std::vector<GeometryInfo> geometryList;
     Instance & instantiateModel(std::string objName, std::string instanceName);
     u32 instanceCount = 0;
     void updateModels();

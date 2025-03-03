@@ -34,7 +34,7 @@ class ImguiModule {
         void destroy(VkDevice device);
         bool active = true;
         bool updated = false;
-        ImTextureID textureID;
+        ImTextureID sceneViews[MAX_FRAMES_IN_FLIGHT];
         ImVec2 previewSize = {128, 128};
         void* enginePtr;
     private:

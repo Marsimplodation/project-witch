@@ -99,28 +99,40 @@ void VkRenderer::createDepthResources() {
     VkExtent2D extent;
     extent.width = init.swapchain.extent.width;
     extent.height = init.swapchain.extent.height;
-    createImage(data.depthImage,
-                data.depthImageView,
-                data.depthImageMemory,
-                depthFormat,
-                extent,
-                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                VK_IMAGE_ASPECT_DEPTH_BIT);
-    extent.width = SHADOW_MAP_RES;
-    extent.height = SHADOW_MAP_RES; 
+    data.depthImages.resize(data.swapchain_image_views.size());
+    data.depthImageMemorys.resize(data.swapchain_image_views.size());
+    data.depthImageViews.resize(data.swapchain_image_views.size());
+    data.shadow_images.resize(data.swapchain_image_views.size());
+    data.shadow_image_views.resize(data.swapchain_image_views.size());
+    data.shadow_image_memory.resize(data.swapchain_image_views.size());
+    data.shadow_framebuffers.resize(data.swapchain_image_views.size());
 
-    data.shadow_images.resize(SHADOW_CASCADES);
-    data.shadow_image_memory.resize(SHADOW_CASCADES);
-    data.shadow_image_views.resize(SHADOW_CASCADES);
-    data.shadow_framebuffers.resize(SHADOW_CASCADES);
-    for (int i = 0; i < SHADOW_CASCADES; ++i){
-        createImage(data.shadow_images[i],
-                    data.shadow_image_views[i],
-                    data.shadow_image_memory[i],
+    for (size_t i = 0; i < data.swapchain_image_views.size(); i++) {
+        createImage(data.depthImages[i],
+                    data.depthImageViews[i],
+                    data.depthImageMemorys[i],
                     depthFormat,
                     extent,
-                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                     VK_IMAGE_ASPECT_DEPTH_BIT);
+        extent.width = SHADOW_MAP_RES;
+        extent.height = SHADOW_MAP_RES; 
+    }
+
+    for (size_t i = 0; i < data.swapchain_image_views.size(); i++) {
+        data.shadow_images[i].resize(SHADOW_CASCADES);
+        data.shadow_image_memory[i].resize(SHADOW_CASCADES);
+        data.shadow_image_views[i].resize(SHADOW_CASCADES);
+        data.shadow_framebuffers[i].resize(SHADOW_CASCADES);
+        for (int j = 0; j < SHADOW_CASCADES; ++j){
+            createImage(data.shadow_images[i][j],
+                        data.shadow_image_views[i][j],
+                        data.shadow_image_memory[i][j],
+                        depthFormat,
+                        extent,
+                        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                        VK_IMAGE_ASPECT_DEPTH_BIT);
+        }
     }
 }
 
@@ -133,7 +145,7 @@ int VkRenderer::create_framebuffers() {
     data.offscreen_framebuffers.resize(data.swapchain_image_views.size());
     createDepthResources();
     for (size_t i = 0; i < data.swapchain_image_views.size(); i++) {
-        VkImageView attachments[] = { data.swapchain_image_views[i], data.depthImageView};
+        VkImageView attachments[] = { data.swapchain_image_views[i], data.depthImageViews[i]};
 
         VkFramebufferCreateInfo framebuffer_info = {};
         framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -168,7 +180,7 @@ int VkRenderer::create_framebuffers() {
                     );
     }
     for (size_t i = 0; i < data.swapchain_image_views.size(); i++) {
-        std::array<VkImageView, 2> attachments = { data.offscreen_image_views[i], data.depthImageView};
+        std::array<VkImageView, 2> attachments = { data.offscreen_image_views[i], data.depthImageViews[i]};
 
         VkFramebufferCreateInfo framebuffer_info = {};
         framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -185,18 +197,20 @@ int VkRenderer::create_framebuffers() {
     VkExtent2D extent;
     extent.width = SHADOW_MAP_RES;
     extent.height = SHADOW_MAP_RES; 
-    for (size_t i = 0; i < SHADOW_CASCADES; i++) {
-        std::array<VkImageView, 1> attachments = { data.shadow_image_views[i]};
-        VkFramebufferCreateInfo framebuffer_info = {};
-        framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebuffer_info.renderPass = data.shadow_pass;
-        framebuffer_info.attachmentCount = 1;
-        framebuffer_info.pAttachments = attachments.data();
-        framebuffer_info.width = extent.width; 
-        framebuffer_info.height = extent.height;
-        framebuffer_info.layers = 1;
-        if (init.disp.createFramebuffer(&framebuffer_info, nullptr, &data.shadow_framebuffers[i]) != VK_SUCCESS) {
-            return -1; // failed to create framebuffer
+    for (size_t i = 0; i < data.swapchain_image_views.size(); i++) {
+        for (size_t j = 0; j < SHADOW_CASCADES; j++) {
+            std::array<VkImageView, 1> attachments = { data.shadow_image_views[i][j]};
+            VkFramebufferCreateInfo framebuffer_info = {};
+            framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebuffer_info.renderPass = data.shadow_pass;
+            framebuffer_info.attachmentCount = 1;
+            framebuffer_info.pAttachments = attachments.data();
+            framebuffer_info.width = extent.width; 
+            framebuffer_info.height = extent.height;
+            framebuffer_info.layers = 1;
+            if (init.disp.createFramebuffer(&framebuffer_info, nullptr, &data.shadow_framebuffers[i][j]) != VK_SUCCESS) {
+                return -1; // failed to create framebuffer
+            }
         }
     }
     return 0;
@@ -217,16 +231,18 @@ int VkRenderer::recreate_swapchain() {
         init.disp.destroyImage(data.offscreen_images[i], nullptr);
         init.disp.destroyImageView(data.offscreen_image_views[i], nullptr);
         init.disp.freeMemory(data.offscreen_image_memory[i], nullptr);
+        init.disp.destroyImage(data.depthImages[i], nullptr);
+        init.disp.destroyImageView(data.depthImageViews[i], nullptr);
+        init.disp.freeMemory(data.depthImageMemorys[i], nullptr);
     }
-    init.disp.destroyImage(data.depthImage, nullptr);
-    init.disp.destroyImageView(data.depthImageView, nullptr);
-    init.disp.freeMemory(data.depthImageMemory, nullptr);
 
-    for (size_t i = 0; i < SHADOW_CASCADES; i++) {
-        init.disp.destroyFramebuffer(data.shadow_framebuffers[i], nullptr);
-        init.disp.destroyImage(data.shadow_images[i], nullptr);
-        init.disp.destroyImageView(data.shadow_image_views[i], nullptr);
-        init.disp.freeMemory(data.shadow_image_memory[i], nullptr);
+    for (size_t i = 0; i < data.swapchain_image_views.size(); i++) {
+        for (size_t j = 0; j < SHADOW_CASCADES; j++) {
+            init.disp.destroyFramebuffer(data.shadow_framebuffers[i][j], nullptr);
+            init.disp.destroyImage(data.shadow_images[i][j], nullptr);
+            init.disp.destroyImageView(data.shadow_image_views[i][j], nullptr);
+            init.disp.freeMemory(data.shadow_image_memory[i][j], nullptr);
+        }
     }
 
     init.swapchain.destroy_image_views(data.swapchain_image_views);

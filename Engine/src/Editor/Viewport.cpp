@@ -23,7 +23,7 @@ void ImguiModule::renderViewport(void * initPtr, void * dataPtr) {
     if(ImGui::GetWindowSize().x != previewSize.x || ImGui::GetWindowSize().y != previewSize.y) {
         data.swapchain_out_of_date = true;
     }
-    ImGui::Image(textureID,previewSize);
+    ImGui::Image(sceneViews[data.current_frame],previewSize);
     previewSize = ImGui::GetWindowSize();
     auto & engine = *(SoulShard*)enginePtr;
     auto & input = engine.inputHandler;
