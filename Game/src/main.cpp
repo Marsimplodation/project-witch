@@ -78,7 +78,7 @@ void rotateModels(float deltaTime) {
 
 int main (int argc, char *argv[]) {
     engine.startup();
-    engine.loadGeometry("../Game/Assets/test.obj");
+    engine.loadGeometry("../Game/Assets/Sponza/sponza.obj");
     engine.registerSystem(updateCamera, "Game Camera");
     engine.registerSystem(spawnModels, "spawn Models");
     engine.systems.back().active = false;

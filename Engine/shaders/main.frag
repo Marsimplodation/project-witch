@@ -42,7 +42,7 @@ float calculateShadowAtCascade(int cascadeIndex) {
     // Perform PCF with 5x5 kernel for smoother shadows
     for (int i = -2; i <= 2; ++i) {
         for (int j = -2; j <= 2; ++j) {
-            vec2 coords = projCoords.xy + (vec2(i, j) / 2048.0);
+            vec2 coords = projCoords.xy + (vec2(i, j) / 4096.0);
             float sampleShadow = texture(texSamplers[nonuniformEXT(cascadeIndex)], coords.xy).r < projCoords.z - bias ? 1.0 : 0.0;
             shadow += sampleShadow * weights[i + 2][j + 2];
             totalWeight += weights[i + 2][j + 2];
