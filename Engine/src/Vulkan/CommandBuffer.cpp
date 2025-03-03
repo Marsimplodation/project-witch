@@ -41,8 +41,8 @@ void VkRenderer::scene_shadow_rendering(int i){
         offsceen_pass_info.framebuffer = data.shadow_framebuffers[i][c];
         offsceen_pass_info.renderArea.offset = { 0, 0 };
         VkExtent2D extent;
-        extent.width = SHADOW_MAP_RES; 
-        extent.height = SHADOW_MAP_RES; 
+        extent.width = SHADOW_MAP_RES[c]; 
+        extent.height = SHADOW_MAP_RES[c]; 
         offsceen_pass_info.renderArea.extent = extent; 
         std::array<VkClearValue, 1> clearValues{};
         clearValues[0].depthStencil = {1.0f, 0};
@@ -52,8 +52,8 @@ void VkRenderer::scene_shadow_rendering(int i){
         VkViewport viewport = {};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = SHADOW_MAP_RES; 
-        viewport.height = SHADOW_MAP_RES;
+        viewport.width = SHADOW_MAP_RES[c]; 
+        viewport.height = SHADOW_MAP_RES[c];
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
@@ -206,7 +206,7 @@ int VkRenderer::record_command_buffer(int i) {
 
     update_shadow_descriptor_sets();
     init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.shadow_pipeline_layout, 0, 1, &data.descriptorShadowSets[data.current_frame], 0, nullptr);
-    scene_shadow_rendering(i);
+    if(engine.scene.sceneLight.castShadows)scene_shadow_rendering(i);
 
     update_descriptor_sets();
     init.disp.cmdBindDescriptorSets(data.command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.pipeline_layout, 0, 1, &data.descriptorSets[data.current_frame], 0, nullptr);

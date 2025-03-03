@@ -45,7 +45,7 @@ std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const 
 void Scene::updateLights() {
     SoulShard & engine = *((SoulShard*)enginePtr);
     std::vector<float> cascadeSplits(SHADOW_CASCADES);
-    float nearClip = 0.01f;
+    float nearClip = 0.1f;
     float farClip = 100.0f; //max shadow distance
     float lambda = 0.95f;
     //account for scene height
@@ -66,7 +66,7 @@ void Scene::updateLights() {
 					farClip);
 
     for (uint32_t i = 0; i < SHADOW_CASCADES; i++) {
-            float p = (i + 1) / static_cast<float>(SHADOW_CASCADES +1);
+            float p = (i + 1) / static_cast<float>(SHADOW_CASCADES);
             float log = minZ * std::pow(ratio, p);
             float uniform = minZ + range * p;
             float d = lambda * (log - uniform) + uniform;
@@ -98,13 +98,16 @@ void Scene::updateLights() {
         glm::vec3 minExtents = -maxExtents;
 
         glm::vec3 lightDir = sceneLight.direction;
-        sceneLight.views[cascadeIndex] = glm::lookAt(frustumCenter - lightDir * -minExtents.z * distanceFactor, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z*distanceFactor, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f + minExtents.z * distanceFactor, (maxExtents.z - minExtents.z)*distanceFactor);
+        //shift down distance factor for detailed far maps
+        //as they are further away they don't need to be shifted back as much
+        distanceFactor /= 2;
+        distanceFactor = fmaxf(distanceFactor, 1.0f);
+        sceneLight.views[cascadeIndex] = lightViewMatrix; 
 
         
-        sceneLight.projections[cascadeIndex] =  glm::ortho(minExtents.x, maxExtents.x, 
-                                                           minExtents.y, maxExtents.y, 
-                                                           0.0f+minExtents.z*distanceFactor, 
-                                                           (maxExtents.z - minExtents.z)*distanceFactor);
+        sceneLight.projections[cascadeIndex] = lightOrthoMatrix; 
 
         sceneLight.splitDepths[cascadeIndex] = nearClip + cascadeSplits[cascadeIndex] * clipRange;
 

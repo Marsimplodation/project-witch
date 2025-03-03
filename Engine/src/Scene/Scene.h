@@ -34,6 +34,7 @@ struct Scene {
     std::vector<glm::mat4> modelMatrices;
     std::vector<Instance> instances;
     std::vector<Model> linearModels;
+    std::vector<PointLight> pointLights;
     entt::registry registry;
 
     DirectionLight sceneLight = DirectionLight{

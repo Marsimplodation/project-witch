@@ -6,6 +6,7 @@ const mat4 bias = mat4(
   0.0, 0.0, 1.0, 0.0,
   0.5, 0.5, 0.0, 1.0 );
 #define SHADOW_CASCADES 4
+const uint SHADOW_MAP_RES[SHADOW_CASCADES] =  { 4096,4096,4096,4096 }; // Different resolutions
 
 struct DirectionLight {
     mat4 views[SHADOW_CASCADES];  // 16-byte alignment
@@ -14,6 +15,7 @@ struct DirectionLight {
     vec4 direction;              // 16-byte alignment
     vec4 color;                  // 16-byte alignment
     vec4 splitDepths; // this can follow vectors without padding
+    bool castShadows;
 };
 
 #endif

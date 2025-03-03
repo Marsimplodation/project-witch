@@ -332,6 +332,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         RadialLightSlider("light dir", c.x, c.y, c.z);
         ImGui::ColorEdit4("Color", (float*)&engine.scene.sceneLight.color);
         ImGui::DragFloat4("Debug", (float*)&engine.scene.sceneLight.debugFactors);
+        ImGui::Checkbox("Cast Shadows", &engine.scene.sceneLight.castShadows);
         ImGui::End();
         ImGui::Begin("Selected");
         if(selectedInstance) {
@@ -339,6 +340,8 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             auto & instance = *selectedInstance;
             const char * name = instance.name.c_str();
             ImGui::Text("Name: %s", name);
+            ImGui::SameLine();
+            bool close = ImGui::Button("X");
             ImGui::BeginChild("Transform Component");
             glm::mat4 & transform = engine.scene.registry.get<TransformComponent>(instance.entity).mat;
             engine.editorCamera.projection[1][1] *= -1;
@@ -357,6 +360,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             ImGui::DragFloat3("rotation", (float*)&newRotation, 0.1f);
             ImGui::DragFloat3("scale", (float*)&newScale, 0.1f);
             ImGui::EndChild();
+            if(close) selectedInstance = 0x0;
         }
         ImGui::End();
         

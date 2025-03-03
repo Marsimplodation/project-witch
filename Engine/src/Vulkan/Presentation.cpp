@@ -117,14 +117,14 @@ void VkRenderer::createDepthResources() {
                     VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
-    extent.width = SHADOW_MAP_RES;
-    extent.height = SHADOW_MAP_RES; 
     for (size_t i = 0; i < data.swapchain_image_views.size(); i++) {
         data.shadow_images[i].resize(SHADOW_CASCADES);
         data.shadow_image_memory[i].resize(SHADOW_CASCADES);
         data.shadow_image_views[i].resize(SHADOW_CASCADES);
         data.shadow_framebuffers[i].resize(SHADOW_CASCADES);
         for (int j = 0; j < SHADOW_CASCADES; ++j){
+            extent.width = SHADOW_MAP_RES[j];
+            extent.height = SHADOW_MAP_RES[j]; 
             createImage(data.shadow_images[i][j],
                         data.shadow_image_views[i][j],
                         data.shadow_image_memory[i][j],
@@ -195,10 +195,10 @@ int VkRenderer::create_framebuffers() {
         }
     }
     VkExtent2D extent;
-    extent.width = SHADOW_MAP_RES;
-    extent.height = SHADOW_MAP_RES; 
     for (size_t i = 0; i < data.swapchain_image_views.size(); i++) {
         for (size_t j = 0; j < SHADOW_CASCADES; j++) {
+            extent.width = SHADOW_MAP_RES[j];
+            extent.height = SHADOW_MAP_RES[j]; 
             std::array<VkImageView, 1> attachments = { data.shadow_image_views[i][j]};
             VkFramebufferCreateInfo framebuffer_info = {};
             framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
