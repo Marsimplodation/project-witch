@@ -115,10 +115,10 @@ void VkRenderer::createDepthResources() {
                     extent,
                     VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                     VK_IMAGE_ASPECT_DEPTH_BIT);
-        extent.width = SHADOW_MAP_RES;
-        extent.height = SHADOW_MAP_RES; 
     }
 
+    extent.width = SHADOW_MAP_RES;
+    extent.height = SHADOW_MAP_RES; 
     for (size_t i = 0; i < data.swapchain_image_views.size(); i++) {
         data.shadow_images[i].resize(SHADOW_CASCADES);
         data.shadow_image_memory[i].resize(SHADOW_CASCADES);
