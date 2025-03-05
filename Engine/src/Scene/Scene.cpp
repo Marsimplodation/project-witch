@@ -3,7 +3,9 @@
 #include "Vulkan/VkRenderer.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/geometric.hpp"
+#include "types/defines.h"
 #include "types/types.h"
+#include <regex>
 #include <string>
 
 
@@ -139,8 +141,6 @@ Instance & Scene::instantiateModel(std::string objName, std::string instanceName
         auto & info = pair.second;
         geometryList.push_back(info);
     }
-    linearModels.resize(instances.size());
-    modelMatrices.resize(instances.size());
 
     return instances.back();
 }
@@ -150,21 +150,43 @@ void Scene::updateModels() {
         .min = glm::vec3(FLT_MAX),
         .max = glm::vec3(-FLT_MAX),
     };
-    u32 iIdx = 0;
-    u32 gIdx = 0;
+    for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
+        linearModels[i].clear();
+        modelMatrices.clear();
+        matrixOffsets.clear();
+    }
     for(auto & info : geometryList) {
-        linearModels[gIdx].indexOffset = info.indexOffset;
-        linearModels[gIdx].triangleCount = info.triangleCount;
-        linearModels[gIdx].instanceCount = info.instanceCount;
+        matrixOffsets.push_back(modelMatrices.size());
+        linearModels[0].push_back({
+            .indexOffset=info.indexOffset,
+            .triangleCount=info.triangleCount,
+            .instanceCount= info.instanceCount});
         for(auto & idx : info.instances) {
             auto & instance = instances[idx];
             auto & transform = registry.get<TransformComponent>(instance.entity);
-            modelMatrices[iIdx++] = (transform.mat);
+            modelMatrices.push_back(transform.mat);
             auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
             auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
             bounds.min = glm::min(bounds.min, min);
             bounds.max = glm::max(bounds.max, max);
         }
-        gIdx++;
+    }
+    for(int c = 0; c < SHADOW_CASCADES; ++c){
+        matrixOffsets.push_back(modelMatrices.size());
+        for(auto & info : geometryList) {
+            linearModels[1 + c].push_back({
+                .indexOffset=info.indexOffset,
+                .triangleCount=info.triangleCount,
+                .instanceCount= info.instanceCount});
+            for(auto & idx : info.instances) {
+                auto & instance = instances[idx];
+                auto & transform = registry.get<TransformComponent>(instance.entity);
+                modelMatrices.push_back(transform.mat);
+                auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
+                auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
+                bounds.min = glm::min(bounds.min, min);
+                bounds.max = glm::max(bounds.max, max);
+            }
+        }
     }
 }

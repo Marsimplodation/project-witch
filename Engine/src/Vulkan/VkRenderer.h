@@ -160,7 +160,7 @@ struct VkRenderer {
     void sceneOnscreenRendering(int i);
     void uiOnscreenRendering(int i);
     void sceneShadowRendering(int i);
-    void renderModels(int i);
+    void renderModels(int i, int renderingIndex);
     void *enginePtr;
 
     //--- Presentation ----//

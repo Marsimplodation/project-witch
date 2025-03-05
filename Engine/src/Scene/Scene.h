@@ -7,6 +7,7 @@
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
+#include "types/defines.h"
 #include <unordered_map>
 
 const int MAX_INSTANCES = 10000;
@@ -32,8 +33,9 @@ struct GeometryInfo {
 struct Scene {
     AABB bounds;
     std::vector<glm::mat4> modelMatrices;
+    std::vector<u32> matrixOffsets;
     std::vector<Instance> instances;
-    std::vector<Model> linearModels;
+    std::vector<Model> linearModels[1 + SHADOW_CASCADES];
     std::vector<PointLight> pointLights;
     entt::registry registry;
 

@@ -17,11 +17,13 @@ int VkRenderer::createCommandPool() {
 }
 
 
-void VkRenderer::renderModels(int i) {
-    u32 modelIndex = 0;
+void VkRenderer::renderModels(int i, int renderingIndex) {
     SoulShard & engine = *((SoulShard*)enginePtr);
+    auto offset = engine.scene.matrixOffsets[renderingIndex];
+    u32 modelIndex = offset;
 
-    for (auto & model : engine.scene.linearModels) {
+
+    for (auto & model : engine.scene.linearModels[renderingIndex]) {
         vkCmdPushConstants(data.commandBuffers[i],data.pipelineLayout,VK_SHADER_STAGE_VERTEX_BIT,
             0,                  // Offset
             sizeof(uint32_t),   // Size
@@ -72,7 +74,7 @@ void VkRenderer::sceneShadowRendering(int i){
             sizeof(u32),   // Size
             &c
         );
-        renderModels(i);
+        renderModels(i, 1+c);
         init.disp.cmdEndRenderPass(data.commandBuffers[i]);
     }
 }
@@ -112,7 +114,7 @@ void VkRenderer::sceneOffscreenRendering(int i){
 
     init.disp.cmdBindPipeline(data.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.offscreenPipeline);
 
-    renderModels(i);
+    renderModels(i, 0);
     init.disp.cmdEndRenderPass(data.commandBuffers[i]);
 
 }
@@ -182,7 +184,7 @@ void VkRenderer::sceneOnscreenRendering(int i){
     init.disp.cmdBeginRenderPass(data.commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     init.disp.cmdBindPipeline(data.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.graphicsPipeline);
-    renderModels(i);
+    renderModels(i, 0);
     init.disp.cmdEndRenderPass(data.commandBuffers[i]);
 }
 
