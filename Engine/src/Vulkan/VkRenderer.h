@@ -84,6 +84,8 @@ struct VkRenderer {
         VkBuffer indexBuffer;
         VkDeviceMemory vertexBufferMemory;
         VkDeviceMemory indexBufferMemory;
+        u32 drawCalls;
+        u32 instancesRendered;
 
 
         std::vector<Vertex> * vertices;

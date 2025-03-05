@@ -297,6 +297,8 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::Text("FPS %f", 1.0f/((SoulShard*)enginePtr)->deltaTime);
         ImGui::Text("Vertices: %s", formatNumberWithDots(data.vertices->size()).c_str());
         ImGui::Text("Triangles: %s", formatNumberWithDots(data.indices->size() / 3).c_str());
+        ImGui::Text("Drawcalls: %d", data.drawCalls);
+        ImGui::Text("Instaces Drawn: %d", data.instancesRendered);
         ImGui::End();
         ImGui::Begin("Systems");
         for(auto & system : engine.systems) {

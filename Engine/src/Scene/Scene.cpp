@@ -145,7 +145,48 @@ Instance & Scene::instantiateModel(std::string objName, std::string instanceName
     return instances.back();
 }
 
+struct Plane {
+    glm::vec3 normal;
+    float d;
+
+    float distance(const glm::vec3& point) const {
+        return glm::dot(normal, point) + d;
+    }
+};
+
+inline void extractFrustumPlanes(Plane planes[6], const glm::mat4& VP) {
+    for (int i = 0; i < 6; i++) {
+        int sign = (i % 2 == 0) ? 1 : -1;
+        int row = i / 2;
+
+        planes[i].normal.x = VP[0][3] + sign * VP[0][row];
+        planes[i].normal.y = VP[1][3] + sign * VP[1][row];
+        planes[i].normal.z = VP[2][3] + sign * VP[2][row];
+        planes[i].d        = VP[3][3] + sign * VP[3][row];
+
+        float len = glm::length(planes[i].normal);
+        planes[i].normal /= len;
+        planes[i].d /= len;
+    }
+}
+
+inline bool isAABBInFrustum(const AABB& aabb, const Plane planes[6]) {
+    for (int i = 0; i < 6; i++) {
+        glm::vec3 p(
+            (planes[i].normal.x > 0) ? aabb.max.x : aabb.min.x,
+            (planes[i].normal.y > 0) ? aabb.max.y : aabb.min.y,
+            (planes[i].normal.z > 0) ? aabb.max.z : aabb.min.z
+        );
+
+        if (planes[i].distance(p) < 0) {
+            return false; // AABB is outside this plane
+        }
+    }
+    return true; // AABB is inside or intersecting the frustum
+}
+
 void Scene::updateModels() {
+    SoulShard & engine = *((SoulShard*)enginePtr);
     bounds = AABB{
         .min = glm::vec3(FLT_MAX),
         .max = glm::vec3(-FLT_MAX),
@@ -155,38 +196,60 @@ void Scene::updateModels() {
         modelMatrices.clear();
         matrixOffsets.clear();
     }
+    //camera
+    auto & proj = engine.renderer.data.editorMode ? engine.editorCamera.projection : engine.mainCamera.projection;
+    auto & view = engine.renderer.data.editorMode ? engine.editorCamera.view : engine.mainCamera.view;
+    auto viewProj =  proj*view; 
+    Plane planes[6];
+    AABB aabb{};
+    extractFrustumPlanes(planes, viewProj);
+    matrixOffsets.push_back(modelMatrices.size());
     for(auto & info : geometryList) {
-        matrixOffsets.push_back(modelMatrices.size());
-        linearModels[0].push_back({
-            .indexOffset=info.indexOffset,
-            .triangleCount=info.triangleCount,
-            .instanceCount= info.instanceCount});
+        u32 instanceCount = 0;
         for(auto & idx : info.instances) {
             auto & instance = instances[idx];
             auto & transform = registry.get<TransformComponent>(instance.entity);
-            modelMatrices.push_back(transform.mat);
             auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
             auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
             bounds.min = glm::min(bounds.min, min);
             bounds.max = glm::max(bounds.max, max);
+            aabb.min = min;
+            aabb.max = max;
+            if(!isAABBInFrustum(aabb, planes)) continue;
+            modelMatrices.push_back(transform.mat);
+            instanceCount++;
         }
+        linearModels[0].push_back({
+            .indexOffset=info.indexOffset,
+            .triangleCount=info.triangleCount,
+            .instanceCount= instanceCount});
     }
     for(int c = 0; c < SHADOW_CASCADES; ++c){
+        auto & proj = sceneLight.projections[c];
+        auto & view = sceneLight.views[c]; 
+        auto viewProj =  proj*view; 
+        extractFrustumPlanes(planes, viewProj);
+
         matrixOffsets.push_back(modelMatrices.size());
         for(auto & info : geometryList) {
-            linearModels[1 + c].push_back({
-                .indexOffset=info.indexOffset,
-                .triangleCount=info.triangleCount,
-                .instanceCount= info.instanceCount});
+            u32 instanceCount = 0;
             for(auto & idx : info.instances) {
                 auto & instance = instances[idx];
                 auto & transform = registry.get<TransformComponent>(instance.entity);
-                modelMatrices.push_back(transform.mat);
                 auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
                 auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
                 bounds.min = glm::min(bounds.min, min);
                 bounds.max = glm::max(bounds.max, max);
+                aabb.min = min;
+                aabb.max = max;
+                if(!isAABBInFrustum(aabb, planes)) continue;
+                modelMatrices.push_back(transform.mat);
+                instanceCount++;
             }
+            linearModels[1 + c].push_back({
+                .indexOffset=info.indexOffset,
+                .triangleCount=info.triangleCount,
+                .instanceCount= instanceCount});
         }
     }
 }

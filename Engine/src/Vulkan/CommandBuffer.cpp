@@ -29,9 +29,12 @@ void VkRenderer::renderModels(int i, int renderingIndex) {
             sizeof(uint32_t),   // Size
             &modelIndex
         );
-
+        
+        if(model.instanceCount == 0) continue;
         init.disp.cmdDrawIndexed(data.commandBuffers[i], model.triangleCount * 3, model.instanceCount, model.indexOffset, 0,0);
         modelIndex += model.instanceCount;
+        data.drawCalls++;
+        data.instancesRendered += model.instanceCount;
     }
 }
 
@@ -189,6 +192,8 @@ void VkRenderer::sceneOnscreenRendering(int i){
 }
 
 int VkRenderer::recordCommandBuffer(int i) {
+    data.drawCalls = 0;
+    data.instancesRendered = 0;
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
