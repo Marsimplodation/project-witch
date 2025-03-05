@@ -14,7 +14,7 @@ struct VkRenderer {
     struct Init {
         GLFWwindow* window;
         vkb::Instance instance;
-        vkb::InstanceDispatchTable inst_disp;
+        vkb::InstanceDispatchTable instDisp;
         VkSurfaceKHR surface;
         vkb::Device device;
         vkb::PhysicalDevice physicalDevice;
@@ -29,50 +29,50 @@ struct VkRenderer {
     };
 
     struct RenderData {
-        VkQueue graphics_queue;
-        VkQueue present_queue;
+        VkQueue graphicsQueue;
+        VkQueue presentQueue;
 
-        std::vector<VkImage> swapchain_images;
-        std::vector<VkImageView> swapchain_image_views;
+        std::vector<VkImage> swapchainImages;
+        std::vector<VkImageView> swapchainImageViews;
         std::vector<VkFramebuffer> framebuffers;
 
-        std::vector<VkImage> offscreen_images;
-        std::vector<VkDeviceMemory> offscreen_image_memory;
-        std::vector<VkImageView> offscreen_image_views;
-        std::vector<VkFramebuffer> offscreen_framebuffers;
+        std::vector<VkImage> offscreenImages;
+        std::vector<VkDeviceMemory> offscreenImageMemory;
+        std::vector<VkImageView> offscreenImageViews;
+        std::vector<VkFramebuffer> offscreenFramebuffers;
         std::vector<Texture> textures;
         
-        std::vector<std::vector<VkImage>> shadow_images;
-        std::vector<std::vector<VkDeviceMemory>> shadow_image_memory;
-        std::vector<std::vector<VkImageView>>  shadow_image_views;
-        std::vector<std::vector<VkFramebuffer>> shadow_framebuffers;
+        std::vector<std::vector<VkImage>> shadowImages;
+        std::vector<std::vector<VkDeviceMemory>> shadowImageMemory;
+        std::vector<std::vector<VkImageView>>  shadowImageViews;
+        std::vector<std::vector<VkFramebuffer>> shadowFramebuffers;
 
 
         std::vector<VkImage> depthImages;
         std::vector<VkDeviceMemory> depthImageMemorys;
         std::vector<VkImageView> depthImageViews;
 
-        VkRenderPass render_pass;
-        VkRenderPass offscreen_pass;
-        VkRenderPass shadow_pass;
-        VkPipelineLayout pipeline_layout;
-        VkPipelineLayout shadow_pipeline_layout;
-        VkPipeline graphics_pipeline;
-        VkPipeline offscreen_pipeline;
-        VkPipeline shadow_pipeline;
+        VkRenderPass renderPass;
+        VkRenderPass offscreenPass;
+        VkRenderPass shadowPass;
+        VkPipelineLayout pipelineLayout;
+        VkPipelineLayout shadowPipelineLayout;
+        VkPipeline graphicsPipeline;
+        VkPipeline offscreenPipeline;
+        VkPipeline shadowPipeline;
         VkSampler imageSampler;
-        bool swapchain_out_of_date;
+        bool swapchainOutOfDate;
         bool editorMode;
         
         ImguiModule gui;
 
-        VkCommandPool command_pool;
-        std::vector<VkCommandBuffer> command_buffers;
+        VkCommandPool commandPool;
+        std::vector<VkCommandBuffer> commandBuffers;
 
-        std::vector<VkSemaphore> available_semaphores;
-        std::vector<VkSemaphore> finished_semaphore;
-        std::vector<VkFence> in_flight_fences;
-        std::vector<VkFence> image_in_flight;
+        std::vector<VkSemaphore> availableSemaphores;
+        std::vector<VkSemaphore> finishedSemaphore;
+        std::vector<VkFence> inFlightFences;
+        std::vector<VkFence> imageInFlight;
 
         VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
         VkDescriptorSet descriptorShadowSets[MAX_FRAMES_IN_FLIGHT];
@@ -98,18 +98,18 @@ struct VkRenderer {
         const char * shadowVertShaderPath;
         const char * shadowFragShaderPath;
 
-        size_t current_frame = 0;
-        int current_img_index = 0;
+        size_t currentFrame = 0;
+        int currentImgIndex = 0;
     };
     Init init{};
     RenderData data;
 
-    GLFWwindow* create_window_glfw(const char* window_name = "", bool resize = true);
-    void destroy_window_glfw(GLFWwindow* window);
-    VkSurfaceKHR create_surface_glfw(VkInstance instance, GLFWwindow* window, VkAllocationCallbacks* allocator = nullptr);
-    int device_initialization();
-    int create_swapchain();
-    int get_queues();
+    GLFWwindow* createWindowGlfw(const char* windowName = "", bool resize = true);
+    void destroyWindowGlfw(GLFWwindow* window);
+    VkSurfaceKHR createSurfaceGlfw(VkInstance instance, GLFWwindow* window, VkAllocationCallbacks* allocator = nullptr);
+    int deviceInitialization();
+    int createSwapchain();
+    int getQueues();
     std::vector<char> readFile(const std::string& filename);
 
     struct ShaderStage {
@@ -119,7 +119,7 @@ struct VkRenderer {
 
     VkShaderModule createShaderModule(const std::vector<char>& data);
     void createShaderStages(VkRenderer::ShaderStage * stages, const std::string& vert, const std::string& frag);
-    int draw_frame();
+    int drawFrame();
     void cleanup();
 
     ///----- Buffers -----//
@@ -137,7 +137,7 @@ struct VkRenderer {
     u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
     //---Graphics Pipeline--//
     VkPipeline createGraphicsPipeline(
-        const VkPipelineShaderStageCreateInfo* shader_stages,
+        const VkPipelineShaderStageCreateInfo* shaderStages,
         VkPipelineRasterizationStateCreateInfo rasterizer,
         VkRenderPass renderPass, VkPipelineLayout pipelineLayout
     );
@@ -147,28 +147,28 @@ struct VkRenderer {
 
 
     //--- Descriptors ----//
-    int create_descriptor_pool();
-    int create_descriptor_layout(); 
-    int update_descriptor_sets();
-    int update_shadow_descriptor_sets();
+    int createDescriptorPool();
+    int createDescriptorLayout(); 
+    int updateDescriptorSets();
+    int updateShadowDescriptorSets();
 
     //--- Command Buffer ---//
-    int record_command_buffer(int i);
-    int create_command_pool();
-    int create_command_buffers();
-    void scene_offscreen_rendering(int i);
-    void scene_onscreen_rendering(int i);
-    void ui_onscreen_rendering(int i);
-    void scene_shadow_rendering(int i);
+    int recordCommandBuffer(int i);
+    int createCommandPool();
+    int createCommandBuffers();
+    void sceneOffscreenRendering(int i);
+    void sceneOnscreenRendering(int i);
+    void uiOnscreenRendering(int i);
+    void sceneShadowRendering(int i);
     void renderModels(int i);
     void *enginePtr;
 
     //--- Presentation ----//
-    int create_off_screen_render_pass();
+    int createOffScreenRenderPass();
     void createDepthResources();
-    int create_framebuffers();
-    int create_sync_objects();
-    int recreate_swapchain();
+    int createFramebuffers();
+    int createSyncObjects();
+    int recreateSwapchain();
     int createRenderPass();
     //-- Images ---//
     int createImageSampler();

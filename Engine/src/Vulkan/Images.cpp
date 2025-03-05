@@ -157,7 +157,7 @@ void VkRenderer::copyDataToImage(VkImage image,const std::vector<glm::vec4>& tex
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = data.command_pool;
+    allocInfo.commandPool = data.commandPool;
     allocInfo.commandBufferCount = 1;
 
     VkCommandBuffer commandBuffer;
@@ -198,8 +198,8 @@ void VkRenderer::copyDataToImage(VkImage image,const std::vector<glm::vec4>& tex
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer;
 
-    init.disp.queueSubmit(data.graphics_queue, 1, &submitInfo, VK_NULL_HANDLE);
-    init.disp.queueWaitIdle(data.graphics_queue);
+    init.disp.queueSubmit(data.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    init.disp.queueWaitIdle(data.graphicsQueue);
     init.disp.destroyBuffer(stagingBuffer, nullptr); 
     init.disp.freeMemory(stagingBufferMemory, nullptr); 
 }

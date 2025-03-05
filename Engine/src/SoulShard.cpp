@@ -18,20 +18,20 @@ int SoulShard::startup() {
         .shadowFragShaderPath = "./shadowFrag.spv",
     };
 
-    if (0 != renderer.device_initialization()) return -1;
-    if (0 != renderer.create_swapchain()) return -1;
-    if (0 != renderer.get_queues()) return -1;
+    if (0 != renderer.deviceInitialization()) return -1;
+    if (0 != renderer.createSwapchain()) return -1;
+    if (0 != renderer.getQueues()) return -1;
     if (0 != renderer.createRenderPass()) return -1;
-    if (0 != renderer.create_descriptor_pool()) return -1;
-    if (0 != renderer.create_descriptor_layout()) return -1;
+    if (0 != renderer.createDescriptorPool()) return -1;
+    if (0 != renderer.createDescriptorLayout()) return -1;
     
     if (0 != renderer.createRenderingPipeline()) return -1;
-    if (0 != renderer.create_framebuffers()) return -1;
-    if (0 != renderer.create_command_pool()) return -1;
+    if (0 != renderer.createFramebuffers()) return -1;
+    if (0 != renderer.createCommandPool()) return -1;
 
     
-    if (0 != renderer.create_command_buffers()) return -1;
-    if (0 != renderer.create_sync_objects()) return -1;
+    if (0 != renderer.createCommandBuffers()) return -1;
+    if (0 != renderer.createSyncObjects()) return -1;
     inputHandler.init(renderer.init.window);
     renderer.enginePtr = this;
     scene.enginePtr = this;
@@ -87,7 +87,7 @@ int SoulShard::run() {
             renderer.updateCameraBuffer(editorCamera);
         }
 
-        int res = renderer.draw_frame();
+        int res = renderer.drawFrame();
         if (res != 0) {
             std::cout << "failed to draw frame \n";
             return -1;

@@ -143,12 +143,12 @@ void ImguiModule::init(void * initPtr, void * dataPtr) {
     init_info.Instance = init.instance;
     init_info.PhysicalDevice = init.physicalDevice;
     init_info.Device = init.device;
-    init_info.Queue = data.graphics_queue;
+    init_info.Queue = data.graphicsQueue;
     init_info.DescriptorPool = imguiPool;
     init_info.MinImageCount = 2;
     init_info.ImageCount = init.swapchain.image_count;
     init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-    init_info.RenderPass = data.render_pass;
+    init_info.RenderPass = data.renderPass;
     ImGui_ImplVulkan_Init(&init_info);
     ImGui_ImplGlfw_InitForVulkan(init.window, true);
     customTheme();
@@ -254,11 +254,11 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
     VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
     VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;
     SoulShard & engine = *((SoulShard*)enginePtr);
-    auto & textures = texturesPerFrame[data.current_frame];
+    auto & textures = texturesPerFrame[data.currentFrame];
 
         if(!active) return;
         if(textureCreated) {
-            ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(sceneViews[data.current_frame]));
+            ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(sceneViews[data.currentFrame]));
             for(auto & texture : textures)
             ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(texture));
         }
@@ -273,13 +273,13 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         for(int i = 0; i < SHADOW_CASCADES; ++i) {
             textures[textures.size() - SHADOW_CASCADES + i] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
             data.imageSampler,
-            data.shadow_image_views[data.current_img_index][i],
+            data.shadowImageViews[data.currentImgIndex][i],
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // Image layout for sampling
             ));
         }
-        sceneViews[data.current_frame] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
+        sceneViews[data.currentFrame] = reinterpret_cast<ImTextureID>(ImGui_ImplVulkan_AddTexture(
             data.imageSampler,
-            data.offscreen_image_views[data.current_img_index],                       // VkSampler
+            data.offscreenImageViews[data.currentImgIndex],                       // VkSampler
             VK_IMAGE_LAYOUT_GENERAL // Image layout for sampling
         ));
         textureCreated = true;
@@ -379,6 +379,6 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::End();
 
         ImGui::Render();
-        ImDrawData* draw_data = ImGui::GetDrawData();
-        ImGui_ImplVulkan_RenderDrawData(draw_data, data.command_buffers[data.current_img_index]);
+        ImDrawData* drawData = ImGui::GetDrawData();
+        ImGui_ImplVulkan_RenderDrawData(drawData, data.commandBuffers[data.currentImgIndex]);
 }

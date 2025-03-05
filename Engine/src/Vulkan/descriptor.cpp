@@ -2,7 +2,7 @@
 #include "types/types.h"
 #include <cstdio>
 #include <vulkan/vulkan_core.h>
-int VkRenderer::create_descriptor_pool() {
+int VkRenderer::createDescriptorPool() {
     VkDescriptorPoolSize poolSizes[2] = {};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = 3 * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
@@ -29,7 +29,7 @@ int VkRenderer::create_descriptor_pool() {
     return 0;
 }
 
-int VkRenderer::create_descriptor_layout() {
+int VkRenderer::createDescriptorLayout() {
     VkDescriptorSetLayoutBinding cameraBinding = {};
     cameraBinding.binding = 0;
     cameraBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -102,7 +102,7 @@ int VkRenderer::create_descriptor_layout() {
     return 0;
 }
 
-int VkRenderer::update_descriptor_sets() {
+int VkRenderer::updateDescriptorSets() {
     VkDescriptorBufferInfo cameraBufferInfo = {};
     cameraBufferInfo.buffer = data.uniformBuffers[0].first;
     cameraBufferInfo.offset = 0;
@@ -127,7 +127,7 @@ int VkRenderer::update_descriptor_sets() {
     }
     for(int i = 0; i < SHADOW_CASCADES; ++i) {
         textureInfos[i].sampler = data.imageSampler;
-        textureInfos[i].imageView = data.shadow_image_views[data.current_img_index][i];
+        textureInfos[i].imageView = data.shadowImageViews[data.currentImgIndex][i];
         textureInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
     for(int i = 0; i < data.textures.size(); ++i) {
@@ -151,14 +151,14 @@ int VkRenderer::update_descriptor_sets() {
         const VkBufferView*              pTexelBufferView;
     } VkWriteDescriptorSet;*/
     std::vector<VkWriteDescriptorSet> writeDescriptorSets = {
-        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.current_frame], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &cameraBufferInfo, nullptr },
-        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.current_frame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
-        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.current_frame], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightBufferInfo, nullptr },
+        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &cameraBufferInfo, nullptr },
+        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
+        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightBufferInfo, nullptr },
         //--- Textures ---//
             };
     if(textureInfos.size() > 0) {
         writeDescriptorSets.push_back({ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 
-            nullptr, data.descriptorSets[data.current_frame],
+            nullptr, data.descriptorSets[data.currentFrame],
             2, 0, (u32)textureInfos.size(),
             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
             textureInfos.data(), nullptr, nullptr 
@@ -169,7 +169,7 @@ int VkRenderer::update_descriptor_sets() {
     return 0;
 }
 
-int VkRenderer::update_shadow_descriptor_sets() {
+int VkRenderer::updateShadowDescriptorSets() {
     VkDescriptorBufferInfo cameraBufferInfo = {};
     cameraBufferInfo.buffer = data.uniformBuffers[0].first;
     cameraBufferInfo.offset = 0;
@@ -213,14 +213,14 @@ int VkRenderer::update_shadow_descriptor_sets() {
         const VkBufferView*              pTexelBufferView;
     } VkWriteDescriptorSet;*/
     std::vector<VkWriteDescriptorSet> writeDescriptorSets = {
-        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.current_frame], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &cameraBufferInfo, nullptr },
-        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.current_frame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
-        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.current_frame], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightBufferInfo, nullptr },
+        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &cameraBufferInfo, nullptr },
+        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
+        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightBufferInfo, nullptr },
         //--- Textures ---//
             };
     if(textureInfos.size() > 0) {
         writeDescriptorSets.push_back({ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 
-            nullptr, data.descriptorShadowSets[data.current_frame],
+            nullptr, data.descriptorShadowSets[data.currentFrame],
             2, 0, (u32)textureInfos.size(),
             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
             textureInfos.data(), nullptr, nullptr 

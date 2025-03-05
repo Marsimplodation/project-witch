@@ -11,7 +11,7 @@
 //  
 u32 VkRenderer::findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties) {
     VkPhysicalDeviceMemoryProperties memoryProperties;
-    init.inst_disp.getPhysicalDeviceMemoryProperties(init.physicalDevice, &memoryProperties); 
+    init.instDisp.getPhysicalDeviceMemoryProperties(init.physicalDevice, &memoryProperties); 
 
     // Loop through all available memory types and find a suitable one
     for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
@@ -80,7 +80,7 @@ void VkRenderer::copyDataToBufferWithStaging(VkBuffer buffer, const void* buffer
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = data.command_pool;
+    allocInfo.commandPool = data.commandPool;
     allocInfo.commandBufferCount = 1;
 
     VkCommandBuffer commandBuffer;
@@ -101,8 +101,8 @@ void VkRenderer::copyDataToBufferWithStaging(VkBuffer buffer, const void* buffer
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer;
 
-    init.disp.queueSubmit(data.graphics_queue, 1, &submitInfo, VK_NULL_HANDLE);
-    init.disp.queueWaitIdle(data.graphics_queue);
+    init.disp.queueSubmit(data.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    init.disp.queueWaitIdle(data.graphicsQueue);
     init.disp.destroyBuffer(stagingBuffer, nullptr); 
     init.disp.freeMemory(stagingBufferMemory, nullptr); 
 }
