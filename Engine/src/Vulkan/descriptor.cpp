@@ -81,7 +81,7 @@ int VkRenderer::createDescriptorLayout() {
 
     //------- SHADOWS -----//
     textureLayoutBinding.descriptorCount = 100;
-    bindings = {cameraBinding, modelBinding, textureLayoutBinding, lightBinding};
+    bindings = {modelBinding, textureLayoutBinding, lightBinding};
     layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutCreateInfo.bindingCount = bindings.size();  // Number of bindings
     layoutCreateInfo.pBindings = bindings.data();
@@ -170,11 +170,6 @@ int VkRenderer::updateDescriptorSets() {
 }
 
 int VkRenderer::updateShadowDescriptorSets() {
-    VkDescriptorBufferInfo cameraBufferInfo = {};
-    cameraBufferInfo.buffer = data.uniformBuffers[0].first;
-    cameraBufferInfo.offset = 0;
-    cameraBufferInfo.range = VK_WHOLE_SIZE;
-    
     VkDescriptorBufferInfo modelBufferInfo = {};
     modelBufferInfo.buffer = data.uniformBuffers[1].first;
     modelBufferInfo.offset = 0;
@@ -213,7 +208,6 @@ int VkRenderer::updateShadowDescriptorSets() {
         const VkBufferView*              pTexelBufferView;
     } VkWriteDescriptorSet;*/
     std::vector<VkWriteDescriptorSet> writeDescriptorSets = {
-        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &cameraBufferInfo, nullptr },
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightBufferInfo, nullptr },
         //--- Textures ---//

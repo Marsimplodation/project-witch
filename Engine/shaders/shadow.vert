@@ -10,13 +10,6 @@ layout(location = 1) out vec3 fragNormal;
 layout(location = 2) out vec2 fragUV;
 layout(location = 3) out uint texIdx;
 
-
-
-layout(binding = 0) uniform CameraBuffer {
-    mat4 view;
-    mat4 projection;
-} camera;
-
 layout(push_constant) uniform PushConstants {
     uint startModelIndex;    // Current draw call index
     uint lightIdx;    // Current draw call index
@@ -25,11 +18,6 @@ layout(push_constant) uniform PushConstants {
 layout(binding = 1) uniform ModelBuffer {
     mat4 models[10000];
 };
-
-// Pseudo-random number generator
-float random(vec2 seed) {
-    return fract(sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453);
-}
 
 layout(binding = 3) uniform LightBuffer {
     DirectionLight light;

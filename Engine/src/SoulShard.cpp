@@ -54,6 +54,7 @@ int SoulShard::run() {
     renderer.data.gui = ImguiModule();
     renderer.data.gui.init(&renderer.init, &renderer.data);
     renderer.data.gui.enginePtr = this;
+        scene.updateModels();
 
     while (!glfwWindowShouldClose(renderer.init.window)) {
         auto currentTime = glfwGetTime();
@@ -61,7 +62,6 @@ int SoulShard::run() {
         lastTime = currentTime;
 
         glfwPollEvents();
-        scene.updateModels();
         if (inputHandler.isKeyPressedOnce(KEY_U)) {
             renderer.data.editorMode = !renderer.data.editorMode;
             inputHandler.releaseMouse();
@@ -92,6 +92,7 @@ int SoulShard::run() {
             std::cout << "failed to draw frame \n";
             return -1;
         }
+        scene.updateModels();
         inputHandler.update();
     }
     renderer.init.disp.deviceWaitIdle();

@@ -13,12 +13,13 @@ void main() {
     // Normalize the fragment normal
     vec3 normal = normalize(fragNormal);
     // Sample texture
-    vec4 texColor = vec4(1.0);
+    //skip alpha cutout in here for now
+    /*vec4 texColor = vec4(1.0);
     if (texIdx != uint(-1)) {
         // 0 is allocated for the shadowMap
         texColor = texture(texSamplers[nonuniformEXT(texIdx)], fragUV);
     }
-    if (texColor.a < 0.3) discard;
+    if (texColor.a < 0.3) discard;*/
 
 }
 
