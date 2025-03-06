@@ -2,6 +2,7 @@
 #define VK_RENDERER_H
 
 #include "Editor/Editor.h"
+#include "types/defines.h"
 #include "types/types.h"
 #include <vector>
 #include <vulkan/vulkan_core.h>
@@ -90,6 +91,7 @@ struct VkRenderer {
 
         std::vector<Vertex> * vertices;
         std::vector<u32> * indices;
+        std::vector<Material> materials = std::vector<Material>(MAX_MATERIALS);
 
         std::vector<std::pair<VkBuffer, VkDeviceMemory>> uniformBuffers;
 
@@ -128,6 +130,7 @@ struct VkRenderer {
     int createGeometryBuffers();
     int createUniformBuffers();
     void updateCameraBuffer();
+    void updatematerialBuffer();
     void updateModelBuffer(std::vector<glm::mat4> & matrices);
     void destroyBuffers();
     void copyDataToBufferWithStaging(VkBuffer buffer, const void* data, VkDeviceSize bufferSize);

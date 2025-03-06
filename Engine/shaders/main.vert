@@ -8,7 +8,7 @@ layout(location = 3) in uint materialIdx;
 layout(location = 0) out vec3 fragPosition;
 layout(location = 1) out vec3 fragNormal;
 layout(location = 2) out vec2 fragUV;
-layout(location = 3) out uint texIdx;
+layout(location = 3) out uint matIdx;
 layout(location = 4) out vec3 fragView;
 
 
@@ -46,7 +46,7 @@ void main() {
     vec4 viewM = (camera.view * worldPos);
     fragView = viewM.xyz;
     fragView.z *= -1;
-    texIdx = materialIdx;
+    matIdx = materialIdx;
     fragUV = uv;
     fragNormal = normalize(mat3(models[index]) * inNormal);
     fragPosition = vec3(worldPos);

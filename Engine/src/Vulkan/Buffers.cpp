@@ -1,5 +1,6 @@
 #include "VkRenderer.h"
 #include "glm/fwd.hpp"
+#include "types/defines.h"
 #include "types/types.h"
 #include <glm/fwd.hpp>
 #include <utility>
@@ -151,6 +152,14 @@ int VkRenderer::createUniformBuffers() {
              &lightBuffer,
              &lightMemory);
     data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(lightBuffer, lightMemory));
+    VkBuffer materialBuffer;
+    VkDeviceMemory materialMemory;
+    createBuffer(sizeof(Material) * MAX_MATERIALS,
+             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+             &materialBuffer,
+             &materialMemory);
+    data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(materialBuffer, materialMemory));
     return 0;
 }
 
@@ -165,6 +174,10 @@ void VkRenderer::updateModelBuffer(std::vector<glm::mat4> & matrices) {
 
 void VkRenderer::updateLightBuffer(DirectionLight & light) {
     copyDataToBuffer(data.uniformBuffers[2].second, &light, sizeof(DirectionLight)); 
+}
+
+void VkRenderer::updatematerialBuffer() {
+    copyDataToBuffer(data.uniformBuffers[3].second, data.materials.data(), sizeof(Material) * MAX_MATERIALS); 
 }
 
 void VkRenderer::destroyBuffers() {

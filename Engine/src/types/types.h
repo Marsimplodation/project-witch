@@ -57,6 +57,11 @@ struct PointLight {
     float radius;
 };
 
+struct Material {
+    glm::vec4 albedo;
+    glm::ivec4 texInfos;
+};
+
 struct System{
     bool active;
     void(*func)(float deltaTime);

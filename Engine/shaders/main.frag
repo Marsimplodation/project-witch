@@ -3,18 +3,36 @@
 #extension GL_EXT_nonuniform_qualifier : enable
 
 #include "includes/light.h"
+#include "includes/materials.h"
 layout(location = 0) in vec3 fragPosition;
 layout(location = 1) in vec3 fragNormal;
 layout(location = 2) in vec2 fragUV;
-layout(location = 3) flat in uint texIdx;
+layout(location = 3) flat in uint matIdx;
 layout(location = 4) in vec3 fragView;
 
 layout(location = 0) out vec4 outColor;
-layout(set = 0, binding = 2) uniform sampler2D texSamplers[100];
+layout(set = 0, binding = 2) uniform sampler2D texSamplers[MAX_TEXTURES];
 layout(binding = 3) uniform LightBuffer {
     DirectionLight light;
 };
 
+layout(binding = 4) uniform MaterialBuffer {
+    Material materials[MAX_MATERIALS];
+};
+
+vec3 normal = vec3(1.0f);
+
+void loadNormalMap(uint texIdx)  {
+    vec4 normalColor = texture(texSamplers[nonuniformEXT(texIdx)], fragUV);
+    vec3 textureNormal = vec3(2.0f * normalColor.x, 2.0f * normalColor.y, 2.0f * normalColor.z);
+    textureNormal -= vec3(1.0f);
+    vec3 arbitrary = abs(normal.z) < 0.99 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangent = normalize(cross(normal.xyz, arbitrary));
+    vec3 bitangent = cross(normal.xyz, tangent);
+
+    normal.xyz = textureNormal.x * tangent + textureNormal.y * bitangent + textureNormal.z * normal.xyz;
+    normal.xyz = normalize(normal.xyz);
+}
 
 float calculateShadowAtCascade(int cascadeIndex) {
     vec4 fragPosLightSpace = bias * light.projections[cascadeIndex] * light.views[cascadeIndex] * vec4(fragPosition, 1.0);
@@ -25,7 +43,7 @@ float calculateShadowAtCascade(int cascadeIndex) {
         return 0.0; // No shadow outside the cascade
 
     // Smoother bias calculation
-    float bias = max(0.0005 * tan(acos(dot(fragNormal, light.direction.xyz))), 0.002);
+    float bias = max(0.0005 * tan(acos(dot(normal, light.direction.xyz))), 0.002);
 
     // Larger 5x5 kernel for smoother shadow filtering
     float weights[5][5] = float[5][5](
@@ -92,18 +110,25 @@ float ShadowCalculation() {
 
 void main() {
     // Normalize the fragment normal
-    vec3 normal = normalize(fragNormal);
+    normal = normalize(fragNormal);
 
     // Ambient light term (higher for anime style)
     vec3 ambient = light.color.rgb * 0.15f;
 
     // Sample texture
-    vec4 texColor = vec4(1.0);
+    vec4 texColor = materials[matIdx].albedo;
+    texColor.a = 1.0f;
+    uint texIdx = materials[matIdx].texInfos[DIFFUSE];
+    uint nIdx = materials[matIdx].texInfos[NORMAL];
     if (texIdx != uint(-1)) {
         // 0 is allocated for the shadowMap
         texColor = texture(texSamplers[nonuniformEXT(texIdx + SHADOW_CASCADES)], fragUV);
     }
     if (texColor.a < 0.3) discard;
+    if (nIdx != uint(-1)) {
+        // 0 is allocated for the shadowMap
+        loadNormalMap(nIdx + SHADOW_CASCADES);
+    }
 
     // Start with ambient term
     vec3 finalColor = ambient * texColor.rgb;

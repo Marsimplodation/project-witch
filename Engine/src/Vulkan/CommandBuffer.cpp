@@ -202,6 +202,7 @@ int VkRenderer::recordCommandBuffer(int i) {
     }
     SoulShard & engine = *((SoulShard*)enginePtr);
     updateModelBuffer(engine.scene.modelMatrices);
+    updatematerialBuffer();
     engine.scene.updateLights();
     updateLightBuffer(engine.scene.sceneLight);
 

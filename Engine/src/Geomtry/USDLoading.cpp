@@ -58,6 +58,8 @@ void SoulShard::loadScene(const std::string& file) {
     // Open an existing USD file
     auto & vertices = gpuGeometry.vertices;
     auto & indices = gpuGeometry.indices;
+    auto & materials = renderer.data.materials;
+    
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
     auto stage = pxr::UsdStage::Open(file);
     if (!stage) {

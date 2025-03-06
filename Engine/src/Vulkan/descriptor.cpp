@@ -1,13 +1,14 @@
 #include "VkRenderer.h"
+#include "types/defines.h"
 #include "types/types.h"
 #include <cstdio>
 #include <vulkan/vulkan_core.h>
 int VkRenderer::createDescriptorPool() {
     VkDescriptorPoolSize poolSizes[2] = {};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = 3 * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+    poolSizes[0].descriptorCount = (3 + MAX_MATERIALS) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = (SHADOW_CASCADES + 100) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+    poolSizes[1].descriptorCount = (SHADOW_CASCADES + MAX_TEXTURES) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     
     VkDescriptorPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -20,7 +21,7 @@ int VkRenderer::createDescriptorPool() {
     if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool");
     }
-    poolSizes[1].descriptorCount = (100) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+    poolSizes[1].descriptorCount = (MAX_TEXTURES) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     result = init.disp.createDescriptorPool(&poolInfo, nullptr, &data.descriptorShadowPool); 
     if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool");
@@ -45,7 +46,7 @@ int VkRenderer::createDescriptorLayout() {
     VkDescriptorSetLayoutBinding textureLayoutBinding{};
     textureLayoutBinding.binding = 2;  // Binding index
     textureLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    textureLayoutBinding.descriptorCount = SHADOW_CASCADES + 100;
+    textureLayoutBinding.descriptorCount = SHADOW_CASCADES + MAX_TEXTURES;
     textureLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     textureLayoutBinding.pImmutableSamplers = nullptr;  // No static samplers
     
@@ -54,10 +55,16 @@ int VkRenderer::createDescriptorLayout() {
     lightBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     lightBinding.descriptorCount = 1;
     lightBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;  // This buffer is used by the closest hit shader.
+    
+    VkDescriptorSetLayoutBinding materialBinding = {};
+    materialBinding.binding = 4;
+    materialBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    materialBinding.descriptorCount = 1;
+    materialBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  // This buffer is used by the closest hit shader.
 
     
 
-    std::vector<VkDescriptorSetLayoutBinding> bindings = {cameraBinding, modelBinding, textureLayoutBinding, lightBinding};
+    std::vector<VkDescriptorSetLayoutBinding> bindings = {cameraBinding, modelBinding, textureLayoutBinding, lightBinding, materialBinding};
 
     VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
     layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -80,8 +87,8 @@ int VkRenderer::createDescriptorLayout() {
     }
 
     //------- SHADOWS -----//
-    textureLayoutBinding.descriptorCount = 100;
-    bindings = {modelBinding, textureLayoutBinding, lightBinding};
+    textureLayoutBinding.descriptorCount = MAX_TEXTURES;
+    bindings = {modelBinding, textureLayoutBinding, lightBinding, materialBinding};
     layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutCreateInfo.bindingCount = bindings.size();  // Number of bindings
     layoutCreateInfo.pBindings = bindings.data();
@@ -117,10 +124,16 @@ int VkRenderer::updateDescriptorSets() {
     lightBufferInfo.buffer = data.uniformBuffers[2].first;
     lightBufferInfo.offset = 0;
     lightBufferInfo.range = VK_WHOLE_SIZE;
+
+    VkDescriptorBufferInfo materialBufferInfo = {};
+    materialBufferInfo.buffer = data.uniformBuffers[3].first;
+    materialBufferInfo.offset = 0;
+    materialBufferInfo.range = VK_WHOLE_SIZE;
+
     
-    std::vector<VkDescriptorImageInfo> textureInfos(100 + SHADOW_CASCADES);
+    std::vector<VkDescriptorImageInfo> textureInfos(MAX_TEXTURES + SHADOW_CASCADES);
     // Initialize all slots to VK_NULL_HANDLE (optional, but safe)
-    for (int i = 0; i < 100 + SHADOW_CASCADES; ++i) {
+    for (int i = 0; i < MAX_TEXTURES + SHADOW_CASCADES; ++i) {
         textureInfos[i].sampler = data.textures[0].sampler;
         textureInfos[i].imageView = data.textures[0].view;
         textureInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -154,6 +167,7 @@ int VkRenderer::updateDescriptorSets() {
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &cameraBufferInfo, nullptr },
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightBufferInfo, nullptr },
+        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 4, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &materialBufferInfo, nullptr },
         //--- Textures ---//
             };
     if(textureInfos.size() > 0) {
@@ -179,10 +193,15 @@ int VkRenderer::updateShadowDescriptorSets() {
     lightBufferInfo.buffer = data.uniformBuffers[2].first;
     lightBufferInfo.offset = 0;
     lightBufferInfo.range = VK_WHOLE_SIZE;
+
+    VkDescriptorBufferInfo materialBufferInfo = {};
+    materialBufferInfo.buffer = data.uniformBuffers[3].first;
+    materialBufferInfo.offset = 0;
+    materialBufferInfo.range = VK_WHOLE_SIZE;
     
-    std::vector<VkDescriptorImageInfo> textureInfos(100);
+    std::vector<VkDescriptorImageInfo> textureInfos(MAX_TEXTURES);
     // Initialize all slots to VK_NULL_HANDLE (optional, but safe)
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < MAX_TEXTURES; ++i) {
         textureInfos[i].sampler = data.textures[0].sampler;
         textureInfos[i].imageView = data.textures[0].view;
         textureInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -210,6 +229,7 @@ int VkRenderer::updateShadowDescriptorSets() {
     std::vector<VkWriteDescriptorSet> writeDescriptorSets = {
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightBufferInfo, nullptr },
+        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 4, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &materialBufferInfo, nullptr },
         //--- Textures ---//
             };
     if(textureInfos.size() > 0) {

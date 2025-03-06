@@ -10,11 +10,11 @@ layout(location = 3) flat in uint texIdx;
 layout(set = 0, binding = 2) uniform sampler2D texSamplers[100];
 
 void main() {
-    // Normalize the fragment normal
+    /*// Normalize the fragment normal
     vec3 normal = normalize(fragNormal);
     // Sample texture
     //skip alpha cutout in here for now
-    /*vec4 texColor = vec4(1.0);
+    vec4 texColor = vec4(1.0);
     if (texIdx != uint(-1)) {
         // 0 is allocated for the shadowMap
         texColor = texture(texSamplers[nonuniformEXT(texIdx)], fragUV);
