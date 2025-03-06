@@ -50,11 +50,16 @@ struct Scene {
     Instance & instantiateModel(std::string objName, std::string instanceName);
     u32 instanceCount = 0;
     void updateModels();
+    void pushUpdatedModels();
     void updateLights();
     void initScene();
     void *enginePtr;
 
 private:
+    std::vector<glm::mat4> _modelMatrices;
+    std::vector<u32> _matrixOffsets;
+    std::vector<Model> _linearModels[1 + SHADOW_CASCADES];
+    AABB _bounds;
 };
 
 

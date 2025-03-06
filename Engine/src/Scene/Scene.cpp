@@ -2,6 +2,7 @@
 #include "SoulShard.h"
 #include "Vulkan/VkRenderer.h"
 #include "glm/ext/matrix_clip_space.hpp"
+#include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
 #include "types/defines.h"
 #include "types/types.h"
@@ -187,23 +188,24 @@ inline bool isAABBInFrustum(const AABB& aabb, const Plane planes[6]) {
 
 void Scene::updateModels() {
     SoulShard & engine = *((SoulShard*)enginePtr);
-    bounds = AABB{
+    _bounds = AABB{
         .min = glm::vec3(FLT_MAX),
         .max = glm::vec3(-FLT_MAX),
     };
     for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
-        linearModels[i].clear();
-        modelMatrices.clear();
-        matrixOffsets.clear();
+        _linearModels[i].clear();
     }
+    _modelMatrices.clear();
+    _matrixOffsets.clear();
     //camera
     auto & proj = engine.renderer.data.editorMode ? engine.editorCamera.projection : engine.mainCamera.projection;
     auto & view = engine.renderer.data.editorMode ? engine.editorCamera.view : engine.mainCamera.view;
     auto viewProj =  proj*view; 
     Plane planes[6];
     AABB aabb{};
+
     extractFrustumPlanes(planes, viewProj);
-    matrixOffsets.push_back(modelMatrices.size());
+    _matrixOffsets.push_back(_modelMatrices.size());
     for(auto & info : geometryList) {
         u32 instanceCount = 0;
         for(auto & idx : info.instances) {
@@ -211,15 +213,15 @@ void Scene::updateModels() {
             auto & transform = registry.get<TransformComponent>(instance.entity);
             auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
             auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
-            bounds.min = glm::min(bounds.min, min);
-            bounds.max = glm::max(bounds.max, max);
+            _bounds.min = glm::min(bounds.min, min);
+            _bounds.max = glm::max(bounds.max, max);
             aabb.min = min;
             aabb.max = max;
             if(!isAABBInFrustum(aabb, planes)) continue;
-            modelMatrices.push_back(transform.mat);
+            _modelMatrices.push_back(transform.mat);
             instanceCount++;
         }
-        linearModels[0].push_back({
+        _linearModels[0].push_back({
             .indexOffset=info.indexOffset,
             .triangleCount=info.triangleCount,
             .instanceCount= instanceCount});
@@ -230,7 +232,7 @@ void Scene::updateModels() {
         auto viewProj =  proj*view; 
         extractFrustumPlanes(planes, viewProj);
 
-        matrixOffsets.push_back(modelMatrices.size());
+        _matrixOffsets.push_back(_modelMatrices.size());
         for(auto & info : geometryList) {
             u32 instanceCount = 0;
             for(auto & idx : info.instances) {
@@ -238,18 +240,35 @@ void Scene::updateModels() {
                 auto & transform = registry.get<TransformComponent>(instance.entity);
                 auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
                 auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
-                bounds.min = glm::min(bounds.min, min);
-                bounds.max = glm::max(bounds.max, max);
+                _bounds.min = glm::min(bounds.min, min);
+                _bounds.max = glm::max(bounds.max, max);
                 aabb.min = min;
                 aabb.max = max;
                 if(!isAABBInFrustum(aabb, planes)) continue;
-                modelMatrices.push_back(transform.mat);
+                _modelMatrices.push_back(transform.mat);
                 instanceCount++;
             }
-            linearModels[1 + c].push_back({
+            _linearModels[1 + c].push_back({
                 .indexOffset=info.indexOffset,
                 .triangleCount=info.triangleCount,
                 .instanceCount= instanceCount});
         }
     }
+}
+void Scene::pushUpdatedModels() {
+    for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
+        linearModels[i].clear();
+    }
+    modelMatrices.clear();
+    matrixOffsets.clear();
+    bounds = _bounds;
+    for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
+        for(auto & m : _linearModels[i])
+            linearModels[i].push_back(m);
+    }
+    for(auto & m : _modelMatrices)
+        modelMatrices.push_back(m);
+    for(auto m : _matrixOffsets)
+        matrixOffsets.push_back(m);
+
 }

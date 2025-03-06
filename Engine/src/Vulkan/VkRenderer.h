@@ -4,6 +4,7 @@
 #include "Editor/Editor.h"
 #include "types/defines.h"
 #include "types/types.h"
+#include <mutex>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 #include <GLFW/glfw3.h>

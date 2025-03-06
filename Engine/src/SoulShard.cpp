@@ -4,9 +4,11 @@
 #include "GLFW/glfw3.h"
 #include "InputHandling/InputHandling.h"
 #include "Vulkan/VkRenderer.h"
+#include <condition_variable>
 #include <cstdlib>
 #include <iostream>
 #include <chrono>
+#include <thread>
 #include <vulkan/vulkan_core.h>
 
 
@@ -41,6 +43,9 @@ int SoulShard::startup() {
     return 0;
 };
 
+std::mutex mtx;
+std::condition_variable cv;
+bool frameReady = false;
 
 int SoulShard::run() {
     //testPhysics();
@@ -54,9 +59,11 @@ int SoulShard::run() {
     renderer.data.gui = ImguiModule();
     renderer.data.gui.init(&renderer.init, &renderer.data);
     renderer.data.gui.enginePtr = this;
-        scene.updateModels();
+    scene.updateModels();
 
-    while (!glfwWindowShouldClose(renderer.init.window)) {
+    auto cpuThread = [&](){
+        while (!glfwWindowShouldClose(renderer.init.window)) {
+        //Timer timer("cpu thread");
         auto currentTime = glfwGetTime();
         deltaTime = float(currentTime - lastTime);
         lastTime = currentTime;
@@ -74,27 +81,50 @@ int SoulShard::run() {
             renderingResolution[0] = renderer.data.gui.previewSize.x; 
             renderingResolution[1] = renderer.data.gui.previewSize.y;
         }
-
-        if(!renderer.data.editorMode) {
-            for(auto & system : systems) {
-                if(system.active)system.func(deltaTime);
-            }
-            renderer.updateCameraBuffer(mainCamera);
-        } else {
-            for(auto & system : systems) {
-                if(system.active)system.func(deltaTime);
-            }
-            renderer.updateCameraBuffer(editorCamera);
-        }
-
-        int res = renderer.drawFrame();
-        if (res != 0) {
-            std::cout << "failed to draw frame \n";
-            return -1;
+        
+        for(auto & system : systems) {
+            if(system.active)system.func(deltaTime);
         }
         scene.updateModels();
-        inputHandler.update();
-    }
+
+        //--- UPDATE GPU STUFF ---//
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            if(!renderer.data.editorMode) {
+                renderer.updateCameraBuffer(mainCamera);
+            } else {
+                renderer.updateCameraBuffer(editorCamera);
+            }
+            scene.pushUpdatedModels();
+            inputHandler.update();
+            frameReady = true;
+        }
+        cv.notify_one();  // Notify GPU thread
+        // Wait for drawFrame() to finish
+        //std::unique_lock<std::mutex> lock(mtx);
+        //cv.wait(lock, [] { return !frameReady; });
+        }
+    };
+    auto gpuThread = [&](){
+        while (!glfwWindowShouldClose(renderer.init.window)) {
+            //Timer timer("rendering thread");
+            std::unique_lock<std::mutex> lock(mtx);
+            cv.wait(lock, [] { return frameReady; });  // Wait until frame is ready
+
+            renderer.drawFrame();  // Draw frame on GPU
+
+            frameReady = false;  // Reset flag
+            lock.unlock();
+            cv.notify_one();
+        }
+    };
+
+    std::thread cpu(cpuThread);
+    std::thread gpu(gpuThread);
+    // Ensure proper thread cleanup
+    cpu.join(); 
+    gpu.join();
+
     renderer.init.disp.deviceWaitIdle();
 
     renderer.data.gui.destroy(renderer.init.device);

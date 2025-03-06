@@ -127,7 +127,7 @@ void main() {
     if (texColor.a < 0.3) discard;
     if (nIdx != uint(-1)) {
         // 0 is allocated for the shadowMap
-        loadNormalMap(nIdx + SHADOW_CASCADES);
+        //loadNormalMap(nIdx + SHADOW_CASCADES);
     }
 
     // Start with ambient term
@@ -135,6 +135,7 @@ void main() {
 
     // Add cel-shaded diffuse lighting for each light
     float cosDir = -dot(normal, light.direction.xyz);
+    cosDir = abs(cosDir);
 
 
 
