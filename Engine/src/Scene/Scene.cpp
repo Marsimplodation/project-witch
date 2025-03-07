@@ -53,7 +53,7 @@ void Scene::updateLights() {
     float lambda = 0.95f;
     //account for scene height
     //a value of 2 worked good in testing, not sure why
-    float distanceFactor = (bounds.max.y - bounds.min.y) / 2; 
+    float distanceFactor = (bounds.max.y - bounds.min.y) * 2; 
     
     float clipRange = farClip - nearClip;
 
