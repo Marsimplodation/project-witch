@@ -86,6 +86,9 @@ struct VkRenderer {
         VkBuffer indexBuffer;
         VkDeviceMemory vertexBufferMemory;
         VkDeviceMemory indexBufferMemory;
+        std::vector<VkBuffer> indirectDrawBuffers[SHADOW_CASCADES + 1];
+        std::vector<VkDeviceMemory> indirectDrawBufferMemorys[SHADOW_CASCADES + 1];
+        std::vector<u32> indirectDrawCounts[SHADOW_CASCADES + 1];
         u32 drawCalls;
         u32 instancesRendered;
 
@@ -140,6 +143,7 @@ struct VkRenderer {
                   VkBuffer* buffer, VkDeviceMemory* bufferMemory);
     void updateCameraBuffer(Camera & camera);
     void updateLightBuffer(DirectionLight & light);
+    void updateIndirectDrawBuffer(int renderingIndex);
     u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
     //---Graphics Pipeline--//
     VkPipeline createGraphicsPipeline(

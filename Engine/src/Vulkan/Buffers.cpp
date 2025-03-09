@@ -1,3 +1,4 @@
+#include "SoulShard.h"
 #include "VkRenderer.h"
 #include "glm/fwd.hpp"
 #include "types/defines.h"
@@ -122,7 +123,50 @@ int VkRenderer::createGeometryBuffers() {
              &data.indexBuffer,
              &data.indexBufferMemory);
     copyDataToBufferWithStaging(data.indexBuffer, data.indices->data(), sizeof(u32)*data.indices->size());
+
+        // Create Indirect Draw Buffer
+    size_t drawCmdBufferSize = sizeof(VkDrawIndexedIndirectCommand) * MAX_DRAWS;
+    u32 count = data.swapchainImages.size();
+    for(int idx = 0; idx < SHADOW_CASCADES + 1; idx++) {
+        data.indirectDrawBufferMemorys[idx].resize(count);
+        data.indirectDrawBuffers[idx].resize(count);
+        data.indirectDrawCounts[idx].resize(count);
+        for(int i = 0; i < count; ++i){
+        createBuffer(drawCmdBufferSize,
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                     &data.indirectDrawBuffers[idx][i],
+                     &data.indirectDrawBufferMemorys[idx][i]);
+        }
+    }
+
     return 0;
+}
+
+
+void VkRenderer::updateIndirectDrawBuffer(int renderingIndex) {
+    SoulShard & engine = *((SoulShard*)enginePtr);
+    
+    std::vector<VkDrawIndexedIndirectCommand> drawCommands;
+    auto offset = engine.scene.matrixOffsets[renderingIndex];
+    u32 modelIndex = offset;
+
+    for (auto &model : engine.scene.linearModels[renderingIndex]) {
+        if (model.instanceCount == 0) continue;
+
+        VkDrawIndexedIndirectCommand drawCmd = {};
+        drawCmd.indexCount = model.triangleCount * 3;
+        drawCmd.instanceCount = model.instanceCount;
+        drawCmd.firstIndex = model.indexOffset;
+        drawCmd.vertexOffset = 0;
+        drawCmd.firstInstance = modelIndex;  // Pass the model index as firstInstance
+
+        drawCommands.push_back(drawCmd);
+        modelIndex += model.instanceCount;
+    }
+
+    copyDataToBuffer(data.indirectDrawBufferMemorys[renderingIndex][data.currentImgIndex], drawCommands.data(), sizeof(VkDrawIndexedIndirectCommand) * drawCommands.size());
+    data.indirectDrawCounts[renderingIndex][data.currentImgIndex] = drawCommands.size();
 }
 
 int VkRenderer::createUniformBuffers() {
@@ -188,5 +232,11 @@ void VkRenderer::destroyBuffers() {
     for (auto & buffer : data.uniformBuffers) {
         init.disp.destroyBuffer(buffer.first, nullptr);
         init.disp.freeMemory(buffer.second, nullptr);
+    }
+    for (size_t idx = 0; idx < SHADOW_CASCADES + 1; idx++) {
+        for (size_t i = 0; i < data.indirectDrawBuffers[idx].size(); i++) {
+            init.disp.destroyBuffer(data.indirectDrawBuffers[idx][i], nullptr);
+            init.disp.freeMemory(data.indirectDrawBufferMemorys[idx][i], nullptr);
+        }
     }
 } 

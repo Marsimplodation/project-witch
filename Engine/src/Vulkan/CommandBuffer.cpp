@@ -1,6 +1,7 @@
 #include "SoulShard.h"
 #include "VkRenderer.h"
 #include "glm/fwd.hpp"
+#include "types/defines.h"
 #include <iostream>
 #include <vector>
 int VkRenderer::createCommandPool() {
@@ -23,19 +24,14 @@ void VkRenderer::renderModels(int i, int renderingIndex) {
     u32 modelIndex = offset;
 
 
-    for (auto & model : engine.scene.linearModels[renderingIndex]) {
-        vkCmdPushConstants(data.commandBuffers[i],data.pipelineLayout,VK_SHADER_STAGE_VERTEX_BIT,
-            0,                  // Offset
-            sizeof(uint32_t),   // Size
-            &modelIndex
-        );
-        
-        if(model.instanceCount == 0) continue;
-        init.disp.cmdDrawIndexed(data.commandBuffers[i], model.triangleCount * 3, model.instanceCount, model.indexOffset, 0,0);
-        modelIndex += model.instanceCount;
-        data.drawCalls++;
-        data.instancesRendered += model.instanceCount;
-    }
+    vkCmdDrawIndexedIndirect(
+        data.commandBuffers[i],  // Command buffer
+        data.indirectDrawBuffers[renderingIndex][i], // Buffer containing draw commands
+        0,                       // Byte offset
+        data.indirectDrawCounts[renderingIndex][i],  // Number of draws
+        sizeof(VkDrawIndexedIndirectCommand) // Stride
+    );
+    data.drawCalls += data.indirectDrawCounts[renderingIndex][i];
 }
 
 void VkRenderer::sceneShadowRendering(int i){
@@ -73,7 +69,7 @@ void VkRenderer::sceneShadowRendering(int i){
         init.disp.cmdBindPipeline(data.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.shadowPipeline);
 
         vkCmdPushConstants(data.commandBuffers[i],data.shadowPipelineLayout,VK_SHADER_STAGE_VERTEX_BIT,
-            4,                  // Offset
+            0,                  // Offset
             sizeof(u32),   // Size
             &c
         );
@@ -203,6 +199,9 @@ int VkRenderer::recordCommandBuffer(int i) {
     SoulShard & engine = *((SoulShard*)enginePtr);
     updateModelBuffer(engine.scene.modelMatrices);
     updatematerialBuffer();
+    for(int renderingIndex = 0; renderingIndex < SHADOW_CASCADES + 1; renderingIndex++){
+            updateIndirectDrawBuffer(renderingIndex);
+    }
     engine.scene.updateLights();
     updateLightBuffer(engine.scene.sceneLight);
 

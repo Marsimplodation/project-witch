@@ -10,7 +10,6 @@
 #include "types/defines.h"
 #include <unordered_map>
 
-const int MAX_INSTANCES = 10000;
 struct AABB {
     glm::vec3 min;
     glm::vec3 max;

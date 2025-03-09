@@ -11,7 +11,6 @@ layout(location = 2) out vec2 fragUV;
 layout(location = 3) out uint texIdx;
 
 layout(push_constant) uniform PushConstants {
-    uint startModelIndex;    // Current draw call index
     uint lightIdx;    // Current draw call index
 };
 
@@ -24,7 +23,7 @@ layout(binding = 3) uniform LightBuffer {
 };
 
 void main() {
-    uint index = startModelIndex + gl_InstanceIndex;
+    uint index = gl_InstanceIndex;
     vec4 worldPos= models[index] * vec4(inPosition, 1.0);
     gl_Position = light.projections[lightIdx] * light.views[lightIdx] * worldPos;
     texIdx = materialIdx;

@@ -58,6 +58,7 @@ int VkRenderer::deviceInitialization() {
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.fillModeNonSolid = VK_TRUE;
     deviceFeatures.samplerAnisotropy = VK_TRUE;
+    deviceFeatures.multiDrawIndirect = VK_TRUE;
     physDeviceSelector.set_required_features(deviceFeatures);
     physDeviceSelector.set_required_features_12(vk12Features);
     physDeviceSelector.add_required_extension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);

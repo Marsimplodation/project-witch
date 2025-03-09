@@ -19,7 +19,6 @@ layout(binding = 0) uniform CameraBuffer {
 } camera;
 
 layout(push_constant) uniform PushConstants {
-    uint startModelIndex;    // Current draw call index
     uint lightIdx;    // Current draw call index
 };
 
@@ -40,7 +39,7 @@ float random(vec2 seed) {
 
 
 void main() {
-    uint index = startModelIndex + gl_InstanceIndex;
+    uint index = gl_InstanceIndex;
     vec4 worldPos= models[index] * vec4(inPosition, 1.0);
     gl_Position = camera.projection *camera.view * worldPos;
     vec4 viewM = (camera.view * worldPos);
