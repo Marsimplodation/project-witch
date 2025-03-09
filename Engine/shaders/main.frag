@@ -43,7 +43,7 @@ float calculateShadowAtCascade(int cascadeIndex) {
         return 0.0; // No shadow outside the cascade
 
     // Smoother bias calculation
-    float bias = max(0.0005 * tan(acos(dot(normal, light.direction.xyz))), 0.002);
+    float bias = max(0.00005 * tan(acos(dot(normal, light.direction.xyz))), 0.001);
 
     // Larger 5x5 kernel for smoother shadow filtering
     float weights[5][5] = float[5][5](
