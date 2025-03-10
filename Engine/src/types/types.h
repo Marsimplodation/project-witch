@@ -47,8 +47,8 @@ struct DirectionLight {
     glm::vec4 direction;              // 16-byte alignment
     glm::vec4 color;                  // 16-byte alignment
     glm::vec4 splitDepths; // this can follow vectors without padding
-    bool castShadows = true;
     glm::vec4 debugFactors;
+    bool castShadows = true;
 };
 
 struct PointLight {

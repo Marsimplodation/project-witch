@@ -15,6 +15,7 @@ struct DirectionLight {
     vec4 direction;              // 16-byte alignment
     vec4 color;                  // 16-byte alignment
     vec4 splitDepths; // this can follow vectors without padding
+    vec4 debugFactors;
     bool castShadows;
 };
 

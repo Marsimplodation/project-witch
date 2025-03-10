@@ -239,8 +239,8 @@ void Scene::updateModels() {
                 auto & transform = registry.get<TransformComponent>(instance.entity);
                 auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
                 auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
-                _bounds.min = glm::min(bounds.min, min);
-                _bounds.max = glm::max(bounds.max, max);
+                _bounds.min = glm::min(_bounds.min, min);
+                _bounds.max = glm::max(_bounds.max, max);
                 aabb.min = min;
                 aabb.max = max;
                 if(!isAABBInFrustum(aabb, planes)) continue;
