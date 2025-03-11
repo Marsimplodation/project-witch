@@ -256,18 +256,18 @@ void Scene::updateModels() {
 }
 void Scene::pushUpdatedModels() {
     for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
-        linearModels[i].clear();
+        linearModels[i].resize(_linearModels[i].size());
     }
-    modelMatrices.clear();
-    matrixOffsets.clear();
+    modelMatrices.resize(_modelMatrices.size());
+    matrixOffsets.resize(_matrixOffsets.size());
     bounds = _bounds;
     for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
-        for(auto & m : _linearModels[i])
-            linearModels[i].push_back(m);
+        for(int j = 0; j < _linearModels[i].size(); ++j)
+            linearModels[i][j] = _linearModels[i][j];
     }
-    for(auto & m : _modelMatrices)
-        modelMatrices.push_back(m);
-    for(auto m : _matrixOffsets)
-        matrixOffsets.push_back(m);
+    for(int j = 0; j < _modelMatrices.size(); ++j)
+        modelMatrices[j] = _modelMatrices[j];
+    for(int j = 0; j < _matrixOffsets.size(); ++j)
+        matrixOffsets[j] = _matrixOffsets[j];
 
 }
