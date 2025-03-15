@@ -2,7 +2,6 @@
 #define SOUL_SHARD_ENINGE_H
 #include "InputHandling/InputHandling.h"
 #include "Scene/Scene.h"
-#include "entt/entt.hpp"
 #include "types/types.h"
 #include <string>
 #include <vector>

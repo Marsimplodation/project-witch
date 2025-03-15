@@ -4,6 +4,7 @@
 #include "GLFW/glfw3.h"
 #include "InputHandling/InputHandling.h"
 #include "Vulkan/VkRenderer.h"
+#include "types/types.h"
 #include <condition_variable>
 #include <cstdlib>
 #include <iostream>
@@ -39,6 +40,8 @@ int SoulShard::startup() {
     scene.enginePtr = this;
     renderer.data.editorMode = true;
     renderer.loadTexture("./textures/dummy.png");
+
+    scene.registry.registerType<TransformComponent>();
 
     return 0;
 };

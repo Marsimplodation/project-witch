@@ -113,7 +113,8 @@ void SoulShard::loadGeometry(std::string modelPath) {
             .indexOffset = startIdx,
             .triangleCount = (endIdx-startIdx)/3,
         };
-        scene.geometry[shape.name] = m;
+        scene.geometry[shape.name] = scene.geometryList.size();
+        scene.geometryList.push_back(m);
         auto & instance = scene.instantiateModel(shape.name, shape.name);
     }
 }

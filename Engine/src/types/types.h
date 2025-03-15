@@ -19,6 +19,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <vulkan/vulkan_core.h>
 #include "defines.h"
+#include "ECS.h"
 struct Model{
     u32 indexOffset;
     u32 triangleCount;

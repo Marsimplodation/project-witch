@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #define u32 uint32_t
+#define u8 char
 #define SHADOW_CASCADES 4
 #define MAX_TEXTURES 1024
 #define MAX_MATERIALS 1024

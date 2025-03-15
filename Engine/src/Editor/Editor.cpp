@@ -338,30 +338,32 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::End();
         ImGui::Begin("Selected");
         if(selectedInstance) {
-
             auto & instance = *selectedInstance;
             const char * name = instance.name.c_str();
             ImGui::Text("Name: %s", name);
             ImGui::SameLine();
             bool close = ImGui::Button("X");
-            ImGui::BeginChild("Transform Component");
-            glm::mat4 & transform = engine.scene.registry.get<TransformComponent>(instance.entity).mat;
-            engine.editorCamera.projection[1][1] *= -1;
-            ImGuizmo::Manipulate(glm::value_ptr(engine.editorCamera.view),
-                             glm::value_ptr(engine.editorCamera.projection),
-                             ImGuizmo::OPERATION::UNIVERSAL,
-                             ImGuizmo::WORLD,
-                             glm::value_ptr(transform));
-            engine.editorCamera.projection[1][1] *= -1;
-            glm::vec3 newPosition, newRotation, newScale;
-            ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform),
-                                                  glm::value_ptr(newPosition),
-                                                  glm::value_ptr(newRotation),
-                                                  glm::value_ptr(newScale));
-            ImGui::DragFloat3("position", (float*)&newPosition, 0.1f);
-            ImGui::DragFloat3("rotation", (float*)&newRotation, 0.1f);
-            ImGui::DragFloat3("scale", (float*)&newScale, 0.1f);
-            ImGui::EndChild();
+            auto transformPtr = engine.scene.registry.getComponent<TransformComponent>(instance.entity);
+            if(transformPtr) { 
+                ImGui::BeginChild("Transform Component");
+                glm::mat4 & transform = transformPtr->mat; 
+                engine.editorCamera.projection[1][1] *= -1;
+                ImGuizmo::Manipulate(glm::value_ptr(engine.editorCamera.view),
+                                 glm::value_ptr(engine.editorCamera.projection),
+                                 ImGuizmo::OPERATION::UNIVERSAL,
+                                 ImGuizmo::WORLD,
+                                 glm::value_ptr(transform));
+                engine.editorCamera.projection[1][1] *= -1;
+                glm::vec3 newPosition, newRotation, newScale;
+                ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform),
+                                                      glm::value_ptr(newPosition),
+                                                      glm::value_ptr(newRotation),
+                                                      glm::value_ptr(newScale));
+                ImGui::DragFloat3("position", (float*)&newPosition, 0.1f);
+                ImGui::DragFloat3("rotation", (float*)&newRotation, 0.1f);
+                ImGui::DragFloat3("scale", (float*)&newScale, 0.1f);
+                ImGui::EndChild();
+            }
             if(close) selectedInstance = 0x0;
         }
         ImGui::End();

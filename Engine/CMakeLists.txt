@@ -3,9 +3,7 @@ project(soulsshard)
 include(FetchContent)
 
 find_package(Vulkan REQUIRED)
-find_package(TBB REQUIRED)
-find_package(X11 REQUIRED)
-find_package(pxr REQUIRED)
+
 
 FetchContent_Declare(
     fetch_vk_bootstrap
@@ -18,12 +16,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG 3.3.8 
 )
-# Fetch EnTT from GitHub
-FetchContent_Declare(
-    entt
-    GIT_REPOSITORY https://github.com/skypjack/entt.git
-    GIT_TAG master  # You can specify a release tag here, if needed
-)
+
 
 FetchContent_Declare(
   glm
@@ -54,7 +47,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(
     fetch_vk_bootstrap
     glfw
-    entt
     glm
     imgui
     imguizmo
@@ -103,7 +95,6 @@ include_directories(
     ${GLFW_INCLUDE_DIRS}
     ${imgui_SOURCE_DIR}
     ${imguizmo_SOURCE_DIR}
-    ${pxr_DIR}/lib
 )
 
 # Link dependencies for the engine
@@ -113,9 +104,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap
     imgui
     imguizmo
     tinyobjloader
-    ${PXR_LIBRARIES}
     )
 # Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
-# Include the EnTT header files
-target_include_directories(${PROJECT_NAME} PUBLIC ${entt_SOURCE_DIR}/src)

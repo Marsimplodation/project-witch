@@ -2,11 +2,10 @@
 #define ENGINE_SCENE
 #include "../types/types.h"
 #include "Vulkan/VkRenderer.h"
-#include "entt/entt.hpp"
-#include "entt/entity/fwd.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
+#include "types/ECS.h"
 #include "types/defines.h"
 #include <unordered_map>
 
@@ -16,7 +15,8 @@ struct AABB {
 };
 struct Instance {
     std::string name;
-    entt::entity entity;
+    EntityID entity;
+    AABB aabb;
 };
 
 struct GeometryInfo {
@@ -36,7 +36,7 @@ struct Scene {
     std::vector<Instance> instances;
     std::vector<Model> linearModels[1 + SHADOW_CASCADES];
     std::vector<PointLight> pointLights;
-    entt::registry registry;
+    ECS registry;
 
     DirectionLight sceneLight = DirectionLight{
         .position = glm::vec4(4,1.5,4,0),
@@ -44,7 +44,7 @@ struct Scene {
         .color = glm::vec4(1.0f),
         .debugFactors=glm::vec4(1.0f),
     };
-    std::unordered_map<std::string, GeometryInfo> geometry;
+    std::unordered_map<std::string, u32> geometry;
     std::vector<GeometryInfo> geometryList;
     Instance & instantiateModel(std::string objName, std::string instanceName);
     u32 instanceCount = 0;

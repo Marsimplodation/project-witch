@@ -1,3 +1,4 @@
+#define ECS_IMPLEMENTATION
 #include "Scene.h"
 #include "SoulShard.h"
 #include "Vulkan/VkRenderer.h"
@@ -5,6 +6,8 @@
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
 #include "types/defines.h"
+
+
 #include "types/types.h"
 #include <regex>
 #include <string>
@@ -121,27 +124,21 @@ Instance & Scene::instantiateModel(std::string objName, std::string instanceName
         printf("too many instances\n");
         exit(1);
     }
-    auto & model = geometry[objName];
+    auto modelIdx = geometry[objName];
+    auto & model = geometryList[modelIdx];
     model.instanceCount++;
     model.instances.push_back(instances.size());
 
     Instance instance = {
         .name = instanceName,
-        .entity = registry.create(),
+        .entity = registry.newEntity(),
     };
     TransformComponent transform = {
         glm::mat4(1.0)
     };
-    registry.emplace<TransformComponent>(instance.entity, transform);
+    registry.addComponent<TransformComponent>(instance.entity, transform);
 
     instances.push_back(instance);
-
-    geometryList.clear();
-    for(auto & pair : geometry) {
-        auto & info = pair.second;
-        geometryList.push_back(info);
-    }
-
     return instances.back();
 }
 
@@ -197,11 +194,10 @@ void Scene::updateModels() {
     _modelMatrices.clear();
     _matrixOffsets.clear();
     //camera
-    auto & proj = engine.renderer.data.editorMode ? engine.editorCamera.projection : engine.mainCamera.projection;
-    auto & view = engine.renderer.data.editorMode ? engine.editorCamera.view : engine.mainCamera.view;
+    auto proj = engine.renderer.data.editorMode ? engine.editorCamera.projection : engine.mainCamera.projection;
+    auto view = engine.renderer.data.editorMode ? engine.editorCamera.view : engine.mainCamera.view;
     auto viewProj =  proj*view; 
     Plane planes[6];
-    AABB aabb{};
 
     extractFrustumPlanes(planes, viewProj);
     _matrixOffsets.push_back(_modelMatrices.size());
@@ -209,14 +205,16 @@ void Scene::updateModels() {
         u32 instanceCount = 0;
         for(auto & idx : info.instances) {
             auto & instance = instances[idx];
-            auto & transform = registry.get<TransformComponent>(instance.entity);
+            auto transformPtr = registry.getComponent<TransformComponent>(instance.entity);
+            if(!transformPtr) continue;
+            auto & transform = *transformPtr;
             auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
             auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
-            _bounds.min = glm::min(bounds.min, min);
-            _bounds.max = glm::max(bounds.max, max);
-            aabb.min = min;
-            aabb.max = max;
-            if(!isAABBInFrustum(aabb, planes)) continue;
+            _bounds.min = glm::min(_bounds.min, min);
+            _bounds.max = glm::max(_bounds.max, max);
+            instance.aabb.min = min;
+            instance.aabb.max = max;
+            if(!isAABBInFrustum(instance.aabb, planes)) continue;
             _modelMatrices.push_back(transform.mat);
             instanceCount++;
         }
@@ -226,8 +224,8 @@ void Scene::updateModels() {
             .instanceCount= instanceCount});
     }
     for(int c = 0; c < SHADOW_CASCADES; ++c){
-        auto & proj = sceneLight.projections[c];
-        auto & view = sceneLight.views[c]; 
+        auto proj = sceneLight.projections[c];
+        auto view = sceneLight.views[c]; 
         auto viewProj =  proj*view; 
         extractFrustumPlanes(planes, viewProj);
 
@@ -236,14 +234,16 @@ void Scene::updateModels() {
             u32 instanceCount = 0;
             for(auto & idx : info.instances) {
                 auto & instance = instances[idx];
-                auto & transform = registry.get<TransformComponent>(instance.entity);
+                auto transformPtr = registry.getComponent<TransformComponent>(instance.entity);
+                if(!transformPtr) continue;
+                auto & transform = *transformPtr;
                 auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
                 auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
                 _bounds.min = glm::min(_bounds.min, min);
                 _bounds.max = glm::max(_bounds.max, max);
-                aabb.min = min;
-                aabb.max = max;
-                if(!isAABBInFrustum(aabb, planes)) continue;
+                instance.aabb.min = min;
+                instance.aabb.max = max;
+                if(!isAABBInFrustum(instance.aabb, planes)) continue;
                 _modelMatrices.push_back(transform.mat);
                 instanceCount++;
             }

@@ -1,12 +1,14 @@
 #include "Scene/Scene.h"
-#include "entt/entity/fwd.hpp"
 #include "glm/fwd.hpp"
 #include "glm/trigonometric.hpp"
+#include "types/ECS.h"
 #include "types/types.h"
 #include <SoulShard.h>
 #include <climits>
 #include <cstdio>
+#include <cstdlib>
 #include <glm/ext/matrix_transform.hpp>
+#include <iostream>
 #include <vector>
 SoulShard engine{};
 auto & input = engine.inputHandler;
@@ -58,31 +60,31 @@ void updateCamera(float deltaTime) {
 };
 
 float elapsedTime = 0.0f;
+u32 spawned = 0;
 void spawnModels(float deltaTime) {
-    if(engine.scene.instanceCount >= 400) return;
-    float xi1 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
-    float xi2 = (((float)rand()/(float)INT_MAX)) * 20;
-    float xi3 = (2*((float)rand()/(float)INT_MAX)-1.0f) * 20;
-    auto dir = glm::vec3(xi1, xi2, xi3);
-    auto & cube = engine.scene.instantiateModel("Cube", "Cube 1");
-    auto & trans = engine.scene.registry.get<TransformComponent>(cube.entity);
-    trans.mat = glm::translate(trans.mat, dir); 
-};
-void rotateModels(float deltaTime) {
-    auto view = engine.scene.registry.view<TransformComponent>();
-    for (auto & entity : view) {
-	auto & trans = engine.scene.registry.get<TransformComponent>(entity);
-	trans.mat = glm::rotate(trans.mat, deltaTime * glm::radians(180.0f), glm::normalize(glm::vec3(0,0.0,1.0))); 
-    }
+    if(spawned >= 2000) return;
+    spawned++;
+    glm::vec3 pos = {
+        (float)std::rand()/RAND_MAX * 20.0f,
+        (float)std::rand()/RAND_MAX * 20.0f,
+        (float)std::rand()/RAND_MAX * 20.0f,
+    };
+    auto & cube =engine.scene.instantiateModel("Cube", "cube 1"); 
+
+    auto * tpr = engine.scene.registry.getComponent<TransformComponent>(cube.entity);
+    if(tpr) tpr->mat = glm::translate(tpr->mat, pos);
 };
 
+
 int main (int argc, char *argv[]) {
+    //ECS_BENCHMARK();
+
     engine.startup();
     engine.loadGeometry("../Game/Assets/Sponza/sponza.obj");
+    //engine.loadGeometry("../Game/Assets/test.obj");
+    //engine.loadGeometry("../Game/Assets/cube.obj");
     engine.registerSystem(updateCamera, "Game Camera");
-    engine.registerSystem(spawnModels, "spawn Models");
-    engine.systems.back().active = false;
-    //engine.registerSystem(rotateModels, "Rotation");
-    //engine.registerSystem(printFPS, "FPS");
+    //engine.registerSystem(spawnModels, "FPS");
+
     engine.run();
 }
