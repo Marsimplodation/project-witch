@@ -2,20 +2,16 @@
 #define SOULSHARD_ECS
 #include "defines.h"
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
-#include <unordered_map>
 #include <vector>
-#include <typeindex>
 #include <cstring>
 using EntityID = u32;
 using TypeID = u32;
 const TypeID MAX_ECS_TYPES = 64;
 static TypeID GLOBAL_STATICS_ECS_TYPE_COUNTER = 0;
 
-// Per-component type pool
 struct ComponentPool {
-    std::vector<u8> data; //contiguous memory for all components of a type
+    std::vector<u8> data; 
 };
 
 template <typename T>
@@ -27,7 +23,6 @@ struct EntityTypeMap {
     bool hasType[MAX_ECS_TYPES];  
 };
 
-// Generate unique TypeID for each component type
 template <typename T>
 const TypeID ECSType<T>::id = [] {
     const static TypeID counter = GLOBAL_STATICS_ECS_TYPE_COUNTER++;
@@ -59,17 +54,14 @@ void ECS::addComponent(EntityID entity, const T& component) {
     TypeID typeIdx = getTypeIndex<T>(); 
     auto & data = componentPools[typeIdx].data;
 
-    // Allocate space in the global data vector
+    // adding a padding to size for proper alignement
     size_t offset = data.size();
     auto mod = sizeof(T) % alignof(T);
-    auto padding =  ((mod != 0) ? alignof(T) : 0);
+    auto padding = (mod != 0) ? alignof(T) : 0;
     auto paddedSize = (sizeof(T) - mod) + padding;
     data.resize(offset + paddedSize);
 
-    // Copy component bytes into data vector
     std::memcpy(&data[offset], &component, sizeof(T));
-
-    // Store offset metadata for the entity
     entityMap[entity].offsets[typeIdx] = offset;
     entityMap[entity].hasType[typeIdx] = true;
 }
@@ -77,14 +69,14 @@ void ECS::addComponent(EntityID entity, const T& component) {
 template <typename T>
 T* ECS::getComponent(EntityID entity) {
     TypeID typeIdx = getTypeIndex<T>(); 
-    if(!entityMap[entity].hasType[typeIdx]) return 0x0;
+    if(!entityMap[entity].hasType[typeIdx]) return nullptr;
 
-    auto& pool = componentPools[typeIdx];
+    auto & pool = componentPools[typeIdx];
     auto & data = pool.data;
 
     u32 offset = entityMap[entity].offsets[typeIdx];
-    return (T*)(&data[offset]); // Cast bytes back to struct
-    return nullptr;
+    // Cast bytes back to struct
+    return (T*)(&data[offset]); 
 }
 
 template <typename T>
@@ -96,14 +88,11 @@ TypeID ECS::getTypeIndex() {
 template <typename T>
 void ECS::registerType() {
     TypeID typeIdx = ECSType<T>::id;
-
-    //----- Type registration ------//
-    if(typeIdx >= _maxTypeID) {
-        _maxTypeID = typeIdx;
-        componentPools.push_back(ComponentPool{
-            .data = std::vector<u8>(),
-        });
-    }
+    if(typeIdx < _maxTypeID) return;
+    _maxTypeID = typeIdx;
+    componentPools.push_back(ComponentPool{
+        .data = std::vector<u8>(),
+    });
 }
 void ECS_BENCHMARK();
 
