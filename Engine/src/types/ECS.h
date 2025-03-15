@@ -61,7 +61,10 @@ void ECS::addComponent(EntityID entity, const T& component) {
 
     // Allocate space in the global data vector
     size_t offset = data.size();
-    data.resize(offset + sizeof(T));
+    auto mod = sizeof(T) % alignof(T);
+    auto padding =  ((mod != 0) ? alignof(T) : 0);
+    auto paddedSize = (sizeof(T) - mod) + padding;
+    data.resize(offset + paddedSize);
 
     // Copy component bytes into data vector
     std::memcpy(&data[offset], &component, sizeof(T));
