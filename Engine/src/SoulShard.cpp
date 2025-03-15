@@ -37,12 +37,10 @@ int SoulShard::startup() {
     if (0 != renderer.createSyncObjects()) return -1;
     inputHandler.init(renderer.init.window);
     renderer.enginePtr = this;
+    scene.initScene();
     scene.enginePtr = this;
     renderer.data.editorMode = true;
     renderer.loadTexture("./textures/dummy.png");
-
-    scene.registry.registerType<TransformComponent>();
-
     return 0;
 };
 

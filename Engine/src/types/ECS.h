@@ -8,7 +8,7 @@
 using EntityID = u32;
 using TypeID = u32;
 const TypeID MAX_ECS_TYPES = 64;
-static TypeID GLOBAL_STATICS_ECS_TYPE_COUNTER = 0;
+TypeID INCREASE_TYPE_COUNTER();
 
 struct ComponentPool {
     std::vector<u8> data; 
@@ -45,7 +45,7 @@ private:
 //-------- IMPLEMENTATION ---------------//
 template <typename T>
 const TypeID ECSType<T>::id = []{
-    const static TypeID counter = GLOBAL_STATICS_ECS_TYPE_COUNTER++;
+    const static TypeID counter = INCREASE_TYPE_COUNTER(); 
     return counter;
 }();
 
@@ -105,6 +105,11 @@ EntityID ECS::newEntity() {
         entityMap.resize(factor * batchCount);
     }
     return _entityCount++;
+}
+
+TypeID INCREASE_TYPE_COUNTER() {
+    static TypeID GLOBAL_STATICS_ECS_TYPE_COUNTER;
+    return GLOBAL_STATICS_ECS_TYPE_COUNTER++; 
 }
 #endif // !ECS_IMPLEMEMENTATION
 

@@ -12,6 +12,11 @@
 #include <regex>
 #include <string>
 
+void Scene::initScene(){
+    registry = ECS();
+    registry.registerType<TransformComponent>();
+    registry.registerType<AABB>();
+}
 
 std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const glm::mat4& view, float nearPlane, float farPlane) {
     
@@ -137,6 +142,7 @@ Instance & Scene::instantiateModel(std::string objName, std::string instanceName
         glm::mat4(1.0)
     };
     registry.addComponent<TransformComponent>(instance.entity, transform);
+    registry.addComponent<AABB>(instance.entity, model.aabb);
 
     instances.push_back(instance);
     return instances.back();
