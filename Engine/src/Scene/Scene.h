@@ -37,6 +37,7 @@ struct Scene {
     std::vector<Model> linearModels[1 + SHADOW_CASCADES];
     std::vector<PointLight> pointLights;
     ECS registry;
+    bool frustumCulling = false;
 
     DirectionLight sceneLight = DirectionLight{
         .position = glm::vec4(4,1.5,4,0),

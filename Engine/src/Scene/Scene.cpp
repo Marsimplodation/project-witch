@@ -214,6 +214,7 @@ void Scene::updateModels() {
     _matrixOffsets.clear();
     //camera
     auto proj = engine.renderer.data.editorMode ? engine.editorCamera.projection : engine.mainCamera.projection;
+    proj[1][1] *= -1;
     auto view = engine.renderer.data.editorMode ? engine.editorCamera.view : engine.mainCamera.view;
     std::array<glm::mat4, SHADOW_CASCADES + 1> viewsProjs{
         proj * view,
@@ -230,7 +231,9 @@ void Scene::updateModels() {
                 auto transformPtr = registry.getComponent<TransformComponent>(instance.entity);
                 if(!transformPtr) continue;
                 auto & transform = *transformPtr;
-                if(!isAABBInFrustum(instance.aabb, planes)) continue;
+                //tmp fix for frustum culling being weird with non identity matrices
+                bool isIdent = transformPtr->mat == glm::mat4(1.0f);
+                if(frustumCulling && !isAABBInFrustum(instance.aabb, planes)) continue;
                 _modelMatrices.push_back(transform.mat);
                 instanceCount++;
             }
