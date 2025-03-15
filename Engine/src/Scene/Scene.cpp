@@ -86,7 +86,6 @@ void Scene::updateLights() {
         float cascadeFar = cascadeSplits[cascadeIndex];
         float cascadeNear = (cascadeIndex > 0) ? cascadeSplits[cascadeIndex - 1] : 0.0;
         std::vector<glm::vec3> frustumCorners = GetFrustumCornersWorldSpace(
-            //switch between editor and game camera
             proj,
             engine.renderer.data.editorMode ? engine.editorCamera.view : engine.mainCamera.view,
             cascadeNear, cascadeFar);
@@ -201,14 +200,16 @@ void Scene::updateModels() {
         for(auto & idx : info.instances) {
             auto & instance = instances[idx];
             auto transformPtr = registry.getComponent<TransformComponent>(instance.entity);
+            auto aabb = registry.getComponent<AABB>(instance.entity);
             if(!transformPtr) continue;
+            if(!aabb) continue;
             auto & transform = *transformPtr;
             auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
             auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
             _bounds.min = glm::min(_bounds.min, min);
             _bounds.max = glm::max(_bounds.max, max);
-            instance.aabb.min = min;
-            instance.aabb.max = max;
+            aabb->min = min;
+            aabb->max = max;
         }
     }
 
@@ -235,11 +236,11 @@ void Scene::updateModels() {
             for(auto & idx : info.instances) {
                 auto & instance = instances[idx];
                 auto transformPtr = registry.getComponent<TransformComponent>(instance.entity);
+                auto aabb = registry.getComponent<AABB>(instance.entity);
                 if(!transformPtr) continue;
+                if(!aabb) continue;
                 auto & transform = *transformPtr;
-                //tmp fix for frustum culling being weird with non identity matrices
-                bool isIdent = transformPtr->mat == glm::mat4(1.0f);
-                if(frustumCulling && !isAABBInFrustum(instance.aabb, planes)) continue;
+                if(frustumCulling && !isAABBInFrustum(*aabb, planes)) continue;
                 _modelMatrices.push_back(transform.mat);
                 instanceCount++;
             }

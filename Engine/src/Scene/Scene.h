@@ -16,7 +16,6 @@ struct AABB {
 struct Instance {
     std::string name;
     EntityID entity;
-    AABB aabb;
 };
 
 struct GeometryInfo {
