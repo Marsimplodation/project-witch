@@ -23,12 +23,6 @@ struct EntityTypeMap {
     bool hasType[MAX_ECS_TYPES];  
 };
 
-template <typename T>
-const TypeID ECSType<T>::id = [] {
-    const static TypeID counter = GLOBAL_STATICS_ECS_TYPE_COUNTER++;
-    return counter;
-}();
-
 struct ECS {
     EntityID newEntity();
     template <typename T>
@@ -49,6 +43,12 @@ private:
 
 
 //-------- IMPLEMENTATION ---------------//
+template <typename T>
+const TypeID ECSType<T>::id = []{
+    const static TypeID counter = GLOBAL_STATICS_ECS_TYPE_COUNTER++;
+    return counter;
+}();
+
 template <typename T>
 void ECS::addComponent(EntityID entity, const T& component) {
     TypeID typeIdx = getTypeIndex<T>(); 
