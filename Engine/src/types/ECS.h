@@ -24,21 +24,21 @@ struct EntityTypeMap {
 };
 
 struct ECS {
-    EntityID newEntity();
+    static EntityID newEntity();
     template <typename T>
-        void addComponent(EntityID entity, const T& component);
+        static void addComponent(EntityID entity, const T& component);
     template <typename T>
-        T* getComponent(EntityID entity);
+        static T* getComponent(EntityID entity);
     template <typename T>
-        TypeID getTypeIndex();
+        static TypeID getTypeIndex();
     template <typename T>
-        void registerType();
+        static void registerType();
 
 private:
-    std::vector<ComponentPool> componentPools;
-    std::vector<EntityTypeMap> entityMap;
-    EntityID _entityCount = 0;
-    TypeID _maxTypeID = 0;
+    static std::vector<ComponentPool> componentPools;
+    static std::vector<EntityTypeMap> entityMap;
+    static EntityID _entityCount;
+    static TypeID _maxTypeID;
 };
 
 
@@ -111,6 +111,10 @@ TypeID INCREASE_TYPE_COUNTER() {
     static TypeID GLOBAL_STATICS_ECS_TYPE_COUNTER;
     return GLOBAL_STATICS_ECS_TYPE_COUNTER++; 
 }
+EntityID ECS::_entityCount=0;
+TypeID ECS::_maxTypeID=0;
+std::vector<ComponentPool> ECS::componentPools(0);
+std::vector<EntityTypeMap> ECS::entityMap(0);
 #endif // !ECS_IMPLEMEMENTATION
 
 #endif // !SOULSHARD_ECS
