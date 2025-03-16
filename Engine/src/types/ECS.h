@@ -115,7 +115,7 @@ TypeID ECS::getTypeIndex() {
 template <typename T>
 void ECS::registerType() {
     TypeID typeIdx = ECSType<T>::id;
-    if(typeIdx < _maxTypeID) return;
+    //if(typeIdx < _maxTypeID) return;
     _maxTypeID = typeIdx;
     componentPools.push_back(ComponentPool{
         .data = std::vector<char>(),
