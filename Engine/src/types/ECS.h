@@ -1,10 +1,10 @@
 #ifndef SOULSHARD_ECS
 #define SOULSHARD_ECS
-#include "defines.h"
 #include <cstddef>
 #include <cstdio>
 #include <vector>
 #include <cstring>
+#include "defines.h"
 using EntityID = u32;
 using TypeID = u32;
 const TypeID MAX_ECS_TYPES = 64;
@@ -25,6 +25,7 @@ struct EntityTypeMap {
 
 struct ECS {
     static EntityID newEntity();
+    static void clear();
     template <typename T>
         static void addComponent(EntityID entity, const T& component);
     template <typename T>
@@ -52,6 +53,7 @@ const TypeID ECSType<T>::id = []{
 template <typename T>
 void ECS::addComponent(EntityID entity, const T& component) {
     TypeID typeIdx = getTypeIndex<T>(); 
+    if(entity >= _entityCount) return;
     auto & data = componentPools[typeIdx].data;
 
     // adding a padding to size for proper alignement
@@ -69,6 +71,7 @@ void ECS::addComponent(EntityID entity, const T& component) {
 template <typename T>
 T* ECS::getComponent(EntityID entity) {
     TypeID typeIdx = getTypeIndex<T>(); 
+    if(entity >= _entityCount) return nullptr;
     if(!entityMap[entity].hasType[typeIdx]) return nullptr;
 
     auto & pool = componentPools[typeIdx];
@@ -106,7 +109,13 @@ EntityID ECS::newEntity() {
     }
     return _entityCount++;
 }
-
+void ECS::clear() {
+    _entityCount = 0;
+    _maxTypeID = 0;
+    entityMap.clear();
+    for(auto & pool : componentPools) pool.data.clear();
+    componentPools.clear();
+}
 TypeID INCREASE_TYPE_COUNTER() {
     static TypeID GLOBAL_STATICS_ECS_TYPE_COUNTER;
     return GLOBAL_STATICS_ECS_TYPE_COUNTER++; 
@@ -118,3 +127,4 @@ std::vector<EntityTypeMap> ECS::entityMap(0);
 #endif // !ECS_IMPLEMEMENTATION
 
 #endif // !SOULSHARD_ECS
+

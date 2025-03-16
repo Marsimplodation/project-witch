@@ -139,6 +139,7 @@ void SoulShard::destroy() {
 
     renderer.data.gui.destroy(renderer.init.device);
     renderer.cleanup();
+    ECS::clear();
     exit(0);
 }
 
