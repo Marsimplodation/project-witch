@@ -174,60 +174,62 @@ void VkRenderer::updateIndirectDrawBuffer(int renderingIndex) {
 #define LIGHT_BUFFER 2 + SHADOW_CASCADES
 #define MATERIAL_BUFFER 3 + SHADOW_CASCADES
 int VkRenderer::createUniformBuffers() {
-    VkBuffer cameraBuffer;
-    VkDeviceMemory cameraMemory;
-    createBuffer(sizeof(Camera),
-             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-             &cameraBuffer,
-             &cameraMemory);
-    data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(cameraBuffer, cameraMemory));
-    
-    for(int c = 0; c < SHADOW_CASCADES + 1; ++c){
-        VkBuffer modelBuffer;
-        VkDeviceMemory modelMemory;
-        createBuffer(sizeof(glm::mat4) * MAX_INSTANCES,
+    for(int f = 0; f < MAX_FRAMES_IN_FLIGHT; ++f) {
+        VkBuffer cameraBuffer;
+        VkDeviceMemory cameraMemory;
+        createBuffer(sizeof(Camera),
                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                 &modelBuffer,
-                 &modelMemory);
-        data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(modelBuffer, modelMemory));
+                 &cameraBuffer,
+                 &cameraMemory);
+        data.uniformBuffers[f].push_back(std::pair<VkBuffer, VkDeviceMemory>(cameraBuffer, cameraMemory));
+        
+        for(int c = 0; c < SHADOW_CASCADES + 1; ++c){
+            VkBuffer modelBuffer;
+            VkDeviceMemory modelMemory;
+            createBuffer(sizeof(glm::mat4) * MAX_INSTANCES,
+                     VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                     &modelBuffer,
+                     &modelMemory);
+            data.uniformBuffers[f].push_back(std::pair<VkBuffer, VkDeviceMemory>(modelBuffer, modelMemory));
+        }
+        
+        VkBuffer lightBuffer;
+        VkDeviceMemory lightMemory;
+        createBuffer(sizeof(DirectionLight),
+                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                 &lightBuffer,
+                 &lightMemory);
+        data.uniformBuffers[f].push_back(std::pair<VkBuffer, VkDeviceMemory>(lightBuffer, lightMemory));
+        VkBuffer materialBuffer;
+        VkDeviceMemory materialMemory;
+        createBuffer(sizeof(Material) * MAX_MATERIALS,
+                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                 &materialBuffer,
+                 &materialMemory);
+        data.uniformBuffers[f].push_back(std::pair<VkBuffer, VkDeviceMemory>(materialBuffer, materialMemory));
     }
-    
-    VkBuffer lightBuffer;
-    VkDeviceMemory lightMemory;
-    createBuffer(sizeof(DirectionLight),
-             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-             &lightBuffer,
-             &lightMemory);
-    data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(lightBuffer, lightMemory));
-    VkBuffer materialBuffer;
-    VkDeviceMemory materialMemory;
-    createBuffer(sizeof(Material) * MAX_MATERIALS,
-             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-             &materialBuffer,
-             &materialMemory);
-    data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(materialBuffer, materialMemory));
     return 0;
 }
 
 void VkRenderer::updateCameraBuffer(Camera & camera) {
-    copyDataToBuffer(data.uniformBuffers[CAMERA_BUFFER].second, &camera, sizeof(Camera)); 
+    copyDataToBuffer(data.uniformBuffers[data.currentFrame][CAMERA_BUFFER].second, &camera, sizeof(Camera)); 
 }
 
 void VkRenderer::updateModelBuffer(std::vector<glm::mat4> & matrices, u32 renderingIdx) {
     if(matrices.size() == 0) return;
-    copyDataToBuffer(data.uniformBuffers[MODEL_BUFFER + renderingIdx].second, matrices.data(), sizeof(glm::mat4) * matrices.size()); 
+    copyDataToBuffer(data.uniformBuffers[data.currentFrame][MODEL_BUFFER + renderingIdx].second, matrices.data(), sizeof(glm::mat4) * matrices.size()); 
 }
 
 void VkRenderer::updateLightBuffer(DirectionLight & light) {
-    copyDataToBuffer(data.uniformBuffers[LIGHT_BUFFER].second, &light, sizeof(DirectionLight)); 
+    copyDataToBuffer(data.uniformBuffers[data.currentFrame][LIGHT_BUFFER].second, &light, sizeof(DirectionLight)); 
 }
 
 void VkRenderer::updatematerialBuffer() {
-    copyDataToBuffer(data.uniformBuffers[MATERIAL_BUFFER].second, data.materials.data(), sizeof(Material) * MAX_MATERIALS); 
+    copyDataToBuffer(data.uniformBuffers[data.currentFrame][MATERIAL_BUFFER].second, data.materials.data(), sizeof(Material) * MAX_MATERIALS); 
 }
 
 void VkRenderer::destroyBuffers() {
@@ -235,9 +237,11 @@ void VkRenderer::destroyBuffers() {
     init.disp.destroyBuffer(data.indexBuffer, nullptr);
     init.disp.freeMemory(data.vertexBufferMemory, nullptr);
     init.disp.freeMemory(data.indexBufferMemory, nullptr);
-    for (auto & buffer : data.uniformBuffers) {
-        init.disp.destroyBuffer(buffer.first, nullptr);
-        init.disp.freeMemory(buffer.second, nullptr);
+    for(int f = 0; f < MAX_FRAMES_IN_FLIGHT; ++f) {
+        for (auto & buffer : data.uniformBuffers[f]) {
+            init.disp.destroyBuffer(buffer.first, nullptr);
+            init.disp.freeMemory(buffer.second, nullptr);
+        }
     }
     for (size_t idx = 0; idx < SHADOW_CASCADES + 1; idx++) {
         for (size_t i = 0; i < data.indirectDrawBuffers[idx].size(); i++) {

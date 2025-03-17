@@ -120,22 +120,22 @@ int VkRenderer::createDescriptorLayout() {
 
 int VkRenderer::updateDescriptorSets() {
     VkDescriptorBufferInfo cameraBufferInfo = {};
-    cameraBufferInfo.buffer = data.uniformBuffers[CAMERA_BUFFER].first;
+    cameraBufferInfo.buffer = data.uniformBuffers[data.currentFrame][CAMERA_BUFFER].first;
     cameraBufferInfo.offset = 0;
     cameraBufferInfo.range = VK_WHOLE_SIZE;
     
     VkDescriptorBufferInfo modelBufferInfo = {};
-    modelBufferInfo.buffer = data.uniformBuffers[MODEL_BUFFER].first;
+    modelBufferInfo.buffer = data.uniformBuffers[data.currentFrame][MODEL_BUFFER].first;
     modelBufferInfo.offset = 0;
     modelBufferInfo.range = VK_WHOLE_SIZE;
 
     VkDescriptorBufferInfo lightBufferInfo = {};
-    lightBufferInfo.buffer = data.uniformBuffers[LIGHT_BUFFER].first;
+    lightBufferInfo.buffer = data.uniformBuffers[data.currentFrame][LIGHT_BUFFER].first;
     lightBufferInfo.offset = 0;
     lightBufferInfo.range = VK_WHOLE_SIZE;
 
     VkDescriptorBufferInfo materialBufferInfo = {};
-    materialBufferInfo.buffer = data.uniformBuffers[MATERIAL_BUFFER].first;
+    materialBufferInfo.buffer = data.uniformBuffers[data.currentFrame][MATERIAL_BUFFER].first;
     materialBufferInfo.offset = 0;
     materialBufferInfo.range = VK_WHOLE_SIZE;
 
@@ -195,12 +195,12 @@ int VkRenderer::updateDescriptorSets() {
 int VkRenderer::updateShadowDescriptorSets() {
 
     VkDescriptorBufferInfo lightBufferInfo = {};
-    lightBufferInfo.buffer = data.uniformBuffers[LIGHT_BUFFER].first;
+    lightBufferInfo.buffer = data.uniformBuffers[data.currentFrame][LIGHT_BUFFER].first;
     lightBufferInfo.offset = 0;
     lightBufferInfo.range = VK_WHOLE_SIZE;
 
     VkDescriptorBufferInfo materialBufferInfo = {};
-    materialBufferInfo.buffer = data.uniformBuffers[MATERIAL_BUFFER].first;
+    materialBufferInfo.buffer = data.uniformBuffers[data.currentFrame][MATERIAL_BUFFER].first;
     materialBufferInfo.offset = 0;
     materialBufferInfo.range = VK_WHOLE_SIZE;
     
@@ -219,7 +219,7 @@ int VkRenderer::updateShadowDescriptorSets() {
     
     for(int c = 0; c < SHADOW_CASCADES; ++c) {
         VkDescriptorBufferInfo modelBufferInfo = {};
-        modelBufferInfo.buffer = data.uniformBuffers[MODEL_BUFFER + c + 1].first;
+        modelBufferInfo.buffer = data.uniformBuffers[data.currentFrame][MODEL_BUFFER + c + 1].first;
         modelBufferInfo.offset = 0;
         modelBufferInfo.range = VK_WHOLE_SIZE;
 

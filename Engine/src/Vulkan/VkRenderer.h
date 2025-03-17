@@ -98,7 +98,7 @@ struct VkRenderer {
         std::vector<Material> materials = std::vector<Material>(MAX_MATERIALS);
         u32 usedMaterials = 0;
 
-        std::vector<std::pair<VkBuffer, VkDeviceMemory>> uniformBuffers;
+        std::vector<std::pair<VkBuffer, VkDeviceMemory>> uniformBuffers[MAX_FRAMES_IN_FLIGHT];
 
 
 
