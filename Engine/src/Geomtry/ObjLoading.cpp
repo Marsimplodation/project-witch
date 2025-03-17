@@ -22,7 +22,8 @@ void SoulShard::loadGeometry(std::string modelPath) {
     std::unordered_map<std::string, u32> textureAtlas;
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
-    u32 materialIdx = 0;
+    u32 materialIdx = renderer.data.usedMaterials;
+    u32 materialOffset = renderer.data.usedMaterials;
     const int DIFFUSE = 0;
     const int NORMAL = 1;
     for (const auto & material : obj_materials) {
@@ -56,6 +57,7 @@ void SoulShard::loadGeometry(std::string modelPath) {
         );
 
     }
+    renderer.data.usedMaterials = materialIdx;
    
     u32 count = 0;
     for (const auto& shape : shapes) {
@@ -77,7 +79,7 @@ void SoulShard::loadGeometry(std::string modelPath) {
             max[1] = glm::max(vertex.position[1], max[1]);
             max[2] = glm::max(vertex.position[2], max[2]);
             // Retrieve material index
-            int material_id = shape.mesh.material_ids[faceIndex/3];
+            int material_id = shape.mesh.material_ids[faceIndex/3] + materialOffset;
             if (material_id == -1 || material_id >= materialIdx) {
                 material_id = 0; // Assign a fallback material index
             }
