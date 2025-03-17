@@ -4,6 +4,7 @@
 #include "GLFW/glfw3.h"
 #include "InputHandling/InputHandling.h"
 #include "Vulkan/VkRenderer.h"
+#include "types/defines.h"
 #include "types/types.h"
 #include <condition_variable>
 #include <cstdlib>
@@ -61,6 +62,9 @@ int SoulShard::run() {
     renderer.data.gui.init(&renderer.init, &renderer.data);
     renderer.data.gui.enginePtr = this;
     scene.updateModels();
+    renderer.data.currentFrame = MAX_FRAMES_IN_FLIGHT - 1;
+    scene.pushUpdatedModels();
+    renderer.data.currentFrame = 0; 
 
     auto cpuThread = [&](){
         while (!glfwWindowShouldClose(renderer.init.window)) {

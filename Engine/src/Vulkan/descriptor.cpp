@@ -6,7 +6,7 @@
 int VkRenderer::createDescriptorPool() {
     VkDescriptorPoolSize poolSizes[2] = {};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = (3 + MAX_MATERIALS) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+    poolSizes[0].descriptorCount = (4 + MAX_MATERIALS) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSizes[1].descriptorCount = (SHADOW_CASCADES + MAX_TEXTURES) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     
@@ -21,7 +21,7 @@ int VkRenderer::createDescriptorPool() {
     if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool");
     }
-    poolSizes[0].descriptorCount = (3 + MAX_MATERIALS) * SHADOW_CASCADES * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+    poolSizes[0].descriptorCount = (4 + MAX_MATERIALS) * SHADOW_CASCADES * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     poolSizes[1].descriptorCount = (MAX_TEXTURES) * SHADOW_CASCADES * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     poolInfo.maxSets = SHADOW_CASCADES * MAX_FRAMES_IN_FLIGHT;  // Only need 1 descriptor set (if you're allocating 1 per frame)
     result = init.disp.createDescriptorPool(&poolInfo, nullptr, &data.descriptorShadowPool); 

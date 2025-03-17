@@ -252,7 +252,7 @@ void Scene::updateModels() {
 }
 void Scene::pushUpdatedModels() {
     SoulShard & engine = *((SoulShard*)enginePtr);
-    auto frame = engine.renderer.data.currentFrame;
+    auto frame = (engine.renderer.data.currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
         linearModels[frame][i].resize(_linearModels[i].size());
         modelMatrices[frame][i].resize(_modelMatrices[i].size());
