@@ -1,6 +1,7 @@
 
 #include "VkBootstrap.h"
 #include "VkRenderer.h"
+#include "types/defines.h"
 #include <iostream>
 #include <fstream>
 #include <vulkan/vulkan_core.h>
@@ -77,7 +78,7 @@ void VkRenderer::createGraphicsPipelineLayout() {
         std::cerr << "Failed to create pipeline layout\n";
         return;
     }
-    pipelineLayoutInfo.pSetLayouts = data.descriptorShadowLayouts;
+    pipelineLayoutInfo.pSetLayouts = (VkDescriptorSetLayout*)data.descriptorShadowLayouts;
     if (init.disp.createPipelineLayout(&pipelineLayoutInfo, nullptr, &data.shadowPipelineLayout) != VK_SUCCESS) {
         std::cerr << "Failed to create pipeline layout\n";
         return;

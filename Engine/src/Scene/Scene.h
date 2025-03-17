@@ -30,13 +30,12 @@ struct GeometryInfo {
 
 struct Scene {
     AABB bounds;
-    std::vector<glm::mat4> modelMatrices;
-    std::vector<u32> matrixOffsets;
+    std::vector<glm::mat4> modelMatrices[MAX_FRAMES_IN_FLIGHT][1 + SHADOW_CASCADES];
     std::vector<Instance> instances;
-    std::vector<Model> linearModels[1 + SHADOW_CASCADES];
+    std::vector<Model> linearModels[MAX_FRAMES_IN_FLIGHT][1 + SHADOW_CASCADES];
     std::vector<PointLight> pointLights;
     ECS registry;
-    bool frustumCulling = false;
+    bool frustumCulling = true;
 
     DirectionLight sceneLight = DirectionLight{
         .position = glm::vec4(4,1.5,4,0),
@@ -55,7 +54,7 @@ struct Scene {
     void *enginePtr;
 
 private:
-    std::vector<glm::mat4> _modelMatrices;
+    std::vector<glm::mat4> _modelMatrices[1 + SHADOW_CASCADES];
     std::vector<u32> _matrixOffsets;
     std::vector<Model> _linearModels[1 + SHADOW_CASCADES];
     AABB _bounds;

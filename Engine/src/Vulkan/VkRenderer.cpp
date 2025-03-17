@@ -197,7 +197,8 @@ void VkRenderer::cleanup() {
         init.disp.destroySemaphore(data.availableSemaphores[i], nullptr);
         init.disp.destroyFence(data.inFlightFences[i], nullptr);
         init.disp.destroyDescriptorSetLayout(data.descriptorLayouts[i], nullptr);
-        init.disp.destroyDescriptorSetLayout(data.descriptorShadowLayouts[i], nullptr);
+        for (size_t j = 0; j < SHADOW_CASCADES; j++)
+            init.disp.destroyDescriptorSetLayout(data.descriptorShadowLayouts[j][i], nullptr);
     }
     init.disp.destroyDescriptorPool(data.descriptorPool, nullptr);
     init.disp.destroyDescriptorPool(data.descriptorShadowPool, nullptr);

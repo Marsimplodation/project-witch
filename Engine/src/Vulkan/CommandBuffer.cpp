@@ -20,10 +20,6 @@ int VkRenderer::createCommandPool() {
 
 void VkRenderer::renderModels(int i, int renderingIndex) {
     SoulShard & engine = *((SoulShard*)enginePtr);
-    auto offset = engine.scene.matrixOffsets[renderingIndex];
-    u32 modelIndex = offset;
-
-
     vkCmdDrawIndexedIndirect(
         data.commandBuffers[i],  // Command buffer
         data.indirectDrawBuffers[renderingIndex][i], // Buffer containing draw commands
@@ -63,6 +59,7 @@ void VkRenderer::sceneShadowRendering(int i){
         scissor.extent = extent;
         init.disp.cmdSetViewport(data.commandBuffers[i], 0, 1, &viewport);
         init.disp.cmdSetScissor(data.commandBuffers[i], 0, 1, &scissor);
+        init.disp.cmdBindDescriptorSets(data.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.shadowPipelineLayout, 0, 1, &data.descriptorShadowSets[c][data.currentFrame], 0, nullptr);
 
         init.disp.cmdBeginRenderPass(data.commandBuffers[i], &offsceenPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -197,10 +194,12 @@ int VkRenderer::recordCommandBuffer(int i) {
         return -1; // failed to begin recording command buffer
     }
     SoulShard & engine = *((SoulShard*)enginePtr);
-    updateModelBuffer(engine.scene.modelMatrices);
+    //if(data.currentFrame != 0) engine.scene.sceneLight.castShadows = false;
+    //if(data.currentFrame != 0) engine.scene.sceneLight.castShadows = false;
     updatematerialBuffer();
     for(int renderingIndex = 0; renderingIndex < SHADOW_CASCADES + 1; renderingIndex++){
-            updateIndirectDrawBuffer(renderingIndex);
+        updateModelBuffer(engine.scene.modelMatrices[data.currentFrame][renderingIndex], renderingIndex);
+        updateIndirectDrawBuffer(renderingIndex);
     }
     engine.scene.updateLights();
     updateLightBuffer(engine.scene.sceneLight);
@@ -212,7 +211,6 @@ int VkRenderer::recordCommandBuffer(int i) {
 
 
     updateShadowDescriptorSets();
-    init.disp.cmdBindDescriptorSets(data.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data.shadowPipelineLayout, 0, 1, &data.descriptorShadowSets[data.currentFrame], 0, nullptr);
     if(engine.scene.sceneLight.castShadows)sceneShadowRendering(i);
 
     updateDescriptorSets();

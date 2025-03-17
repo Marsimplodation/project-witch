@@ -77,9 +77,9 @@ struct VkRenderer {
         std::vector<VkFence> imageInFlight;
 
         VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
-        VkDescriptorSet descriptorShadowSets[MAX_FRAMES_IN_FLIGHT];
+        VkDescriptorSet descriptorShadowSets[SHADOW_CASCADES][MAX_FRAMES_IN_FLIGHT];
         VkDescriptorSetLayout descriptorLayouts[MAX_FRAMES_IN_FLIGHT];
-        VkDescriptorSetLayout descriptorShadowLayouts[MAX_FRAMES_IN_FLIGHT];
+        VkDescriptorSetLayout descriptorShadowLayouts[SHADOW_CASCADES][MAX_FRAMES_IN_FLIGHT];
         VkDescriptorPool descriptorPool;
         VkDescriptorPool descriptorShadowPool;
         VkBuffer vertexBuffer;
@@ -135,7 +135,7 @@ struct VkRenderer {
     int createUniformBuffers();
     void updateCameraBuffer();
     void updatematerialBuffer();
-    void updateModelBuffer(std::vector<glm::mat4> & matrices);
+    void updateModelBuffer(std::vector<glm::mat4> & matrices, u32 renderingIdx);
     void destroyBuffers();
     void copyDataToBufferWithStaging(VkBuffer buffer, const void* data, VkDeviceSize bufferSize);
     void copyDataToBuffer(VkDeviceMemory buffer, const void* data, VkDeviceSize bufferSize);

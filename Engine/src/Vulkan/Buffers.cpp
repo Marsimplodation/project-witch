@@ -148,10 +148,9 @@ void VkRenderer::updateIndirectDrawBuffer(int renderingIndex) {
     SoulShard & engine = *((SoulShard*)enginePtr);
     
     std::vector<VkDrawIndexedIndirectCommand> drawCommands;
-    auto offset = engine.scene.matrixOffsets[renderingIndex];
-    u32 modelIndex = offset;
+    u32 modelIndex = 0;
 
-    for (auto &model : engine.scene.linearModels[renderingIndex]) {
+    for (auto &model : engine.scene.linearModels[data.currentFrame][renderingIndex]) {
         if (model.instanceCount == 0) continue;
 
         VkDrawIndexedIndirectCommand drawCmd = {};
@@ -169,6 +168,11 @@ void VkRenderer::updateIndirectDrawBuffer(int renderingIndex) {
     data.indirectDrawCounts[renderingIndex][data.currentImgIndex] = drawCommands.size();
 }
 
+
+#define CAMERA_BUFFER 0
+#define MODEL_BUFFER 1
+#define LIGHT_BUFFER 2 + SHADOW_CASCADES
+#define MATERIAL_BUFFER 3 + SHADOW_CASCADES
 int VkRenderer::createUniformBuffers() {
     VkBuffer cameraBuffer;
     VkDeviceMemory cameraMemory;
@@ -179,14 +183,16 @@ int VkRenderer::createUniformBuffers() {
              &cameraMemory);
     data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(cameraBuffer, cameraMemory));
     
-    VkBuffer modelBuffer;
-    VkDeviceMemory modelMemory;
-    createBuffer(sizeof(glm::mat4) * MAX_INSTANCES * (SHADOW_CASCADES + 1),
-             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-             &modelBuffer,
-             &modelMemory);
-    data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(modelBuffer, modelMemory));
+    for(int c = 0; c < SHADOW_CASCADES + 1; ++c){
+        VkBuffer modelBuffer;
+        VkDeviceMemory modelMemory;
+        createBuffer(sizeof(glm::mat4) * MAX_INSTANCES * (SHADOW_CASCADES + 1),
+                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                 &modelBuffer,
+                 &modelMemory);
+        data.uniformBuffers.push_back(std::pair<VkBuffer, VkDeviceMemory>(modelBuffer, modelMemory));
+    }
     
     VkBuffer lightBuffer;
     VkDeviceMemory lightMemory;
@@ -208,20 +214,20 @@ int VkRenderer::createUniformBuffers() {
 }
 
 void VkRenderer::updateCameraBuffer(Camera & camera) {
-    copyDataToBuffer(data.uniformBuffers[0].second, &camera, sizeof(Camera)); 
+    copyDataToBuffer(data.uniformBuffers[CAMERA_BUFFER].second, &camera, sizeof(Camera)); 
 }
 
-void VkRenderer::updateModelBuffer(std::vector<glm::mat4> & matrices) {
+void VkRenderer::updateModelBuffer(std::vector<glm::mat4> & matrices, u32 renderingIdx) {
     if(matrices.size() == 0) return;
-    copyDataToBuffer(data.uniformBuffers[1].second, matrices.data(), sizeof(glm::mat4) * matrices.size()); 
+    copyDataToBuffer(data.uniformBuffers[MODEL_BUFFER + renderingIdx].second, matrices.data(), sizeof(glm::mat4) * matrices.size()); 
 }
 
 void VkRenderer::updateLightBuffer(DirectionLight & light) {
-    copyDataToBuffer(data.uniformBuffers[2].second, &light, sizeof(DirectionLight)); 
+    copyDataToBuffer(data.uniformBuffers[LIGHT_BUFFER].second, &light, sizeof(DirectionLight)); 
 }
 
 void VkRenderer::updatematerialBuffer() {
-    copyDataToBuffer(data.uniformBuffers[3].second, data.materials.data(), sizeof(Material) * MAX_MATERIALS); 
+    copyDataToBuffer(data.uniformBuffers[MATERIAL_BUFFER].second, data.materials.data(), sizeof(Material) * MAX_MATERIALS); 
 }
 
 void VkRenderer::destroyBuffers() {

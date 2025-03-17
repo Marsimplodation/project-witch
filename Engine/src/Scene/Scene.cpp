@@ -216,8 +216,8 @@ void Scene::updateModels() {
     //-------- FRUSTUM CULLING -------//
     for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
         _linearModels[i].clear();
+        _modelMatrices[i].clear();
     }
-    _modelMatrices.clear();
     _matrixOffsets.clear();
     //camera
     auto proj = engine.renderer.data.editorMode ? engine.editorCamera.projection : engine.mainCamera.projection;
@@ -229,7 +229,6 @@ void Scene::updateModels() {
     for(int c = 0; c < SHADOW_CASCADES; ++c) viewsProjs[c+1] = sceneLight.projections[c]*sceneLight.views[c];
     Plane planes[6];
     for(int c = 0; c < SHADOW_CASCADES + 1; ++c){
-        _matrixOffsets.push_back(_modelMatrices.size());
         extractFrustumPlanes(planes, viewsProjs[c]);
         for(auto & info : geometryList) {
             u32 instanceCount = 0;
@@ -241,7 +240,7 @@ void Scene::updateModels() {
                 if(!aabb) continue;
                 auto & transform = *transformPtr;
                 if(frustumCulling && !isAABBInFrustum(*aabb, planes)) continue;
-                _modelMatrices.push_back(transform.mat);
+                _modelMatrices[c].push_back(transform.mat);
                 instanceCount++;
             }
             _linearModels[c].push_back({
@@ -252,19 +251,18 @@ void Scene::updateModels() {
     }
 }
 void Scene::pushUpdatedModels() {
+    SoulShard & engine = *((SoulShard*)enginePtr);
+    auto frame = engine.renderer.data.currentFrame;
     for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
-        linearModels[i].resize(_linearModels[i].size());
+        linearModels[frame][i].resize(_linearModels[i].size());
+        modelMatrices[frame][i].resize(_modelMatrices[i].size());
     }
-    modelMatrices.resize(_modelMatrices.size());
-    matrixOffsets.resize(_matrixOffsets.size());
     bounds = _bounds;
     for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
         for(int j = 0; j < _linearModels[i].size(); ++j)
-            linearModels[i][j] = _linearModels[i][j];
+            linearModels[frame][i][j] = _linearModels[i][j];
+        
+        for(int j = 0; j < _modelMatrices[i].size(); ++j)
+            modelMatrices[frame][i][j] = _modelMatrices[i][j];
     }
-    for(int j = 0; j < _modelMatrices.size(); ++j)
-        modelMatrices[j] = _modelMatrices[j];
-    for(int j = 0; j < _matrixOffsets.size(); ++j)
-        matrixOffsets[j] = _matrixOffsets[j];
-
 }

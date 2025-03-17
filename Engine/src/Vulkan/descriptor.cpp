@@ -21,7 +21,9 @@ int VkRenderer::createDescriptorPool() {
     if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool");
     }
-    poolSizes[1].descriptorCount = (MAX_TEXTURES) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+    poolSizes[0].descriptorCount = (3 + MAX_MATERIALS) * SHADOW_CASCADES * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+    poolSizes[1].descriptorCount = (MAX_TEXTURES) * SHADOW_CASCADES * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+    poolInfo.maxSets = SHADOW_CASCADES * MAX_FRAMES_IN_FLIGHT;  // Only need 1 descriptor set (if you're allocating 1 per frame)
     result = init.disp.createDescriptorPool(&poolInfo, nullptr, &data.descriptorShadowPool); 
     if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool");
@@ -92,41 +94,48 @@ int VkRenderer::createDescriptorLayout() {
     layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutCreateInfo.bindingCount = bindings.size();  // Number of bindings
     layoutCreateInfo.pBindings = bindings.data();
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i){
-        VkResult result = init.disp.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &data.descriptorShadowLayouts[i]);
-        if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to create descriptor set layout!");
+    for(int c = 0; c < SHADOW_CASCADES; ++c) {
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i){
+            VkResult result = init.disp.createDescriptorSetLayout(&layoutCreateInfo, nullptr, &data.descriptorShadowLayouts[c][i]);
+            if (result != VK_SUCCESS) {
+                throw std::runtime_error("failed to create descriptor set layout!");
+            }
         }
-    }
-   
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = data.descriptorShadowPool;
-    allocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT; 
-    allocInfo.pSetLayouts = data.descriptorShadowLayouts;
-    if ( init.disp.allocateDescriptorSets(&allocInfo, data.descriptorShadowSets) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate descriptor sets!");
+       
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = data.descriptorShadowPool;
+        allocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT; 
+        allocInfo.pSetLayouts = data.descriptorShadowLayouts[c];
+        if ( init.disp.allocateDescriptorSets(&allocInfo, data.descriptorShadowSets[c]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
     }
     return 0;
 }
 
+#define CAMERA_BUFFER 0
+#define MODEL_BUFFER 1
+#define LIGHT_BUFFER 2 + SHADOW_CASCADES
+#define MATERIAL_BUFFER 3 + SHADOW_CASCADES
+
 int VkRenderer::updateDescriptorSets() {
     VkDescriptorBufferInfo cameraBufferInfo = {};
-    cameraBufferInfo.buffer = data.uniformBuffers[0].first;
+    cameraBufferInfo.buffer = data.uniformBuffers[CAMERA_BUFFER].first;
     cameraBufferInfo.offset = 0;
     cameraBufferInfo.range = VK_WHOLE_SIZE;
     
     VkDescriptorBufferInfo modelBufferInfo = {};
-    modelBufferInfo.buffer = data.uniformBuffers[1].first;
+    modelBufferInfo.buffer = data.uniformBuffers[MODEL_BUFFER].first;
     modelBufferInfo.offset = 0;
     modelBufferInfo.range = VK_WHOLE_SIZE;
 
     VkDescriptorBufferInfo lightBufferInfo = {};
-    lightBufferInfo.buffer = data.uniformBuffers[2].first;
+    lightBufferInfo.buffer = data.uniformBuffers[LIGHT_BUFFER].first;
     lightBufferInfo.offset = 0;
     lightBufferInfo.range = VK_WHOLE_SIZE;
 
     VkDescriptorBufferInfo materialBufferInfo = {};
-    materialBufferInfo.buffer = data.uniformBuffers[3].first;
+    materialBufferInfo.buffer = data.uniformBuffers[MATERIAL_BUFFER].first;
     materialBufferInfo.offset = 0;
     materialBufferInfo.range = VK_WHOLE_SIZE;
 
@@ -184,18 +193,14 @@ int VkRenderer::updateDescriptorSets() {
 }
 
 int VkRenderer::updateShadowDescriptorSets() {
-    VkDescriptorBufferInfo modelBufferInfo = {};
-    modelBufferInfo.buffer = data.uniformBuffers[1].first;
-    modelBufferInfo.offset = 0;
-    modelBufferInfo.range = VK_WHOLE_SIZE;
 
     VkDescriptorBufferInfo lightBufferInfo = {};
-    lightBufferInfo.buffer = data.uniformBuffers[2].first;
+    lightBufferInfo.buffer = data.uniformBuffers[LIGHT_BUFFER].first;
     lightBufferInfo.offset = 0;
     lightBufferInfo.range = VK_WHOLE_SIZE;
 
     VkDescriptorBufferInfo materialBufferInfo = {};
-    materialBufferInfo.buffer = data.uniformBuffers[3].first;
+    materialBufferInfo.buffer = data.uniformBuffers[MATERIAL_BUFFER].first;
     materialBufferInfo.offset = 0;
     materialBufferInfo.range = VK_WHOLE_SIZE;
     
@@ -212,35 +217,41 @@ int VkRenderer::updateShadowDescriptorSets() {
         textureInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
     
+    for(int c = 0; c < SHADOW_CASCADES; ++c) {
+        VkDescriptorBufferInfo modelBufferInfo = {};
+        modelBufferInfo.buffer = data.uniformBuffers[MODEL_BUFFER + c + 1].first;
+        modelBufferInfo.offset = 0;
+        modelBufferInfo.range = VK_WHOLE_SIZE;
 
-    /*
-    typedef struct VkWriteDescriptorSet {
-        VkStructureType                  sType;
-        const void*                      pNext;
-        VkDescriptorSet                  dstSet;
-        uint32_t                         dstBinding;
-        uint32_t                         dstArrayElement;
-        uint32_t                         descriptorCount;
-        VkDescriptorType                 descriptorType;
-        const VkDescriptorImageInfo*     pImageInfo;
-        const VkDescriptorBufferInfo*    pBufferInfo;
-        const VkBufferView*              pTexelBufferView;
-    } VkWriteDescriptorSet;*/
-    std::vector<VkWriteDescriptorSet> writeDescriptorSets = {
-        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
-        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightBufferInfo, nullptr },
-        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[data.currentFrame], 4, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &materialBufferInfo, nullptr },
-        //--- Textures ---//
-            };
-    if(textureInfos.size() > 0) {
-        writeDescriptorSets.push_back({ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 
-            nullptr, data.descriptorShadowSets[data.currentFrame],
-            2, 0, (u32)textureInfos.size(),
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            textureInfos.data(), nullptr, nullptr 
-        });
+        /*
+        typedef struct VkWriteDescriptorSet {
+            VkStructureType                  sType;
+            const void*                      pNext;
+            VkDescriptorSet                  dstSet;
+            uint32_t                         dstBinding;
+            uint32_t                         dstArrayElement;
+            uint32_t                         descriptorCount;
+            VkDescriptorType                 descriptorType;
+            const VkDescriptorImageInfo*     pImageInfo;
+            const VkDescriptorBufferInfo*    pBufferInfo;
+            const VkBufferView*              pTexelBufferView;
+        } VkWriteDescriptorSet;*/
+        std::vector<VkWriteDescriptorSet> writeDescriptorSets = {
+            { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[c][data.currentFrame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
+            { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[c][data.currentFrame], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightBufferInfo, nullptr },
+            { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorShadowSets[c][data.currentFrame], 4, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &materialBufferInfo, nullptr },
+            //--- Textures ---//
+                };
+        if(textureInfos.size() > 0) {
+            writeDescriptorSets.push_back({ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 
+                nullptr, data.descriptorShadowSets[c][data.currentFrame],
+                2, 0, (u32)textureInfos.size(),
+                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                textureInfos.data(), nullptr, nullptr 
+            });
+        }
+
+        init.disp.updateDescriptorSets(writeDescriptorSets.size(),writeDescriptorSets.data(), 0,nullptr);
     }
-
-    init.disp.updateDescriptorSets(writeDescriptorSets.size(),writeDescriptorSets.data(), 0,nullptr);
     return 0;
 }
