@@ -262,7 +262,7 @@ void ImguiModule::renderInstance(){
     const char * name = instance.name.c_str();
     ImGui::Text("Name: %s", name);
     ImGui::SameLine();
-    bool close = ImGui::Button("X");
+    bool close = ImGui::Button("✘");
     auto transformPtr = engine.scene.registry.getComponent<TransformComponent>(instance.entity);
     float entryHeight = ImGui::GetFrameHeightWithSpacing() * 1.2f;
     if(transformPtr) { 
@@ -290,6 +290,12 @@ void ImguiModule::renderInstance(){
         if(!data) continue;
         ImGui::BeginChild(c.name.c_str(), ImVec2(0,entryHeight * (c.data.size() + 1)),true);
         ImGui::Text("%s", c.name.c_str());
+        ImGui::SameLine();
+        if(ImGui::Button("✘")) {
+            ECS::removeComponentByID(instance.entity, c.id);
+            ImGui::EndChild();
+            continue;
+        };
         constexpr auto VEC3 =  UIComponent::ComponentData::TYPE::VEC3;
         constexpr auto FLOAT =  UIComponent::ComponentData::TYPE::FLOAT;
         for(auto & entry : c.data) {

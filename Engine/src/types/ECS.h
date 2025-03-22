@@ -22,8 +22,11 @@ struct ECS {
         static void removeComponent(EntityID entity);
     template <typename T>
         static T* getComponent(EntityID entity);
+
     static void* getComponentByID(EntityID entity, TypeID typeIdx);
     static void addComponentByID(EntityID entity, TypeID typeIdx, size_t size);
+    static void removeComponentByID(EntityID entity, TypeID typeIdx);
+
     template <typename T>
         static size_t getTotalTypeSize();
     template <typename T>
@@ -111,6 +114,7 @@ void ECS::removeComponent(EntityID entity) {
 }
 
 
+
 template <typename T>
 T* ECS::getComponent(EntityID entity) {
     TypeID typeIdx = getTypeIndex<T>(); 
@@ -141,6 +145,18 @@ void ECS_BENCHMARK();
 
 
 #ifdef ECS_IMPLEMENTATION
+
+void ECS::removeComponentByID(EntityID entity, TypeID typeIdx) {
+    if(entity >= _entityCount) return;
+    if(!hasComponent(entity, typeIdx)) return;
+
+    auto & data = componentPools[typeIdx].data;
+    auto & unused = componentPools[typeIdx].unusedSpace;
+    auto offset = entityMap[entity].offsets[typeIdx];
+    unused.push_back(offset);
+    entityMap[entity].offsets[typeIdx] = DOES_NOT_HAVE_COMPONENT;
+}
+
 void* ECS::getComponentByID(EntityID entity, TypeID typeIdx) {
     if(entity >= _entityCount) return nullptr;
     if(!hasComponent(entity, typeIdx)) return nullptr;
