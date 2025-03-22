@@ -37,11 +37,10 @@ FetchContent_Declare(
     GIT_TAG master
 )
 
-# Fetch TinyObjLoader
 FetchContent_Declare(
-  tinyobjloader
-  GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
-  GIT_TAG v2.0.0rc13
+    assimp
+    GIT_REPOSITORY https://github.com/assimp/assimp.git
+    GIT_TAG v5.3.1 # Change this to the latest stable version if needed
 )
 
 FetchContent_MakeAvailable(
@@ -50,7 +49,7 @@ FetchContent_MakeAvailable(
     glm
     imgui
     imguizmo
-    tinyobjloader
+    assimp
 )
 
 
@@ -103,7 +102,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap
     glm
     imgui
     imguizmo
-    tinyobjloader
+    assimp
     )
 # Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
