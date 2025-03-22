@@ -94,6 +94,7 @@ include_directories(
     ${GLFW_INCLUDE_DIRS}
     ${imgui_SOURCE_DIR}
     ${imguizmo_SOURCE_DIR}
+    "3rdParty/includes"
 )
 
 # Link dependencies for the engine
