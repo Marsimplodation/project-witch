@@ -164,6 +164,7 @@ void VkRenderer::updateIndirectDrawBuffer(int renderingIndex) {
         modelIndex += model.instanceCount;
     }
 
+    if(drawCommands.size() == 0) return;
     copyDataToBuffer(data.indirectDrawBufferMemorys[renderingIndex][data.currentImgIndex], drawCommands.data(), sizeof(VkDrawIndexedIndirectCommand) * drawCommands.size());
     data.indirectDrawCounts[renderingIndex][data.currentImgIndex] = drawCommands.size();
 }
