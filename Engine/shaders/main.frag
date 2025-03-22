@@ -135,7 +135,6 @@ void main() {
 
     // Add cel-shaded diffuse lighting for each light
     float cosDir = -dot(normal, light.direction.xyz);
-    cosDir = abs(cosDir);
 
 
 

@@ -187,33 +187,13 @@ inline bool isAABBInFrustum(const AABB& aabb, const Plane planes[6]) {
     return true; // AABB is inside or intersecting the frustum
 }
 
+
 void Scene::updateModels() {
     SoulShard & engine = *((SoulShard*)enginePtr);
     _bounds = AABB{
         .min = glm::vec3(FLT_MAX),
         .max = glm::vec3(-FLT_MAX),
     };
-
-    //---- update instance AABBS ----//
-    for(auto & info : geometryList) {
-        u32 instanceCount = 0;
-        for(auto & idx : info.instances) {
-            auto & instance = instances[idx];
-            auto transformPtr = registry.getComponent<TransformComponent>(instance.entity);
-            auto aabb = registry.getComponent<AABB>(instance.entity);
-            if(!transformPtr) continue;
-            if(!aabb) continue;
-            auto & transform = *transformPtr;
-            auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
-            auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
-            _bounds.min = glm::min(_bounds.min, min);
-            _bounds.max = glm::max(_bounds.max, max);
-            aabb->min = min;
-            aabb->max = max;
-        }
-    }
-
-    //-------- FRUSTUM CULLING -------//
     for(int i = 0; i < 1+SHADOW_CASCADES; ++i){
         _linearModels[i].clear();
         _modelMatrices[i].clear();
@@ -223,30 +203,49 @@ void Scene::updateModels() {
     auto proj = engine.renderer.data.editorMode ? engine.editorCamera.projection : engine.mainCamera.projection;
     proj[1][1] *= -1;
     auto view = engine.renderer.data.editorMode ? engine.editorCamera.view : engine.mainCamera.view;
+
     std::array<glm::mat4, SHADOW_CASCADES + 1> viewsProjs{
         proj * view,
     };
-    for(int c = 0; c < SHADOW_CASCADES; ++c) viewsProjs[c+1] = sceneLight.projections[c]*sceneLight.views[c];
-    Plane planes[6];
-    for(int c = 0; c < SHADOW_CASCADES + 1; ++c){
-        extractFrustumPlanes(planes, viewsProjs[c]);
-        for(auto & info : geometryList) {
-            u32 instanceCount = 0;
-            for(auto & idx : info.instances) {
-                auto & instance = instances[idx];
-                auto transformPtr = registry.getComponent<TransformComponent>(instance.entity);
-                auto aabb = registry.getComponent<AABB>(instance.entity);
-                if(!transformPtr) continue;
-                if(!aabb) continue;
-                auto & transform = *transformPtr;
-                if(frustumCulling && !isAABBInFrustum(*aabb, planes)) continue;
+    for(int c = 0; c < SHADOW_CASCADES; ++c)
+        viewsProjs[c+1] = sceneLight.projections[c]*sceneLight.views[c];
+
+    Plane planes[SHADOW_CASCADES + 1][6];
+    for(int c = 0; c < SHADOW_CASCADES + 1; ++c)
+        extractFrustumPlanes(planes[c], viewsProjs[c]);
+    for(auto & info : geometryList) {
+        u32 instanceCount[SHADOW_CASCADES + 1];
+        for(int c = 0; c < SHADOW_CASCADES + 1; ++c){
+            instanceCount[c] = 0;
+        }
+        for(auto & idx : info.instances) {
+            auto & instance = instances[idx];
+            auto transformPtr = registry.getComponent<TransformComponent>(instance.entity);
+            auto aabb = registry.getComponent<AABB>(instance.entity);
+            if(!transformPtr) continue;
+            if(!aabb) continue;
+            auto & transform = *transformPtr;
+            //---- update AABB / Update Scene Bounds ----//
+            auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
+            auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
+            _bounds.min = glm::min(_bounds.min, min);
+            _bounds.max = glm::max(_bounds.max, max);
+            aabb->min = min;
+            aabb->max = max;
+
+            //---- frustum culling ----//
+            for(int c = 0; c < SHADOW_CASCADES + 1; ++c){
+                if(frustumCulling && !isAABBInFrustum(*aabb, planes[c])) continue;
                 _modelMatrices[c].push_back(transform.mat);
-                instanceCount++;
+                instanceCount[c]++;
             }
+        }
+        //--- Push Models for rendering ---//
+        for(int c = 0; c < SHADOW_CASCADES + 1; ++c){
             _linearModels[c].push_back({
                 .indexOffset=info.indexOffset,
                 .triangleCount=info.triangleCount,
-                .instanceCount=instanceCount});
+                .instanceCount=instanceCount[c]});
         }
     }
 }
