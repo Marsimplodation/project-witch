@@ -250,6 +250,67 @@ void RadialLightSlider(const char* label, float& outX, float& outY, float& outZ)
 
 Instance * selectedInstance = 0x0;
 std::vector<ImTextureID> texturesPerFrame[MAX_FRAMES_IN_FLIGHT];
+
+void ImguiModule::renderInstance(){
+    SoulShard & engine = *((SoulShard*)enginePtr);
+    ImGui::Begin("Selected");
+    if(!selectedInstance) {
+        ImGui::End();
+        return;
+    }
+    auto & instance = *selectedInstance;
+    const char * name = instance.name.c_str();
+    ImGui::Text("Name: %s", name);
+    ImGui::SameLine();
+    bool close = ImGui::Button("X");
+    auto transformPtr = engine.scene.registry.getComponent<TransformComponent>(instance.entity);
+    float entryHeight = ImGui::GetFrameHeightWithSpacing() * 1.2f;
+    if(transformPtr) { 
+        glm::mat4 & transform = transformPtr->mat; 
+        engine.editorCamera.projection[1][1] *= -1;
+        ImGuizmo::Manipulate(glm::value_ptr(engine.editorCamera.view),
+                         glm::value_ptr(engine.editorCamera.projection),
+                         ImGuizmo::OPERATION::UNIVERSAL,
+                         ImGuizmo::WORLD,
+                         glm::value_ptr(transform));
+        engine.editorCamera.projection[1][1] *= -1;
+        ImGui::BeginChild("Transform", ImVec2(0,entryHeight * 4),true);
+        ImGui::Text("Transform");
+        float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+        ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), matrixTranslation, matrixRotation, matrixScale);
+        ImGui::DragFloat3("Translation", matrixTranslation);
+        ImGui::DragFloat3("Rotation", matrixRotation);
+        ImGui::DragFloat3("Scale", matrixScale);
+        ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, glm::value_ptr(transform));
+        ImGui::EndChild();
+    }
+
+    for(auto & c : registeredComponents) {
+        auto data = ECS::getComponentByID(instance.entity, c.id);
+        if(!data) continue;
+        ImGui::BeginChild(c.name.c_str(), ImVec2(0,entryHeight * (c.data.size() + 1)),true);
+        ImGui::Text("%s", c.name.c_str());
+        constexpr auto VEC3 =  UIComponent::ComponentData::TYPE::VEC3;
+        constexpr auto FLOAT =  UIComponent::ComponentData::TYPE::FLOAT;
+        for(auto & entry : c.data) {
+            switch (entry.type) {
+                case VEC3:
+                    ImGui::DragFloat3(entry.name.c_str(), ((float*)data + entry.offset));
+                    break;
+                case FLOAT:
+                    ImGui::DragFloat(entry.name.c_str(), ((float*)data + entry.offset));
+                    break;
+                default:
+                    break;
+            }
+        }
+        ImGui::EndChild();
+    }
+
+    if(close) selectedInstance = 0x0;
+    ImGui::End();
+}
+
 void ImguiModule::update(void * initPtr, void * dataPtr) {
     VkRenderer::Init & init = * (VkRenderer::Init*)initPtr;
     VkRenderer::RenderData & data = *(VkRenderer::RenderData*) dataPtr;
@@ -336,38 +397,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::DragFloat4("Debug", (float*)&engine.scene.sceneLight.debugFactors);
         ImGui::Checkbox("Cast Shadows", &engine.scene.sceneLight.castShadows);
         ImGui::End();
-        ImGui::Begin("Selected");
-        if(selectedInstance) {
-            auto & instance = *selectedInstance;
-            const char * name = instance.name.c_str();
-            ImGui::Text("Name: %s", name);
-            ImGui::SameLine();
-            bool close = ImGui::Button("X");
-            auto transformPtr = engine.scene.registry.getComponent<TransformComponent>(instance.entity);
-            if(transformPtr) { 
-                ImGui::BeginChild("Transform Component");
-                glm::mat4 & transform = transformPtr->mat; 
-                engine.editorCamera.projection[1][1] *= -1;
-                ImGuizmo::Manipulate(glm::value_ptr(engine.editorCamera.view),
-                                 glm::value_ptr(engine.editorCamera.projection),
-                                 ImGuizmo::OPERATION::UNIVERSAL,
-                                 ImGuizmo::WORLD,
-                                 glm::value_ptr(transform));
-                engine.editorCamera.projection[1][1] *= -1;
-                glm::vec3 newPosition, newRotation, newScale;
-                ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform),
-                                                      glm::value_ptr(newPosition),
-                                                      glm::value_ptr(newRotation),
-                                                      glm::value_ptr(newScale));
-                ImGui::DragFloat3("position", (float*)&newPosition, 0.1f);
-                ImGui::DragFloat3("rotation", (float*)&newRotation, 0.1f);
-                ImGui::DragFloat3("scale", (float*)&newScale, 0.1f);
-                ImGui::EndChild();
-            }
-            if(close) selectedInstance = 0x0;
-        }
-        ImGui::End();
-        
+        renderInstance();
         /*ImGui::Begin("Node Editor");
         editor.draw();
         ImGui::End();*/

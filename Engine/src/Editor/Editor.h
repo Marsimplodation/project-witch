@@ -27,6 +27,20 @@ struct ComponentSerialize {
     std::vector<ImGuiSerialize> fields;
 };
 
+struct UIComponent {
+    TypeID id;
+    struct ComponentData {
+        enum TYPE {
+            VEC3,
+            FLOAT
+        } type;
+        u32 offset;
+        std::string name;
+    };
+    std::string name;
+    std::vector<ComponentData> data;
+};
+
 class ImguiModule {
     public:
     	void init(void * initPtr, void * dataPtr);
@@ -37,8 +51,11 @@ class ImguiModule {
         ImTextureID sceneViews[MAX_FRAMES_IN_FLIGHT];
         ImVec2 previewSize = {128, 128};
         void* enginePtr;
+
+        std::vector<UIComponent> registeredComponents;
     private:
         VkDescriptorPool imguiPool;
         void renderViewport(void * initPtr, void * dataPtr);
+        void renderInstance();
 };
 #endif // !IMGUI_MODULE_H

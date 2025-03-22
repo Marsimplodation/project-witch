@@ -22,6 +22,7 @@ struct ECS {
         static void removeComponent(EntityID entity);
     template <typename T>
         static T* getComponent(EntityID entity);
+    static void* getComponentByID(EntityID entity, TypeID typeIdx);
     template <typename T>
         static TypeID getTypeIndex();
     template <typename T>
@@ -132,6 +133,18 @@ void ECS_BENCHMARK();
 
 
 #ifdef ECS_IMPLEMENTATION
+void* ECS::getComponentByID(EntityID entity, TypeID typeIdx) {
+    if(entity >= _entityCount) return nullptr;
+    if(!hasComponent(entity, typeIdx)) return nullptr;
+
+    auto & pool = componentPools[typeIdx];
+    auto & data = pool.data;
+
+    unsigned int offset = entityMap[entity].offsets[typeIdx] - 1;
+    // Cast bytes back to struct
+    return (&data[offset]); 
+}
+
 EntityID ECS::newEntity() {
     if(unusedEntities.size() > 0) {
         auto id = unusedEntities.back();

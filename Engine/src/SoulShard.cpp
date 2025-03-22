@@ -36,10 +36,13 @@ int SoulShard::startup() {
     
     if (0 != renderer.createCommandBuffers()) return -1;
     if (0 != renderer.createSyncObjects()) return -1;
+    renderer.data.gui = ImguiModule();
+    renderer.data.gui.init(&renderer.init, &renderer.data);
+    renderer.data.gui.enginePtr = this;
     inputHandler.init(renderer.init.window);
     renderer.enginePtr = this;
-    scene.initScene();
     scene.enginePtr = this;
+    scene.initScene();
     renderer.data.editorMode = true;
     renderer.loadTexture("./textures/dummy.png");
     return 0;
@@ -58,9 +61,6 @@ int SoulShard::run() {
     if (0 != renderer.createGeometryBuffers()) return -1;
     if (0 != renderer.createUniformBuffers()) return -1;
     auto lastTime = glfwGetTime(); 
-    renderer.data.gui = ImguiModule();
-    renderer.data.gui.init(&renderer.init, &renderer.data);
-    renderer.data.gui.enginePtr = this;
     scene.updateModels();
     renderer.data.currentFrame = MAX_FRAMES_IN_FLIGHT - 1;
     scene.pushUpdatedModels();

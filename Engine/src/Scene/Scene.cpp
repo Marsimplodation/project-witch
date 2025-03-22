@@ -13,9 +13,29 @@
 #include <string>
 
 void Scene::initScene(){
+    SoulShard & engine = *((SoulShard*)enginePtr);
+    auto & gui = engine.renderer.data.gui;
     registry = ECS();
     registry.registerType<TransformComponent>();
     registry.registerType<AABB>();
+    UIComponent AABBUI {
+        .id = ECS::getTypeIndex<AABB>(),
+        .name = "AABB",
+        .data =  {
+            UIComponent::ComponentData {
+                .type = UIComponent::ComponentData::TYPE::VEC3,
+                .offset = 0,
+                .name = "Min",
+            },
+            UIComponent::ComponentData {
+                .type = UIComponent::ComponentData::TYPE::VEC3,
+                .offset = sizeof(float),
+                .name = "Max",
+            }
+        },
+
+    };
+    gui.registeredComponents.push_back(AABBUI);
 }
 
 std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const glm::mat4& view, float nearPlane, float farPlane) {

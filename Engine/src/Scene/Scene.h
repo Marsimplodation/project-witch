@@ -33,7 +33,6 @@ struct Scene {
     std::vector<glm::mat4> modelMatrices[MAX_FRAMES_IN_FLIGHT][1 + SHADOW_CASCADES];
     std::vector<Instance> instances;
     std::vector<Model> linearModels[MAX_FRAMES_IN_FLIGHT][1 + SHADOW_CASCADES];
-    std::vector<PointLight> pointLights;
     ECS registry;
     bool frustumCulling = true;
 
