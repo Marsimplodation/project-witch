@@ -58,6 +58,7 @@ void SoulShard::loadGeometry(std::string modelPath) {
    
     u32 count = 0;
     for (u32 i = 0; i < scene->mNumMeshes; i++) {
+        u32 vSize = vertices.size();
         aiMesh* mesh = scene->mMeshes[i];
         glm::vec3 min = glm::vec3(INFINITY);
         glm::vec3 max = glm::vec3(-INFINITY);
@@ -77,7 +78,12 @@ void SoulShard::loadGeometry(std::string modelPath) {
                 uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
                 vertices.push_back(vertex);
             }
-            indices.push_back(uniqueVertices[vertex]);
+        }
+        for (u32 j = 0; j < mesh->mNumFaces; j++) {
+            aiFace face = mesh->mFaces[j];
+            for (u32 k = 0; k < face.mNumIndices; k++) {
+                indices.push_back(uniqueVertices[vertices[vSize + face.mIndices[k]]]);
+            }
         }
         u32 endIdx = indices.size();
         GeometryInfo m{
