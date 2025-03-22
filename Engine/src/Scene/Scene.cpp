@@ -247,12 +247,29 @@ void Scene::updateModels() {
             if(!aabb) continue;
             auto & transform = *transformPtr;
             //---- update AABB / Update Scene Bounds ----//
-            auto min = glm::vec3(transform.mat * glm::vec4(info.aabb.min, 1.0f));
-            auto max = glm::vec3(transform.mat * glm::vec4(info.aabb.max, 1.0f));
-            _bounds.min = glm::min(_bounds.min, min);
-            _bounds.max = glm::max(_bounds.max, max);
-            aabb->min = min;
-            aabb->max = max;
+            glm::vec3 corners[8] = {
+                {info.aabb.min.x, info.aabb.min.y, info.aabb.min.z},
+                {info.aabb.max.x, info.aabb.min.y, info.aabb.min.z},
+                {info.aabb.min.x, info.aabb.max.y, info.aabb.min.z},
+                {info.aabb.max.x, info.aabb.max.y, info.aabb.min.z},
+                {info.aabb.min.x, info.aabb.min.y, info.aabb.max.z},
+                {info.aabb.max.x, info.aabb.min.y, info.aabb.max.z},
+                {info.aabb.min.x, info.aabb.max.y, info.aabb.max.z},
+                {info.aabb.max.x, info.aabb.max.y, info.aabb.max.z}
+            };
+
+            glm::vec3 newMin(FLT_MAX), newMax(-FLT_MAX);
+
+            for (int i = 0; i < 8; ++i) {
+                glm::vec3 transformed = glm::vec3(transform.mat * glm::vec4(corners[i], 1.0f));
+                newMin = glm::min(newMin, transformed);
+                newMax = glm::max(newMax, transformed);
+            }
+
+            aabb->min = newMin;
+            aabb->max = newMax;
+            _bounds.min = glm::min(_bounds.min, aabb->min);
+            _bounds.max = glm::max(_bounds.max, aabb->max);
 
             //---- frustum culling ----//
             for(int c = 0; c < SHADOW_CASCADES + 1; ++c){

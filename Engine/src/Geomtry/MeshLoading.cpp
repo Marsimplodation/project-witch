@@ -8,6 +8,46 @@
 #include <cmath>
 #include <string>
 #include <unordered_map>
+
+glm::mat4 ConvertMatrixToGLM(const aiMatrix4x4& from) {
+    glm::mat4 to;
+    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
+    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
+    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
+    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
+    return to;
+}
+
+glm::mat4 GetMeshTransformGLM(const aiScene* scene, aiMesh* mesh) {
+    aiNode* node = nullptr;
+
+    // Find the node that contains this mesh
+    for (u32 i = 0; i < scene->mRootNode->mNumChildren; i++) {
+        aiNode* child = scene->mRootNode->mChildren[i];
+        for (u32 j = 0; j < child->mNumMeshes; j++) {
+            if (scene->mMeshes[child->mMeshes[j]] == mesh) {
+                node = child;
+                break;
+            }
+        }
+        if (node) break;
+    }
+
+    // Accumulate transformations up the hierarchy
+    aiMatrix4x4 transform;
+    if (node) {
+        transform = node->mTransformation;
+        aiNode* parent = node->mParent;
+        while (parent) {
+            transform = parent->mTransformation * transform;
+            parent = parent->mParent;
+        }
+    }
+
+    return ConvertMatrixToGLM(transform);
+}
+
+
 void SoulShard::loadGeometry(std::string modelPath) {    
     Assimp::Importer importer;
     const aiScene * scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_FlipUVs);
@@ -102,5 +142,8 @@ void SoulShard::loadGeometry(std::string modelPath) {
         this->scene.geometry[name] = this->scene.geometryList.size();
         this->scene.geometryList.push_back(m);
         auto & instance = this->scene.instantiateModel(name, name);
+        auto tPtr = ECS::getComponent<TransformComponent>(instance.entity);
+        if(!tPtr) continue; 
+        tPtr->mat = GetMeshTransformGLM(scene, mesh);
     }
 }
