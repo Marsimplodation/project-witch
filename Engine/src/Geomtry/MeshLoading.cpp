@@ -4,6 +4,7 @@
 #include "assimp/scene.h"
 #include "assimp/types.h"
 #include "glm/fwd.hpp"
+#include "types/types.h"
 #include <cmath>
 #include <string>
 #include <unordered_map>
@@ -57,13 +58,17 @@ void SoulShard::loadGeometry(std::string modelPath) {
     renderer.data.usedMaterials = materialIdx;
    
     u32 count = 0;
+    std::vector<Vertex> tmpVertices;
     for (u32 i = 0; i < scene->mNumMeshes; i++) {
+        tmpVertices.clear();
+        auto & vertices = gpuGeometry.vertices;
+        auto & indices = gpuGeometry.indices;
+        u32 startIdx = indices.size();
+
         aiMesh* mesh = scene->mMeshes[i];
-        Vertex tmpVertices[mesh->mNumVertices];
         glm::vec3 min = glm::vec3(INFINITY);
         glm::vec3 max = glm::vec3(-INFINITY);
         u32 faceIndex = 0;
-        u32 startIdx = indices.size();
         for (u32 j = 0; j < mesh->mNumVertices; j++) {
             Vertex vertex{};
             vertex.position = glm::vec3(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z);
@@ -78,7 +83,7 @@ void SoulShard::loadGeometry(std::string modelPath) {
                 uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
                 vertices.push_back(vertex);
             }
-            tmpVertices[j] = vertex;
+            tmpVertices.push_back(vertex);
         }
         for (u32 j = 0; j < mesh->mNumFaces; j++) {
             aiFace face = mesh->mFaces[j];
