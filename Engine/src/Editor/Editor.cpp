@@ -299,12 +299,13 @@ void ImguiModule::renderInstance(){
         constexpr auto VEC3 =  UIComponent::ComponentData::TYPE::VEC3;
         constexpr auto FLOAT =  UIComponent::ComponentData::TYPE::FLOAT;
         for(auto & entry : c.data) {
+            auto ptr = (u8*)data + entry.offset; 
             switch (entry.type) {
                 case VEC3:
-                    ImGui::DragFloat3(entry.name.c_str(), ((float*)data + entry.offset));
+                    ImGui::DragFloat3(entry.name.c_str(), (float*)ptr);
                     break;
                 case FLOAT:
-                    ImGui::DragFloat(entry.name.c_str(), ((float*)data + entry.offset));
+                    ImGui::DragFloat(entry.name.c_str(), (float*)ptr);
                     break;
                 default:
                     break;

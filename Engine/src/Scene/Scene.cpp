@@ -30,7 +30,7 @@ void Scene::initScene(){
             },
             UIComponent::ComponentData {
                 .type = UIComponent::ComponentData::TYPE::VEC3,
-                .offset = sizeof(float),
+                .offset = sizeof(glm::vec3),
                 .name = "Max",
             }
         },
