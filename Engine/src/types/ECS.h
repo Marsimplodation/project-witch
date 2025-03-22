@@ -23,6 +23,9 @@ struct ECS {
     template <typename T>
         static T* getComponent(EntityID entity);
     static void* getComponentByID(EntityID entity, TypeID typeIdx);
+    static void addComponentByID(EntityID entity, TypeID typeIdx, size_t size);
+    template <typename T>
+        static size_t getTotalTypeSize();
     template <typename T>
         static TypeID getTypeIndex();
     template <typename T>
@@ -65,6 +68,13 @@ const TypeID ECS::ECSType<T>::id = []{
 inline bool ECS::hasComponent(EntityID entity, TypeID typeIdx) {
     return entityMap[entity].offsets[typeIdx] != DOES_NOT_HAVE_COMPONENT;
 }
+template <typename T>
+size_t ECS::getTotalTypeSize() {
+    auto mod = sizeof(T) % alignof(T);
+    auto padding = (mod != 0) ? alignof(T) : 0;
+    auto paddedSize = (sizeof(T) - mod) + padding;
+    return paddedSize;
+}
 
 template <typename T>
 void ECS::addComponent(EntityID entity, const T& component) {
@@ -76,9 +86,7 @@ void ECS::addComponent(EntityID entity, const T& component) {
     size_t offset = 0;
     if(unused.size() == 0) {
         offset = data.size();
-        auto mod = sizeof(T) % alignof(T);
-        auto padding = (mod != 0) ? alignof(T) : 0;
-        auto paddedSize = (sizeof(T) - mod) + padding;
+        auto paddedSize = getTotalTypeSize<T>();
         data.resize(offset + paddedSize);
     } else {
         offset = unused.back();
@@ -143,6 +151,24 @@ void* ECS::getComponentByID(EntityID entity, TypeID typeIdx) {
     unsigned int offset = entityMap[entity].offsets[typeIdx] - 1;
     // Cast bytes back to struct
     return (&data[offset]); 
+}
+
+void ECS::addComponentByID(EntityID entity, TypeID typeIdx, size_t totalSize) {
+    if(entity >= _entityCount) return;
+    auto & data = componentPools[typeIdx].data;
+    auto & unused = componentPools[typeIdx].unusedSpace;
+
+    size_t offset = 0;
+    if(unused.size() == 0) {
+        offset = data.size();
+        data.resize(offset + totalSize);
+    } else {
+        offset = unused.back();
+        unused.pop_back();
+    }
+
+    std::memset(&data[offset], 0, totalSize);
+    entityMap[entity].offsets[typeIdx] = offset + 1;
 }
 
 EntityID ECS::newEntity() {

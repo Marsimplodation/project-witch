@@ -1,6 +1,7 @@
 #ifndef EDITOR_MODULE_H
 #define EDITOR_MODULE_H 
 #include "imgui.h"
+#include <cstddef>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "../types/types.h"
@@ -29,6 +30,7 @@ struct ComponentSerialize {
 
 struct UIComponent {
     TypeID id;
+    size_t totalSize;
     struct ComponentData {
         enum TYPE {
             VEC3,

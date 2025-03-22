@@ -307,6 +307,25 @@ void ImguiModule::renderInstance(){
         ImGui::EndChild();
     }
 
+    static bool closePopup = false;
+    if (ImGui::Button("New Component")) {
+        closePopup = false;
+        ImGui::OpenPopup("Select Component");
+    }
+    if (!closePopup && ImGui::BeginPopupModal("Select Component")) {
+        closePopup = ImGui::Button("Cancel");
+        for(auto & c : registeredComponents) {
+            auto data = ECS::getComponentByID(instance.entity, c.id);
+            if(data) continue;
+            if(ImGui::Button(c.name.c_str())) {
+                closePopup = true;
+                ECS::addComponentByID(instance.entity, c.id, c.totalSize);
+            }
+        }
+        // <...>
+        ImGui::EndPopup();
+    }
+
     if(close) selectedInstance = 0x0;
     ImGui::End();
 }

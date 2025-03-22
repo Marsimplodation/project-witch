@@ -61,30 +61,44 @@ void updateCamera(float deltaTime) {
 
 float elapsedTime = 0.0f;
 u32 spawned = 0;
-void spawnModels(float deltaTime) {
-    if(spawned >= 2000) return;
-    spawned++;
-    glm::vec3 pos = {
-        (float)std::rand()/RAND_MAX * 20.0f,
-        (float)std::rand()/RAND_MAX * 20.0f,
-        (float)std::rand()/RAND_MAX * 20.0f,
-    };
-    auto & cube =engine.scene.instantiateModel("Cube", "cube 1"); 
-
-    auto * tpr = engine.scene.registry.getComponent<TransformComponent>(cube.entity);
-    if(tpr) tpr->mat = glm::translate(tpr->mat, pos);
+struct Test {float a;};
+void translateModels(float deltaTime) {
+    for(auto & instance:engine.scene.instances) {
+        auto * tpr = engine.scene.registry.getComponent<TransformComponent>(instance.entity);
+        auto * testpr = engine.scene.registry.getComponent<Test>(instance.entity);
+        if(!tpr || !testpr) continue;
+        tpr->mat = glm::translate(tpr->mat, glm::vec3(0,testpr->a * deltaTime, 0));
+    }
 };
 
 
 int main (int argc, char *argv[]) {
     //ECS_BENCHMARK();
-
     engine.startup();
+
+    auto & gui = engine.renderer.data.gui;
+    ECS::registerType<Test>();
+    UIComponent TestUI {
+        .id = ECS::getTypeIndex<Test>(),
+        .totalSize = ECS::getTotalTypeSize<Test>(),
+        .name = "Test",
+        .data =  {
+            UIComponent::ComponentData {
+                .type = UIComponent::ComponentData::TYPE::FLOAT,
+                .offset = 0,
+                .name = "a",
+            },
+        },
+
+    };
+    gui.registeredComponents.push_back(TestUI);
+
+
     engine.loadGeometry("../Game/Assets/Sponza/sponza.obj");
-    //engine.loadGeometry("../Game/Assets/test.obj");
+    //engine.loadGeometry("../Game/Assets/cube.obj");
     //engine.loadGeometry("../Game/Assets/cube.obj");
     engine.registerSystem(updateCamera, "Game Camera");
-    //engine.registerSystem(spawnModels, "FPS");
+    engine.registerSystem(translateModels, "Translate Models");
 
     engine.run();
 }

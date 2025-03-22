@@ -20,6 +20,7 @@ void Scene::initScene(){
     registry.registerType<AABB>();
     UIComponent AABBUI {
         .id = ECS::getTypeIndex<AABB>(),
+        .totalSize = ECS::getTotalTypeSize<AABB>(),
         .name = "AABB",
         .data =  {
             UIComponent::ComponentData {
