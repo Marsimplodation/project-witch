@@ -3,6 +3,7 @@
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
 #include "assimp/types.h"
+#include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 #include "types/types.h"
 #include <cmath>
@@ -99,6 +100,7 @@ void SoulShard::loadGeometry(std::string modelPath) {
    
     u32 count = 0;
     std::vector<Vertex> tmpVertices;
+    bool objFile =  modelPath.find(".obj") != std::string::npos;
     for (u32 i = 0; i < scene->mNumMeshes; i++) {
         tmpVertices.clear();
         auto & vertices = gpuGeometry.vertices;
@@ -106,18 +108,31 @@ void SoulShard::loadGeometry(std::string modelPath) {
         u32 startIdx = indices.size();
 
         aiMesh* mesh = scene->mMeshes[i];
-        glm::vec3 min = glm::vec3(INFINITY);
-        glm::vec3 max = glm::vec3(-INFINITY);
         u32 faceIndex = 0;
+        auto min = glm::vec3(MAXFLOAT);
+        auto max = glm::vec3(-MAXFLOAT);
         for (u32 j = 0; j < mesh->mNumVertices; j++) {
             Vertex vertex{};
             vertex.position = glm::vec3(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z);
+            min = glm::min(min, vertex.position);
+            max = glm::max(max, vertex.position);
+        }
+        //estimate mesh position for obj files which only ship absolute triangle positions
+        glm::vec3 center = (max + min) * 0.5f;
+        if(objFile) {
+            max-=center;
+            min-=center;
+        }
+
+
+        for (u32 j = 0; j < mesh->mNumVertices; j++) {
+            Vertex vertex{};
+            vertex.position = glm::vec3(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z);
+            if(objFile) vertex.position -= center;
             vertex.normal = mesh->HasNormals() ? glm::vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z) : glm::vec3(0);
             vertex.uv = mesh->HasTextureCoords(0) ? glm::vec2(mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y) : glm::vec2(0);
             vertex.materialIdx = mesh->mMaterialIndex + materialOffset;
             
-            min = glm::min(min, vertex.position);
-            max = glm::max(max, vertex.position);
 
             if (uniqueVertices.count(vertex) == 0) {
                 uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
@@ -144,6 +159,7 @@ void SoulShard::loadGeometry(std::string modelPath) {
         auto & instance = this->scene.instantiateModel(name, name);
         auto tPtr = ECS::getComponent<TransformComponent>(instance.entity);
         if(!tPtr) continue; 
-        tPtr->mat = GetMeshTransformGLM(scene, mesh);
+        if(objFile) tPtr->mat = glm::translate(glm::mat4(1.0f), center);
+        else tPtr->mat = GetMeshTransformGLM(scene, mesh);
     }
 }
