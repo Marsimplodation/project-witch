@@ -1,3 +1,4 @@
+#include <cstring>
 #define ECS_IMPLEMENTATION
 #include "Scene.h"
 #include "SoulShard.h"
@@ -18,6 +19,7 @@ void Scene::initScene(){
     registry = ECS();
     registry.registerType<TransformComponent>();
     registry.registerType<AABB>();
+    registry.registerType<InstanceName>();
     UIComponent AABBUI {
         .id = ECS::getTypeIndex<AABB>(),
         .totalSize = ECS::getTotalTypeSize<AABB>(),
@@ -155,14 +157,18 @@ Instance & Scene::instantiateModel(std::string objName, std::string instanceName
     model.instances.push_back(instances.size());
 
     Instance instance = {
-        .name = instanceName,
         .entity = registry.newEntity(),
     };
+    size_t len = instanceName.size() > 255 ? 254 : instanceName.size();
+    InstanceName name;
+    name.name[255] = '0';
+    memcpy(name.name, instanceName.c_str(), len); 
     TransformComponent transform = {
         glm::mat4(1.0)
     };
     registry.addComponent<TransformComponent>(instance.entity, transform);
     registry.addComponent<AABB>(instance.entity, model.aabb);
+    registry.addComponent<InstanceName>(instance.entity, name);
 
     instances.push_back(instance);
     return instances.back();

@@ -59,5 +59,6 @@ class ImguiModule {
         VkDescriptorPool imguiPool;
         void renderViewport(void * initPtr, void * dataPtr);
         void renderInstance();
+        EntityID selectedInstance = 0;
 };
 #endif // !IMGUI_MODULE_H

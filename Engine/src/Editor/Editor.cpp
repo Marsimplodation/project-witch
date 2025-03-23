@@ -10,6 +10,7 @@
 #include "glm/detail/qualifier.hpp"
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
+#include "types/ECS.h"
 #include "types/types.h"
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -248,7 +249,6 @@ void RadialLightSlider(const char* label, float& outX, float& outY, float& outZ)
     ImGui::Dummy(ImVec2(radius * 2, radius * 2)); // Reserve space
 }
 
-Instance * selectedInstance = 0x0;
 std::vector<ImTextureID> texturesPerFrame[MAX_FRAMES_IN_FLIGHT];
 
 void ImguiModule::renderInstance(){
@@ -258,12 +258,15 @@ void ImguiModule::renderInstance(){
         ImGui::End();
         return;
     }
-    auto & instance = *selectedInstance;
-    const char * name = instance.name.c_str();
+    //marking 0 as not selected
+    EntityID instance = selectedInstance - 1;
+    auto namePtr = engine.scene.registry.getComponent<InstanceName>(selectedInstance - 1);
+    if(!namePtr) return;
+    const char * name = namePtr->name;
     ImGui::Text("Name: %s", name);
     ImGui::SameLine();
     bool close = ImGui::Button("✘");
-    auto transformPtr = engine.scene.registry.getComponent<TransformComponent>(instance.entity);
+    auto transformPtr = engine.scene.registry.getComponent<TransformComponent>(instance);
     float entryHeight = ImGui::GetFrameHeightWithSpacing() * 1.2f;
     if(transformPtr) { 
         glm::mat4 & transform = transformPtr->mat; 
@@ -286,13 +289,13 @@ void ImguiModule::renderInstance(){
     }
 
     for(auto & c : registeredComponents) {
-        auto data = ECS::getComponentByID(instance.entity, c.id);
+        auto data = ECS::getComponentByID(instance, c.id);
         if(!data) continue;
         ImGui::BeginChild(c.name.c_str(), ImVec2(0,entryHeight * (c.data.size() + 1)),true);
         ImGui::Text("%s", c.name.c_str());
         ImGui::SameLine();
         if(ImGui::Button("✘")) {
-            ECS::removeComponentByID(instance.entity, c.id);
+            ECS::removeComponentByID(instance, c.id);
             ImGui::EndChild();
             continue;
         };
@@ -322,11 +325,11 @@ void ImguiModule::renderInstance(){
     if (!closePopup && ImGui::BeginPopupModal("Select Component")) {
         closePopup = ImGui::Button("Cancel");
         for(auto & c : registeredComponents) {
-            auto data = ECS::getComponentByID(instance.entity, c.id);
+            auto data = ECS::getComponentByID(instance, c.id);
             if(data) continue;
             if(ImGui::Button(c.name.c_str())) {
                 closePopup = true;
-                ECS::addComponentByID(instance.entity, c.id, c.totalSize);
+                ECS::addComponentByID(instance, c.id, c.totalSize);
             }
         }
         // <...>
@@ -410,9 +413,11 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::Begin("Scene");
         int instanceIndex = 0;
         for (auto & instance : engine.scene.instances) {
-            auto name = instance.name + std::string("##") + std::to_string(instanceIndex++);
+            auto namePtr = engine.scene.registry.getComponent<InstanceName>(instance.entity);
+            if(!namePtr) continue;
+            auto name = namePtr->name + std::string("##") + std::to_string(instanceIndex++);
             if (ImGui::Selectable(name.c_str())) {  // Make the text clickable
-                selectedInstance = &instance;
+                selectedInstance = instance.entity + 1;
             }
         }
         ImGui::End();
@@ -433,7 +438,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         const char * name = pair.first.c_str();
             if (ImGui::Selectable(name)) {  // Make the text clickable
                 // Call your function to spawn a new instance here
-                selectedInstance = &engine.scene.instantiateModel(name, name); 
+                selectedInstance = engine.scene.instantiateModel(name, name).entity + 1; 
             }
         }
         ImGui::End();
