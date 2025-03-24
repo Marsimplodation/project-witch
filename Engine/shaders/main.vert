@@ -10,6 +10,7 @@ layout(location = 1) out vec3 fragNormal;
 layout(location = 2) out vec2 fragUV;
 layout(location = 3) out uint matIdx;
 layout(location = 4) out vec3 fragView;
+layout(location = 5) out vec3 cameraPos;
 
 
 
@@ -45,6 +46,11 @@ void main() {
     vec4 viewM = (camera.view * worldPos);
     fragView = viewM.xyz;
     fragView.z *= -1;
+
+    mat3 rotation = mat3(camera.view); 
+    vec3 translation = vec3(camera.view[3]); 
+    cameraPos = -transpose(rotation) * translation;
+
     matIdx = materialIdx;
     fragUV = uv;
     fragNormal = normalize(mat3(models[index]) * inNormal);
