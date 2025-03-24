@@ -11,6 +11,26 @@ using TypeID = unsigned int;
 #endif // !MAX_ECS_TYPES
 TypeID INCREASE_TYPE_COUNTER();
 
+struct OptionalEntityID {
+    bool hasValue();
+    EntityID getValue();
+    OptionalEntityID& operator=(const EntityID a);
+private:
+    EntityID value = 0;
+};
+
+#ifdef ECS_IMPLEMENTATION
+bool OptionalEntityID::hasValue(){
+    return (this->value != 0);
+}
+EntityID OptionalEntityID::getValue(){
+    return (this->value - 1);
+}
+OptionalEntityID&  OptionalEntityID::operator=(const EntityID id) {
+    this->value = id + 1;
+    return *this;
+};
+#endif
 
 struct ECS {
     static EntityID newEntity();

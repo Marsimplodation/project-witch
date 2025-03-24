@@ -1,6 +1,7 @@
 #ifndef EDITOR_MODULE_H
 #define EDITOR_MODULE_H 
 #include "imgui.h"
+#include "types/ECS.h"
 #include <cstddef>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -59,6 +60,6 @@ class ImguiModule {
         VkDescriptorPool imguiPool;
         void renderViewport(void * initPtr, void * dataPtr);
         void renderInstance();
-        EntityID selectedInstance = 0;
+        OptionalEntityID selectedInstance;
 };
 #endif // !IMGUI_MODULE_H

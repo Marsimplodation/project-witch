@@ -254,13 +254,13 @@ std::vector<ImTextureID> texturesPerFrame[MAX_FRAMES_IN_FLIGHT];
 void ImguiModule::renderInstance(){
     SoulShard & engine = *((SoulShard*)enginePtr);
     ImGui::Begin("Selected");
-    if(!selectedInstance) {
+    if(!selectedInstance.hasValue()) {
         ImGui::End();
         return;
     }
     //marking 0 as not selected
-    EntityID instance = selectedInstance - 1;
-    auto namePtr = engine.scene.registry.getComponent<InstanceName>(selectedInstance - 1);
+    EntityID instance = selectedInstance.getValue();
+    auto namePtr = engine.scene.registry.getComponent<InstanceName>(instance);
     if(!namePtr) return;
     const char * name = namePtr->name;
     ImGui::Text("Name: %s", name);
@@ -336,7 +336,7 @@ void ImguiModule::renderInstance(){
         ImGui::EndPopup();
     }
 
-    if(close) selectedInstance = 0x0;
+    if(close) selectedInstance = 0;
     ImGui::End();
 }
 
@@ -417,7 +417,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             if(!namePtr) continue;
             auto name = namePtr->name + std::string("##") + std::to_string(instanceIndex++);
             if (ImGui::Selectable(name.c_str())) {  // Make the text clickable
-                selectedInstance = instance.entity + 1;
+                selectedInstance = instance.entity;
             }
         }
         ImGui::End();
@@ -438,7 +438,7 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         const char * name = pair.first.c_str();
             if (ImGui::Selectable(name)) {  // Make the text clickable
                 // Call your function to spawn a new instance here
-                selectedInstance = engine.scene.instantiateModel(name, name).entity + 1; 
+                selectedInstance = engine.scene.instantiateModel(name, name).entity; 
             }
         }
         ImGui::End();

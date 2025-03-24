@@ -51,7 +51,7 @@ EntityID getInstance(glm::vec3 origin, glm::vec3 dir, Scene & scene) {
         auto aabb = ECS::getComponent<AABB>(instance.entity);
         if(!aabb) continue;
         if(!findAABBIntersection(*aabb)) continue;
-        selected = instance.entity + 1;
+        selected = instance.entity;
     }
     return selected;
 }
