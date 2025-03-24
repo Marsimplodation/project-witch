@@ -336,7 +336,7 @@ void ImguiModule::renderInstance(){
         ImGui::EndPopup();
     }
 
-    if(close) selectedInstance = 0;
+    if(close) selectedInstance.removeValue();
     ImGui::End();
 }
 

@@ -19,11 +19,11 @@ namespace {
 }
 
 
-EntityID getInstance(glm::vec3 origin, glm::vec3 dir, Scene & scene) {
+OptionalEntityID getInstance(glm::vec3 origin, glm::vec3 dir, Scene & scene) {
     float tmax = FLT_MAX;
     float tmin = 0.0f;
     glm::vec3 inv_dir = 1.0f / dir;
-    EntityID selected = 0;
+    OptionalEntityID selected;
 
     auto findAABBIntersection = [&](AABB &b) {
         // calculate intersection intervals

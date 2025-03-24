@@ -13,6 +13,7 @@ TypeID INCREASE_TYPE_COUNTER();
 
 struct OptionalEntityID {
     bool hasValue();
+    void removeValue();
     EntityID getValue();
     OptionalEntityID& operator=(const EntityID a);
 private:
@@ -22,6 +23,9 @@ private:
 #ifdef ECS_IMPLEMENTATION
 bool OptionalEntityID::hasValue(){
     return (this->value != 0);
+}
+void OptionalEntityID::removeValue(){
+    this->value = 0;
 }
 EntityID OptionalEntityID::getValue(){
     return (this->value - 1);
