@@ -7,6 +7,7 @@
 #include "glm/fwd.hpp"
 #include "types/types.h"
 #include <cmath>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 

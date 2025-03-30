@@ -203,6 +203,7 @@ int VkRenderer::recordCommandBuffer(int i) {
     }
     engine.scene.updateLights();
     updateLightBuffer(engine.scene.sceneLight);
+    updatePointLightBuffer();
 
     init.disp.cmdBindIndexBuffer(data.commandBuffers[i], data.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
     VkDeviceSize offsets[] = {0};

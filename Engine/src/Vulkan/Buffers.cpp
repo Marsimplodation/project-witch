@@ -174,6 +174,7 @@ void VkRenderer::updateIndirectDrawBuffer(int renderingIndex) {
 #define MODEL_BUFFER 1
 #define LIGHT_BUFFER 2 + SHADOW_CASCADES
 #define MATERIAL_BUFFER 3 + SHADOW_CASCADES
+#define POINT_LIGHT_BUFFER 4 + SHADOW_CASCADES
 int VkRenderer::createUniformBuffers() {
     for(int f = 0; f < MAX_FRAMES_IN_FLIGHT; ++f) {
         VkBuffer cameraBuffer;
@@ -212,6 +213,15 @@ int VkRenderer::createUniformBuffers() {
                  &materialBuffer,
                  &materialMemory);
         data.uniformBuffers[f].push_back(std::pair<VkBuffer, VkDeviceMemory>(materialBuffer, materialMemory));
+        
+        VkBuffer pointLightBuffer;
+        VkDeviceMemory pointLightMemory;
+        createBuffer(sizeof(PointLight) * 100,
+                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                 &pointLightBuffer,
+                 &pointLightMemory);
+        data.uniformBuffers[f].push_back(std::pair<VkBuffer, VkDeviceMemory>(pointLightBuffer, pointLightMemory));
     }
     return 0;
 }
@@ -227,6 +237,13 @@ void VkRenderer::updateModelBuffer(std::vector<glm::mat4> & matrices, u32 render
 
 void VkRenderer::updateLightBuffer(DirectionLight & light) {
     copyDataToBuffer(data.uniformBuffers[data.currentFrame][LIGHT_BUFFER].second, &light, sizeof(DirectionLight)); 
+}
+
+void VkRenderer::updatePointLightBuffer() {
+    SoulShard & engine = *((SoulShard*)enginePtr);
+    auto lights = engine.scene.pointLights.data();
+    auto size = engine.scene.pointLights.size();
+    copyDataToBuffer(data.uniformBuffers[data.currentFrame][POINT_LIGHT_BUFFER].second, lights, sizeof(PointLight) * size); 
 }
 
 void VkRenderer::updatematerialBuffer() {

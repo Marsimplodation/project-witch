@@ -9,32 +9,13 @@
 
 #include <vulkan/vulkan_core.h>
 
-struct ImGuiSerialize {
-    enum Tag {
-        Float,
-        Vec4,
-        String,
-        Text
-    } tag;
-
-    std::string name; // Use a pointer for non-trivial types
-    union {
-        float f;
-        glm::vec4 v4;
-    };
-};
-
-struct ComponentSerialize {
-    std::string componentName;
-    std::vector<ImGuiSerialize> fields;
-};
-
 struct UIComponent {
     TypeID id;
     size_t totalSize;
     struct ComponentData {
         enum TYPE {
             VEC3,
+            COLOR,
             FLOAT
         } type;
         u32 offset;

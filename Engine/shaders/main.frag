@@ -16,6 +16,9 @@ layout(set = 0, binding = 2) uniform sampler2D texSamplers[MAX_TEXTURES];
 layout(binding = 3) uniform LightBuffer {
     DirectionLight light;
 };
+layout(binding = 5) uniform PointLightBuffer {
+    PointLight pointLights[100];
+};
 
 layout(binding = 4) uniform MaterialBuffer {
     Material materials[MAX_MATERIALS];
@@ -33,6 +36,29 @@ void loadNormalMap(uint texIdx)  {
 
     normal.xyz = textureNormal.x * tangent + textureNormal.y * bitangent + textureNormal.z * normal.xyz;
     normal.xyz = normalize(normal.xyz);
+}
+
+vec3 getPointLightsColor() {
+    vec3 ret = vec3(0.0);
+    for(int i = 0; i < 100; ++i) {
+        PointLight pLight = pointLights[i];
+        vec3 pos = vec3(pLight.position);
+        vec3 color = vec3(pLight.color);
+        float radius = pLight.position[3];
+        float intensity = pLight.color[3];
+        if(radius == 0.0f) continue;
+
+        float distance = length(pos - fragPosition);
+        distance -= radius;
+
+        // Compute attenuation
+        float attenuation = 1.0 / ((distance * distance));
+        attenuation = min(1.0f, attenuation);
+        float finalIntensity = intensity * attenuation;
+
+        ret += color * finalIntensity;
+    }
+    return ret;
 }
 
 float calculateShadowAtCascade(int cascadeIndex) {
@@ -108,10 +134,14 @@ float ShadowCalculation() {
 
 bool outLine() {
     vec3 viewDir = normalize(cameraPos - fragPosition);
+    float distance = length(cameraPos - fragPosition);
+    float minDist = 1.0f;
+    float maxDist = 1000.0f;
+    float distanceFactor = clamp(1.0 - (distance - minDist) / (maxDist - minDist), 0.2, 1.0);
 
     // Fresnel term: Highlight edges based on the angle between the normal and view direction
     float fresnelTerm = 1.0 - abs(dot(normal, viewDir));
-    fresnelTerm = pow(fresnelTerm, 3.0); // Sharpen Fresnel effect
+    fresnelTerm = pow(fresnelTerm, 3.0) * distanceFactor; // Sharpen Fresnel effect
 
     // Screen-space derivative-based edge detection
     vec3 dNormalX = dFdx(normal);
@@ -123,7 +153,7 @@ bool outLine() {
     // Skip edge detection if normal change is not significant
     float normalChangeThreshold = 0.05; // Adjust this value based on your mesh
     outColor = vec4(normalChange, 0,0,1);
-    float edgeFactor = 0.6* fresnelTerm + 0.4 * normalChange; // Weighted combination
+    float edgeFactor = 0.6* fresnelTerm + 0.4 * normalChange * distanceFactor; // Weighted combination
     if (normalChange < normalChangeThreshold) {
 	edgeFactor = 0.0; 
     }
@@ -163,7 +193,7 @@ void main() {
     }
 
     // Start with ambient term
-    vec3 finalColor = ambient * texColor.rgb;
+    vec3 finalColor = (ambient + getPointLightsColor())* texColor.rgb;
 
     // Add cel-shaded diffuse lighting for each light
     float cosDir = -dot(normal, light.direction.xyz);

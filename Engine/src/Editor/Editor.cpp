@@ -262,10 +262,10 @@ void ImguiModule::renderInstance(){
     EntityID instance = selectedInstance.getValue();
     auto namePtr = engine.scene.registry.getComponent<InstanceName>(instance);
     if(!namePtr) return;
-    const char * name = namePtr->name;
-    ImGui::Text("Name: %s", name);
-    ImGui::SameLine();
+    char * name = namePtr->name;
     bool close = ImGui::Button("✘");
+    ImGui::SameLine();
+    ImGui::InputText("Name", name, 255);
     auto transformPtr = engine.scene.registry.getComponent<TransformComponent>(instance);
     float entryHeight = ImGui::GetFrameHeightWithSpacing() * 1.2f;
     if(transformPtr) { 
@@ -301,6 +301,7 @@ void ImguiModule::renderInstance(){
         };
         constexpr auto VEC3 =  UIComponent::ComponentData::TYPE::VEC3;
         constexpr auto FLOAT =  UIComponent::ComponentData::TYPE::FLOAT;
+        constexpr auto COLOR =  UIComponent::ComponentData::TYPE::COLOR;
         for(auto & entry : c.data) {
             auto ptr = (u8*)data + entry.offset; 
             switch (entry.type) {
@@ -309,6 +310,9 @@ void ImguiModule::renderInstance(){
                     break;
                 case FLOAT:
                     ImGui::DragFloat(entry.name.c_str(), (float*)ptr);
+                    break;
+                case COLOR:
+                    ImGui::ColorEdit3(entry.name.c_str(), (float*)ptr);
                     break;
                 default:
                     break;
@@ -411,6 +415,14 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
 
 
         ImGui::Begin("Scene");
+        if (ImGui::BeginPopupContextWindow()) { // Right-click anywhere in the window
+            if (ImGui::MenuItem("Add PointLight")) {
+                engine.scene.createPointLight();
+            }
+            ImGui::EndPopup();
+        }
+
+
         int instanceIndex = 0;
         for (auto & instance : engine.scene.instances) {
             auto namePtr = engine.scene.registry.getComponent<InstanceName>(instance.entity);
@@ -421,6 +433,8 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
             }
         }
         ImGui::End();
+
+
         ImGui::Begin("Light");
         glm::vec3 & c = *(glm::vec3*)&engine.scene.sceneLight.direction;
         RadialLightSlider("light dir", c.x, c.y, c.z);

@@ -20,6 +20,7 @@ void Scene::initScene(){
     registry.registerType<TransformComponent>();
     registry.registerType<AABB>();
     registry.registerType<InstanceName>();
+    registry.registerType<PointLight>();
     UIComponent AABBUI {
         .id = ECS::getTypeIndex<AABB>(),
         .totalSize = ECS::getTotalTypeSize<AABB>(),
@@ -38,7 +39,30 @@ void Scene::initScene(){
         },
 
     };
+    UIComponent PointLightUI {
+        .id = ECS::getTypeIndex<PointLight>(),
+        .totalSize = ECS::getTotalTypeSize<PointLight>(),
+        .name = "Point Light",
+        .data =  {
+            UIComponent::ComponentData {
+                .type = UIComponent::ComponentData::TYPE::COLOR,
+                .offset = sizeof(glm::vec4),
+                .name = "Color",
+            },
+            UIComponent::ComponentData {
+                .type = UIComponent::ComponentData::TYPE::FLOAT,
+                .offset = sizeof(glm::vec4) + sizeof(glm::vec3),
+                .name = "Intensity",
+            },
+            UIComponent::ComponentData {
+                .type = UIComponent::ComponentData::TYPE::FLOAT,
+                .offset = sizeof(glm::vec3),
+                .name = "Radius",
+            }
+        },
+    };
     gui.registeredComponents.push_back(AABBUI);
+    gui.registeredComponents.push_back(PointLightUI);
 }
 
 std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const glm::mat4& view, float nearPlane, float farPlane) {
@@ -74,10 +98,48 @@ std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const 
     return corners;
 }
 
+void Scene::createPointLight() {
+    std::string instanceName = "Point Light";
+    Instance instance = {
+        .entity = registry.newEntity(),
+    };
+    size_t len = instanceName.size() > 255 ? 254 : instanceName.size();
+    InstanceName name;
+    name.name[255] = '0';
+    memcpy(name.name, "Point Light", len); 
+    TransformComponent transform = {
+        glm::mat4(1.0)
+    };
+    registry.addComponent<TransformComponent>(instance.entity, transform);
+    registry.addComponent<PointLight>(instance.entity, 
+                                      PointLight{
+                                        glm::vec4(1,1,1,0.1f),
+                                        glm::vec4(1,1,1,1.0f),
+                                      });
+    registry.addComponent<InstanceName>(instance.entity, name);
+
+    instances.push_back(instance);
+}
 
 
 void Scene::updateLights() {
     SoulShard & engine = *((SoulShard*)enginePtr);
+
+    auto pLightIdx = 0;
+    for(auto instance: instances) {
+        auto transformPtr = registry.getComponent<TransformComponent>(instance.entity);
+        auto light = registry.getComponent<PointLight>(instance.entity);
+        if(!light || !transformPtr) continue;
+        auto radius = light->position[3];
+        light->position[3] = 1.0f;
+        light->position = transformPtr->mat[3];
+        light->position[3] = radius;
+        pointLights[pLightIdx++] = *light;
+    }
+    for(int i = pLightIdx; i < pointLights.size(); ++i)
+        pointLights[i] = PointLight{glm::vec4(0.0f), glm::vec4(0.0f)};
+
+
     std::vector<float> cascadeSplits(SHADOW_CASCADES);
     float nearClip = 0.1f;
     float farClip = 100.0f; //max shadow distance

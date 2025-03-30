@@ -19,4 +19,10 @@ struct DirectionLight {
     bool castShadows;
 };
 
+struct PointLight {
+    //includes x,y,z + radius
+    vec4 position; 
+    vec4 color;
+};
+
 #endif

@@ -6,7 +6,7 @@
 int VkRenderer::createDescriptorPool() {
     VkDescriptorPoolSize poolSizes[2] = {};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = (4 + MAX_MATERIALS) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
+    poolSizes[0].descriptorCount = (5 + MAX_MATERIALS) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSizes[1].descriptorCount = (SHADOW_CASCADES + MAX_TEXTURES) * MAX_FRAMES_IN_FLIGHT; // Change to 3 for the 3 descriptors (raygen, miss, hit)
     
@@ -63,10 +63,16 @@ int VkRenderer::createDescriptorLayout() {
     materialBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     materialBinding.descriptorCount = 1;
     materialBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  // This buffer is used by the closest hit shader.
+    
+    VkDescriptorSetLayoutBinding pointLightBinding = {};
+    pointLightBinding.binding = 5;
+    pointLightBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    pointLightBinding.descriptorCount = 1;
+    pointLightBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;  // This buffer is used by the closest hit shader.
 
     
 
-    std::vector<VkDescriptorSetLayoutBinding> bindings = {cameraBinding, modelBinding, textureLayoutBinding, lightBinding, materialBinding};
+    std::vector<VkDescriptorSetLayoutBinding> bindings = {cameraBinding, modelBinding, textureLayoutBinding, lightBinding, materialBinding, pointLightBinding};
 
     VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
     layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -117,6 +123,7 @@ int VkRenderer::createDescriptorLayout() {
 #define MODEL_BUFFER 1
 #define LIGHT_BUFFER 2 + SHADOW_CASCADES
 #define MATERIAL_BUFFER 3 + SHADOW_CASCADES
+#define POINT_LIGHT_BUFFER 4 + SHADOW_CASCADES
 
 int VkRenderer::updateDescriptorSets() {
     VkDescriptorBufferInfo cameraBufferInfo = {};
@@ -138,6 +145,11 @@ int VkRenderer::updateDescriptorSets() {
     materialBufferInfo.buffer = data.uniformBuffers[data.currentFrame][MATERIAL_BUFFER].first;
     materialBufferInfo.offset = 0;
     materialBufferInfo.range = VK_WHOLE_SIZE;
+
+    VkDescriptorBufferInfo pointLightBufferInfo = {};
+    pointLightBufferInfo.buffer = data.uniformBuffers[data.currentFrame][POINT_LIGHT_BUFFER].first;
+    pointLightBufferInfo.offset = 0;
+    pointLightBufferInfo.range = VK_WHOLE_SIZE;
 
     
     std::vector<VkDescriptorImageInfo> textureInfos(MAX_TEXTURES + SHADOW_CASCADES);
@@ -177,6 +189,7 @@ int VkRenderer::updateDescriptorSets() {
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &modelBufferInfo, nullptr },
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightBufferInfo, nullptr },
         { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 4, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &materialBufferInfo, nullptr },
+        { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, data.descriptorSets[data.currentFrame], 5, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &pointLightBufferInfo, nullptr },
         //--- Textures ---//
             };
     if(textureInfos.size() > 0) {

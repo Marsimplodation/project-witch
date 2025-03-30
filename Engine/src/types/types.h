@@ -42,20 +42,20 @@ struct Timer {
 
 
 struct DirectionLight {
-    glm::mat4 views[SHADOW_CASCADES];  // 16-byte alignment
-    glm::mat4 projections[SHADOW_CASCADES]; // 16-byte alignment
-    glm::vec4 position;               // 16-byte alignment
-    glm::vec4 direction;              // 16-byte alignment
-    glm::vec4 color;                  // 16-byte alignment
-    glm::vec4 splitDepths; // this can follow vectors without padding
+    glm::mat4 views[SHADOW_CASCADES];
+    glm::mat4 projections[SHADOW_CASCADES]; 
+    glm::vec4 position;               
+    glm::vec4 direction;              
+    glm::vec4 color;                 
+    glm::vec4 splitDepths; 
     glm::vec4 debugFactors;
     bool castShadows = true;
 };
 
 struct PointLight {
-    glm::vec4 position;               // 16-byte alignment
+    //includes x,y,z + radius
+    glm::vec4 position; 
     glm::vec4 color;
-    float radius;
 };
 
 struct Material {

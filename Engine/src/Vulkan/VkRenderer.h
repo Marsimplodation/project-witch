@@ -135,6 +135,7 @@ struct VkRenderer {
     int createGeometryBuffers();
     int createUniformBuffers();
     void updateCameraBuffer();
+    void updatePointLightBuffer();
     void updatematerialBuffer();
     void updateModelBuffer(std::vector<glm::mat4> & matrices, u32 renderingIdx);
     void destroyBuffers();
