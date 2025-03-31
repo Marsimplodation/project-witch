@@ -48,10 +48,14 @@ vec3 getPointLightsColor() {
         float intensity = pLight.color[3];
         if(radius == 0.0f) continue;
         float distance = length(pos - fragPosition);
+        vec3 direction = (pos - fragPosition)/distance;
+        float cos = dot(normal, direction);
+        if(cos < 0) cos = 0.0f;
+        else cos = 1.0f;
         // Compute attenuation
         float attenuation = 1.0 / ((distance * distance));
         attenuation = min(1.0f, attenuation);
-        float finalIntensity = intensity * attenuation;
+        float finalIntensity = cos*  intensity * attenuation;
 
         ret += color * finalIntensity;
     }
