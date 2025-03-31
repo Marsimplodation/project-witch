@@ -1,15 +1,19 @@
 #include "../SoulShard.h"
+#include "Scene/Scene.h"
 #include "assimp/Importer.hpp"
+#include "assimp/light.h"
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
 #include "assimp/types.h"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include "types/types.h"
 #include <cmath>
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 glm::mat4 ConvertMatrixToGLM(const aiMatrix4x4& from) {
     glm::mat4 to;
@@ -49,25 +53,30 @@ glm::mat4 GetMeshTransformGLM(const aiScene* scene, aiMesh* mesh) {
     return ConvertMatrixToGLM(transform);
 }
 
+glm::mat4 GetLightTransformGLM(const aiScene* scene, aiLight* light) {
+    aiNode* node = scene->mRootNode->FindNode(light->mName);
+    if (!node) return glm::mat4(1.0f);  
 
-void SoulShard::loadGeometry(std::string modelPath) {    
-    Assimp::Importer importer;
-    const aiScene * scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_FlipUVs);
-
-    if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        throw std::runtime_error("Assimp error: " + std::string(importer.GetErrorString()));
+    // Accumulate transformations up the hierarchy
+    aiMatrix4x4 transform = node->mTransformation;
+    aiNode* parent = node->mParent;
+    while (parent) {
+        transform = parent->mTransformation * transform;
+        parent = parent->mParent;
     }
-    auto & vertices = gpuGeometry.vertices;
-    auto & indices = gpuGeometry.indices;
-    auto & materials = renderer.data.materials;
-    std::string base_dir = modelPath.substr(0, modelPath.find_last_of('/'));
-    std::unordered_map<std::string, u32> textureAtlas;
-    std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
-    u32 materialIdx = renderer.data.usedMaterials;
-    u32 materialOffset = renderer.data.usedMaterials;
+    return ConvertMatrixToGLM(transform);
+}
+
+
+void loadMaterials(std::vector<Material> & materials,
+                   u32 & materialIdx,
+                   const aiScene * scene,
+                   VkRenderer & renderer,
+                   std::string & base_dir) {
     const int DIFFUSE = 0;
     const int NORMAL = 1;
+    std::unordered_map<std::string, u32> textureAtlas;
     for (u32 i = 0; i < scene->mNumMaterials; i++) {
         aiMaterial* material = scene->mMaterials[i];
         auto & rMat = materials[materialIdx++];
@@ -97,18 +106,26 @@ void SoulShard::loadGeometry(std::string modelPath) {
         material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
         rMat.albedo = glm::vec4(color.r, color.g, color.b, 1.0f);
     }
-    renderer.data.usedMaterials = materialIdx;
-   
+
+}
+
+
+void loadMeshes(u32 & materialOffset,
+                   const aiScene * fileScene,
+                   VkRenderer & renderer,
+                    std::vector<Vertex> & vertices,
+                    std::vector<u32> & indices,
+                   std::string & base_dir,
+                Scene & scene,
+                bool objFile) {
     u32 count = 0;
     std::vector<Vertex> tmpVertices;
-    bool objFile =  modelPath.find(".obj") != std::string::npos;
-    for (u32 i = 0; i < scene->mNumMeshes; i++) {
+    std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+    for (u32 i = 0; i < fileScene->mNumMeshes; i++) {
         tmpVertices.clear();
-        auto & vertices = gpuGeometry.vertices;
-        auto & indices = gpuGeometry.indices;
         u32 startIdx = indices.size();
 
-        aiMesh* mesh = scene->mMeshes[i];
+        aiMesh* mesh = fileScene->mMeshes[i];
         u32 faceIndex = 0;
         auto min = glm::vec3(MAXFLOAT);
         auto max = glm::vec3(-MAXFLOAT);
@@ -155,12 +172,87 @@ void SoulShard::loadGeometry(std::string modelPath) {
             .triangleCount = (endIdx-startIdx)/3,
         };
         auto name = mesh->mName.C_Str(); 
-        this->scene.geometry[name] = this->scene.geometryList.size();
-        this->scene.geometryList.push_back(m);
-        auto & instance = this->scene.instantiateModel(name, name);
+        scene.geometry[name] = scene.geometryList.size();
+        scene.geometryList.push_back(m);
+        auto & instance = scene.instantiateModel(name, name);
         auto tPtr = ECS::getComponent<TransformComponent>(instance.entity);
         if(!tPtr) continue; 
         if(objFile) tPtr->mat = glm::translate(glm::mat4(1.0f), center);
-        else tPtr->mat = GetMeshTransformGLM(scene, mesh);
+        else tPtr->mat = GetMeshTransformGLM(fileScene, mesh);
+    }}
+
+void loadLights(const aiScene * fileScene,
+                Scene & scene) {
+    if (!fileScene || !fileScene->HasLights()) {
+        return;
     }
+
+    for (unsigned int i = 0; i < fileScene->mNumLights; ++i) {
+        aiLight* light = fileScene->mLights[i];
+
+        if (light->mType == aiLightSource_POINT) {
+            aiVector3D pos = light->mPosition;
+            aiColor3D color = light->mColorDiffuse;  // Diffuse color
+            scene.createPointLight();
+            auto instance = scene.instances.back();
+            auto * pointLight = ECS::getComponent<PointLight>(instance.entity);
+            auto * name = ECS::getComponent<InstanceName>(instance.entity);
+            auto * trans = ECS::getComponent<TransformComponent>(instance.entity);
+            if(!name || !pointLight || !trans) continue;
+            glm::vec3 c = {color.r, color.g, color.b};
+            float intensity = length(c);
+            intensity /= 100.0f;
+
+            // Normalize color
+            float maxChannel = std::max({color.r, color.g, color.b});
+            glm::vec3 normalizedColor = (maxChannel > 0.0f) ? glm::vec3(color.r, color.g, color.b) / maxChannel : glm::vec3(1.0f);
+
+            // Assign final color with intensity
+            pointLight->color = { normalizedColor.r, normalizedColor.g, normalizedColor.b, intensity };
+            trans->mat = GetLightTransformGLM(fileScene, light);
+        }
+        if (light->mType == aiLightSource_DIRECTIONAL) {
+            aiVector3D direction = light->mDirection;
+            aiColor3D color = light->mColorDiffuse;  // Diffuse color
+            glm::vec3 c = {color.r, color.g, color.b};
+            float intensity = length(c);
+            intensity /= 100.0f;
+            // Normalize color
+            float maxChannel = std::max({color.r, color.g, color.b});
+            glm::vec3 normalizedColor = (maxChannel > 0.0f) ? glm::vec3(color.r, color.g, color.b) / maxChannel : glm::vec3(1.0f);
+
+            // Assign final color with intensity
+            scene.sceneLight.color ={ normalizedColor.r, normalizedColor.g, normalizedColor.b, intensity };
+            auto pos = GetLightTransformGLM(fileScene, light)[3];
+            pos = glm::normalize(pos);
+            scene.sceneLight.direction = {
+                -pos.x,
+                -pos.y,
+                -pos.z,
+                1.0f,
+            }; 
+        }
+    }
+}
+
+void SoulShard::loadGeometry(std::string modelPath) {    
+    Assimp::Importer importer;
+    const aiScene * scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_FlipUVs);
+
+    if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+        throw std::runtime_error("Assimp error: " + std::string(importer.GetErrorString()));
+    }
+    auto & vertices = gpuGeometry.vertices;
+    auto & indices = gpuGeometry.indices;
+    auto & materials = renderer.data.materials;
+    std::string base_dir = modelPath.substr(0, modelPath.find_last_of('/'));
+    u32 materialIdx = renderer.data.usedMaterials;
+    u32 materialOffset = renderer.data.usedMaterials;
+    renderer.data.usedMaterials = materialIdx;
+   
+    bool objFile =  modelPath.find(".obj") != std::string::npos;
+    loadMaterials(materials, materialIdx, scene, renderer, base_dir);
+    loadMeshes(materialOffset, scene, renderer, vertices, indices, base_dir,this->scene, objFile);
+    loadLights(scene, this->scene);
+    
 }

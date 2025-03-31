@@ -11,7 +11,6 @@ const uint SHADOW_MAP_RES[SHADOW_CASCADES] =  { 4096,4096,4096,4096 }; // Differ
 struct DirectionLight {
     mat4 views[SHADOW_CASCADES];  // 16-byte alignment
     mat4 projections[SHADOW_CASCADES]; // 16-byte alignment
-    vec4 position;               // 16-byte alignment
     vec4 direction;              // 16-byte alignment
     vec4 color;                  // 16-byte alignment
     vec4 splitDepths; // this can follow vectors without padding

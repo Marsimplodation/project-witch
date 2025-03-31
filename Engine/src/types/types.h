@@ -44,7 +44,6 @@ struct Timer {
 struct DirectionLight {
     glm::mat4 views[SHADOW_CASCADES];
     glm::mat4 projections[SHADOW_CASCADES]; 
-    glm::vec4 position;               
     glm::vec4 direction;              
     glm::vec4 color;                 
     glm::vec4 splitDepths; 

@@ -42,9 +42,8 @@ struct Scene {
     bool frustumCulling = true;
 
     DirectionLight sceneLight = DirectionLight{
-        .position = glm::vec4(4,1.5,4,0),
         .direction = glm::vec4(-1,-1,-1,0),
-        .color = glm::vec4(1.0f),
+        .color = glm::vec4(0.0f),
         .debugFactors=glm::vec4(1.0f),
     };
     std::unordered_map<std::string, u32> geometry;

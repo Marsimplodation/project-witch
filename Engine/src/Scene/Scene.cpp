@@ -54,11 +54,6 @@ void Scene::initScene(){
                 .offset = sizeof(glm::vec4) + sizeof(glm::vec3),
                 .name = "Intensity",
             },
-            UIComponent::ComponentData {
-                .type = UIComponent::ComponentData::TYPE::FLOAT,
-                .offset = sizeof(glm::vec3),
-                .name = "Radius",
-            }
         },
     };
     gui.registeredComponents.push_back(AABBUI);
@@ -133,7 +128,6 @@ void Scene::updateLights() {
         auto radius = light->position[3];
         light->position[3] = 1.0f;
         light->position = transformPtr->mat[3];
-        light->position[3] = radius;
         pointLights[pLightIdx++] = *light;
     }
     for(int i = pLightIdx; i < pointLights.size(); ++i)
