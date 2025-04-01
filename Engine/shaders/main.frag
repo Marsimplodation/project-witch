@@ -13,14 +13,14 @@ layout(location = 5) in vec3 cameraPos;
 
 layout(location = 0) out vec4 outColor;
 layout(set = 0, binding = 2) uniform sampler2D texSamplers[MAX_TEXTURES];
-layout(binding = 3) uniform LightBuffer {
+layout(binding = 3) readonly buffer LightBuffer {
     DirectionLight light;
 };
-layout(binding = 5) uniform PointLightBuffer {
+layout(binding = 5) readonly buffer PointLightBuffer {
     PointLight pointLights[100];
 };
 
-layout(binding = 4) uniform MaterialBuffer {
+layout(binding = 4) readonly buffer MaterialBuffer {
     Material materials[MAX_MATERIALS];
 };
 

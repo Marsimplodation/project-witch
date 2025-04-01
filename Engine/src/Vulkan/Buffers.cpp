@@ -180,7 +180,7 @@ int VkRenderer::createUniformBuffers() {
         VkBuffer cameraBuffer;
         VkDeviceMemory cameraMemory;
         createBuffer(sizeof(Camera),
-                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                  &cameraBuffer,
                  &cameraMemory);
@@ -190,7 +190,7 @@ int VkRenderer::createUniformBuffers() {
             VkBuffer modelBuffer;
             VkDeviceMemory modelMemory;
             createBuffer(sizeof(glm::mat4) * MAX_INSTANCES,
-                     VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                      &modelBuffer,
                      &modelMemory);
@@ -200,7 +200,7 @@ int VkRenderer::createUniformBuffers() {
         VkBuffer lightBuffer;
         VkDeviceMemory lightMemory;
         createBuffer(sizeof(DirectionLight),
-                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                  &lightBuffer,
                  &lightMemory);
@@ -208,7 +208,7 @@ int VkRenderer::createUniformBuffers() {
         VkBuffer materialBuffer;
         VkDeviceMemory materialMemory;
         createBuffer(sizeof(Material) * MAX_MATERIALS,
-                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                  &materialBuffer,
                  &materialMemory);
@@ -217,7 +217,7 @@ int VkRenderer::createUniformBuffers() {
         VkBuffer pointLightBuffer;
         VkDeviceMemory pointLightMemory;
         createBuffer(sizeof(PointLight) * 100,
-                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                  &pointLightBuffer,
                  &pointLightMemory);

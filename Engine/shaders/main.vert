@@ -14,7 +14,7 @@ layout(location = 5) out vec3 cameraPos;
 
 
 
-layout(binding = 0) uniform CameraBuffer {
+layout(binding = 0) readonly buffer CameraBuffer {
     mat4 view;
     mat4 projection;
 } camera;
@@ -23,11 +23,11 @@ layout(push_constant) uniform PushConstants {
     uint lightIdx;    // Current draw call index
 };
 
-layout(binding = 1) uniform ModelBuffer {
+layout(binding = 1) readonly buffer ModelBuffer {
     mat4 models[10000];
 };
 
-layout(binding = 3) uniform LightBuffer {
+layout(binding = 3) readonly buffer LightBuffer {
     DirectionLight light;
 };
 

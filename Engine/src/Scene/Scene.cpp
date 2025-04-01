@@ -135,7 +135,7 @@ void Scene::updateLights() {
 
 
     std::vector<float> cascadeSplits(SHADOW_CASCADES);
-    float nearClip = 0.1f;
+    float nearClip = 1.0f;
     float farClip = 100.0f; //max shadow distance
     float lambda = 0.95f;
     //account for scene height
