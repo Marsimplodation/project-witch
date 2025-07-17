@@ -156,7 +156,7 @@ int VkRenderer::drawFrame() {
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &data.commandBuffers[imageIndex];
 
-    VkSemaphore signalSemaphores[] = { data.finishedSemaphore[data.currentFrame] };
+    VkSemaphore signalSemaphores[] = { data.finishedSemaphore[imageIndex] };
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
@@ -192,8 +192,10 @@ int VkRenderer::drawFrame() {
 }
 
 void VkRenderer::cleanup() {
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < init.swapchain.image_count; i++) {
         init.disp.destroySemaphore(data.finishedSemaphore[i], nullptr);
+    }
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         init.disp.destroySemaphore(data.availableSemaphores[i], nullptr);
         init.disp.destroyFence(data.inFlightFences[i], nullptr);
         init.disp.destroyDescriptorSetLayout(data.descriptorLayouts[i], nullptr);

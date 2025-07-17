@@ -436,8 +436,8 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
 
 
         ImGui::Begin("Light");
-        //glm::vec3 & c = *(glm::vec3*)&engine.scene.sceneLight.direction;
-        //RadialLightSlider("light dir", c.x, c.y, c.z);
+        glm::vec3 & c = *(glm::vec3*)&engine.scene.sceneLight.direction;
+        RadialLightSlider("light dir", c.x, c.y, c.z);
         ImGui::DragFloat3("Direction", (float*)&engine.scene.sceneLight.direction);
         ImGui::ColorEdit4("Color", (float*)&engine.scene.sceneLight.color);
         ImGui::DragFloat4("Debug", (float*)&engine.scene.sceneLight.debugFactors);
