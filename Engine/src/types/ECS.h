@@ -1,9 +1,12 @@
-#ifndef SOULSHARD_ECS
-#define SOULSHARD_ECS
+#ifndef TINY_ECS
+#define TINY_ECS
 #include <cstddef>
 #include <cstdio>
 #include <vector>
 #include <cstring>
+#include <tuple>
+#include <optional>
+
 using EntityID = unsigned int;
 using TypeID = unsigned int;
 #ifndef MAX_ECS_TYPES
@@ -15,7 +18,7 @@ struct OptionalEntityID {
     bool hasValue();
     void removeValue();
     EntityID getValue();
-    OptionalEntityID& operator=(const EntityID a);
+    OptionalEntityID& operator=(const EntityID id);
 private:
     EntityID value = 0;
 };
@@ -36,6 +39,47 @@ OptionalEntityID&  OptionalEntityID::operator=(const EntityID id) {
 };
 #endif
 
+template <typename T>
+struct ComponentRef {
+    bool hasValue() {return data != 0x0;};
+    ComponentRef(T* data) : data(data) {}
+    T& unwrap(){return *data;}
+
+
+    T& operator*() { return *data; }
+    const T& operator*() const { return *data; }
+    T* operator->() { return data; }
+    const T* operator->() const { return data; }
+    explicit operator bool() const {
+        return data != 0x0;
+    }
+private:
+    T* data;
+};
+
+template <typename... Ts>
+struct MultipleComponentRefs {
+    MultipleComponentRefs(std::tuple<Ts*...> ptrs) : ptrs(ptrs) {}
+
+    bool hasValues() const {
+        return (... && (std::get<Ts*>(ptrs) != nullptr));
+    }
+
+    std::tuple<Ts&...> unwrap() {
+        return std::apply([](Ts*... ps) -> std::tuple<Ts&...> {
+            return std::tie(*ps...);
+        }, ptrs);
+    }
+
+    explicit operator bool() const {
+        return hasValues();
+    }
+
+private:
+    std::tuple<Ts*...> ptrs;
+};
+
+
 struct ECS {
     static EntityID newEntity();
     static void removeEntity(EntityID entity);
@@ -45,7 +89,15 @@ struct ECS {
     template <typename T>
         static void removeComponent(EntityID entity);
     template <typename T>
-        static T* getComponent(EntityID entity);
+        static ComponentRef<T> getComponent(EntityID entity);
+
+    template <typename... Ts>
+        static MultipleComponentRefs<Ts...> getMultipleComponents(EntityID entity);
+    template <typename... Ts>
+        static void addMultipleComponents(EntityID entity, const Ts& ... components);
+
+    template <typename... Ts>
+    static std::vector<EntityID> allEntitiesWith();
 
     static void* getComponentByID(EntityID entity, TypeID typeIdx);
     static void addComponentByID(EntityID entity, TypeID typeIdx, size_t size);
@@ -57,6 +109,10 @@ struct ECS {
         static TypeID getTypeIndex();
     template <typename T>
         static void registerType();
+
+    template <typename... Ts>
+        static void registerMultipleTypes();
+
 
 private:
     //private types/
@@ -74,6 +130,9 @@ private:
     };
     //private methods
     inline static bool hasComponent(EntityID entity, TypeID typeIdx);
+    template <typename T>
+    inline static T* getComponentInternally(EntityID entity);
+
 
     //private members
     const static size_t DOES_NOT_HAVE_COMPONENT = 0;
@@ -124,6 +183,16 @@ void ECS::addComponent(EntityID entity, const T& component) {
     entityMap[entity].offsets[typeIdx] = offset + 1;
 }
 
+template <typename... Ts>
+void ECS::addMultipleComponents(EntityID entity, const Ts& ... components) {
+    (addComponent(entity, components),...);
+}
+
+template <typename... Ts>
+void ECS::registerMultipleTypes() {
+    (registerType<Ts>,...);
+}
+
 template <typename T>
 void ECS::removeComponent(EntityID entity) {
     TypeID typeIdx = getTypeIndex<T>(); 
@@ -133,14 +202,13 @@ void ECS::removeComponent(EntityID entity) {
     auto & data = componentPools[typeIdx].data;
     auto & unused = componentPools[typeIdx].unusedSpace;
     auto offset = entityMap[entity].offsets[typeIdx];
-    unused.push_back(offset);
+    unused.push_back(offset - 1);
     entityMap[entity].offsets[typeIdx] = DOES_NOT_HAVE_COMPONENT;
 }
 
 
-
 template <typename T>
-T* ECS::getComponent(EntityID entity) {
+T* ECS::getComponentInternally(EntityID entity) {
     TypeID typeIdx = getTypeIndex<T>(); 
     if(entity >= _entityCount) return nullptr;
     if(!hasComponent(entity, typeIdx)) return nullptr;
@@ -152,6 +220,30 @@ T* ECS::getComponent(EntityID entity) {
     // Cast bytes back to struct
     return (T*)(&data[offset]); 
 }
+
+template <typename T>
+ComponentRef<T> ECS::getComponent(EntityID entity) {
+    return ComponentRef<T>(getComponentInternally<T>(entity)); 
+}
+
+
+template <typename... Ts>
+MultipleComponentRefs<Ts...> ECS::getMultipleComponents(EntityID entity) {
+    return MultipleComponentRefs<Ts...>(
+        std::make_tuple(getComponentInternally<Ts>(entity)...)
+    );
+}
+
+template <typename... Ts>
+std::vector<EntityID> ECS::allEntitiesWith() {
+    std::vector<EntityID> out;
+    for(int i = 0; i < _entityCount; ++i) {
+        bool hasAllComponents = ((hasComponent(i, getTypeIndex<Ts>())) & ...);
+        if(hasAllComponents) out.push_back(i);
+    }
+    return out;
+}
+
 
 template <typename T>
 TypeID ECS::getTypeIndex() {
@@ -177,7 +269,7 @@ void ECS::removeComponentByID(EntityID entity, TypeID typeIdx) {
     auto & data = componentPools[typeIdx].data;
     auto & unused = componentPools[typeIdx].unusedSpace;
     auto offset = entityMap[entity].offsets[typeIdx];
-    unused.push_back(offset);
+    unused.push_back(offset - 1);
     entityMap[entity].offsets[typeIdx] = DOES_NOT_HAVE_COMPONENT;
 }
 
@@ -239,11 +331,7 @@ void ECS::removeEntity(EntityID entity) {
     if(entity >= _entityCount) return;
     for(auto e : unusedEntities) if(e == entity) return;
     for(TypeID typeIdx = 0; typeIdx <= _maxTypeID; ++typeIdx) {
-        if(!hasComponent(entity, typeIdx)) continue;
-        auto & data = componentPools[typeIdx].data;
-        auto & unused = componentPools[typeIdx].unusedSpace;
-        auto offset = entityMap[entity].offsets[typeIdx];
-        unused.push_back(offset);
+        removeComponentByID(entity, typeIdx);
     }
     unusedEntities.push_back(entity);
 }
@@ -254,6 +342,4 @@ ECS::ComponentPool ECS::componentPools[MAX_ECS_TYPES];
 std::vector<ECS::EntityTypeMap> ECS::entityMap(0);
 std::vector<EntityID> ECS::unusedEntities(0);
 #endif // !ECS_IMPLEMEMENTATION
-
-#endif // !SOULSHARD_ECS
-
+#endif // !TINY_ECS

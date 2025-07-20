@@ -11,6 +11,7 @@
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
 #include "types/ECS.h"
+#include "types/ECS_UI.h"
 #include "types/types.h"
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -288,57 +289,7 @@ void ImguiModule::renderInstance(){
         ImGui::EndChild();
     }
 
-    for(auto & c : registeredComponents) {
-        auto data = ECS::getComponentByID(instance, c.id);
-        if(!data) continue;
-        ImGui::BeginChild(c.name.c_str(), ImVec2(0,entryHeight * (c.data.size() + 1)),true);
-        ImGui::Text("%s", c.name.c_str());
-        ImGui::SameLine();
-        if(ImGui::Button("✘")) {
-            ECS::removeComponentByID(instance, c.id);
-            ImGui::EndChild();
-            continue;
-        };
-        constexpr auto VEC3 =  UIComponent::ComponentData::TYPE::VEC3;
-        constexpr auto FLOAT =  UIComponent::ComponentData::TYPE::FLOAT;
-        constexpr auto COLOR =  UIComponent::ComponentData::TYPE::COLOR;
-        for(auto & entry : c.data) {
-            auto ptr = (u8*)data + entry.offset; 
-            switch (entry.type) {
-                case VEC3:
-                    ImGui::DragFloat3(entry.name.c_str(), (float*)ptr);
-                    break;
-                case FLOAT:
-                    ImGui::DragFloat(entry.name.c_str(), (float*)ptr);
-                    break;
-                case COLOR:
-                    ImGui::ColorEdit3(entry.name.c_str(), (float*)ptr);
-                    break;
-                default:
-                    break;
-            }
-        }
-        ImGui::EndChild();
-    }
-
-    static bool closePopup = false;
-    if (ImGui::Button("New Component")) {
-        closePopup = false;
-        ImGui::OpenPopup("Select Component");
-    }
-    if (!closePopup && ImGui::BeginPopupModal("Select Component")) {
-        closePopup = ImGui::Button("Cancel");
-        for(auto & c : registeredComponents) {
-            auto data = ECS::getComponentByID(instance, c.id);
-            if(data) continue;
-            if(ImGui::Button(c.name.c_str())) {
-                closePopup = true;
-                ECS::addComponentByID(instance, c.id, c.totalSize);
-            }
-        }
-        // <...>
-        ImGui::EndPopup();
-    }
+    ECS_UI::renderEntityInspector(ECS_UI::CHILD);
 
     if(close) selectedInstance.removeValue();
     ImGui::End();
@@ -384,6 +335,10 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGuizmo::BeginFrame();
 
         ImGui::DockSpaceOverViewport(0);
+    
+        ECS_UI::renderEntityList((EntityID*)engine.scene.instances.data(), engine.scene.instances.size());
+        selectedInstance = ECS_UI::currentEntity;
+
 
         // Build your GUI
         renderViewport(initPtr, dataPtr);        
@@ -409,28 +364,6 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         }
         for(int i = 0; i < data.textures.size(); ++i) {
             ImGui::Image(textures[i], ImVec2(256, 256));
-        }
-        ImGui::End();
-
-
-
-        ImGui::Begin("Scene");
-        if (ImGui::BeginPopupContextWindow()) { // Right-click anywhere in the window
-            if (ImGui::MenuItem("Add PointLight")) {
-                engine.scene.createPointLight();
-            }
-            ImGui::EndPopup();
-        }
-
-
-        int instanceIndex = 0;
-        for (auto & instance : engine.scene.instances) {
-            auto namePtr = engine.scene.registry.getComponent<InstanceName>(instance.entity);
-            if(!namePtr) continue;
-            auto name = namePtr->name + std::string("##") + std::to_string(instanceIndex++);
-            if (ImGui::Selectable(name.c_str())) {  // Make the text clickable
-                selectedInstance = instance.entity;
-            }
         }
         ImGui::End();
 
@@ -461,4 +394,6 @@ void ImguiModule::update(void * initPtr, void * dataPtr) {
         ImGui::Render();
         ImDrawData* drawData = ImGui::GetDrawData();
         ImGui_ImplVulkan_RenderDrawData(drawData, data.commandBuffers[data.currentImgIndex]);
+        ECS_UI::currentEntity = selectedInstance;
+
 }

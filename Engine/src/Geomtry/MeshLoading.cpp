@@ -195,9 +195,9 @@ void loadLights(const aiScene * fileScene,
             aiColor3D color = light->mColorDiffuse;  // Diffuse color
             scene.createPointLight();
             auto instance = scene.instances.back();
-            auto * pointLight = ECS::getComponent<PointLight>(instance.entity);
-            auto * name = ECS::getComponent<InstanceName>(instance.entity);
-            auto * trans = ECS::getComponent<TransformComponent>(instance.entity);
+            auto pointLight = ECS::getComponent<PointLight>(instance.entity);
+            auto name = ECS::getComponent<InstanceName>(instance.entity);
+            auto trans = ECS::getComponent<TransformComponent>(instance.entity);
             if(!name || !pointLight || !trans) continue;
             glm::vec3 c = {color.r, color.g, color.b};
             float intensity = length(c);

@@ -17,9 +17,11 @@
 #include <glm/vec3.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <vulkan/vulkan_core.h>
 #include "defines.h"
 #include "ECS.h"
+#include "ECS_UI.h"
 struct Model{
     u32 indexOffset;
     u32 triangleCount;

@@ -9,21 +9,7 @@
 
 #include <vulkan/vulkan_core.h>
 
-struct UIComponent {
-    TypeID id;
-    size_t totalSize;
-    struct ComponentData {
-        enum TYPE {
-            VEC3,
-            COLOR,
-            FLOAT
-        } type;
-        u32 offset;
-        std::string name;
-    };
-    std::string name;
-    std::vector<ComponentData> data;
-};
+
 
 class ImguiModule {
     public:
@@ -36,7 +22,6 @@ class ImguiModule {
         ImVec2 previewSize = {128, 128};
         void* enginePtr;
 
-        std::vector<UIComponent> registeredComponents;
     private:
         VkDescriptorPool imguiPool;
         void renderViewport(void * initPtr, void * dataPtr);

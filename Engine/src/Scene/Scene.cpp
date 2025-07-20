@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstring>
 #define ECS_IMPLEMENTATION
 #include "Scene.h"
@@ -21,43 +22,14 @@ void Scene::initScene(){
     registry.registerType<AABB>();
     registry.registerType<InstanceName>();
     registry.registerType<PointLight>();
-    UIComponent AABBUI {
-        .id = ECS::getTypeIndex<AABB>(),
-        .totalSize = ECS::getTotalTypeSize<AABB>(),
-        .name = "AABB",
-        .data =  {
-            UIComponent::ComponentData {
-                .type = UIComponent::ComponentData::TYPE::VEC3,
-                .offset = 0,
-                .name = "Min",
-            },
-            UIComponent::ComponentData {
-                .type = UIComponent::ComponentData::TYPE::VEC3,
-                .offset = sizeof(glm::vec3),
-                .name = "Max",
-            }
-        },
 
-    };
-    UIComponent PointLightUI {
-        .id = ECS::getTypeIndex<PointLight>(),
-        .totalSize = ECS::getTotalTypeSize<PointLight>(),
-        .name = "Point Light",
-        .data =  {
-            UIComponent::ComponentData {
-                .type = UIComponent::ComponentData::TYPE::COLOR,
-                .offset = sizeof(glm::vec4),
-                .name = "Color",
-            },
-            UIComponent::ComponentData {
-                .type = UIComponent::ComponentData::TYPE::FLOAT,
-                .offset = sizeof(glm::vec4) + sizeof(glm::vec3),
-                .name = "Intensity",
-            },
-        },
-    };
-    gui.registeredComponents.push_back(AABBUI);
-    gui.registeredComponents.push_back(PointLightUI);
+    ECS_UI::registerType<AABB>("AABB");
+    ECS_UI::addToType<AABB>("Min", offsetof(AABB, min), ECS_UI::ELEMENT_TYPE::VEC3);
+    ECS_UI::addToType<AABB>("Max", offsetof(AABB, max), ECS_UI::ELEMENT_TYPE::VEC3);
+
+    ECS_UI::registerType<PointLight>("Pointlight");
+    ECS_UI::addToType<PointLight>("Color", offsetof(PointLight, color), ECS_UI::ELEMENT_TYPE::COLOR);
+    ECS_UI::addToType<PointLight>("Intensity", sizeof(glm::vec4) + sizeof(glm::vec3), ECS_UI::ELEMENT_TYPE::FLOAT);
 }
 
 std::vector<glm::vec3> GetFrustumCornersWorldSpace(const glm::mat4& proj, const glm::mat4& view, float nearPlane, float farPlane) {
